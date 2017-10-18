@@ -3,19 +3,24 @@
 import sys
 import random
 import numpy as np
-from utils.rank_io import *
-from layers import DynamicMaxPooling
+from matchzoo.utils.rank_io import *
+from matchzoo.layers import DynamicMaxPooling
 import scipy.sparse as sp
+
+EPS = 1e-20
 
 class ListBasicGenerator(object):
     def __init__(self, config={}):
         self.__name = 'ListBasicGenerator'
         self.config = config
-        self.batch_list = config['batch_list']
         if 'relation_file' in config:
             self.rel = read_relation(filename=config['relation_file'])
             self.list_list = self.make_list(self.rel)
             self.num_list = len(self.list_list)
+        if 'batch_list' in config:
+            self.batch_list = config['batch_list']
+        else:
+            self.batch_list = self.num_list
         self.check_list = []
         self.point = 0
 
@@ -34,6 +39,7 @@ class ListBasicGenerator(object):
             list_list[d1].append( (label, d2) )
         for d1 in list_list:
             list_list[d1] = sorted(list_list[d1], reverse = True)
+        print list_list[d1]
         print 'List Instance Count:', len(list_list)
         return list_list.items()
 
@@ -273,6 +279,12 @@ class DRMM_ListGenerator(ListBasicGenerator):
         else:
             t1_rep = self.embed[self.data1[t1]]
             t2_rep = self.embed[self.data2[t2]]
+            for c in range(t1_rep.shape[0]):
+                if np.linalg.norm(t1_rep[c]) > EPS:
+                    t1_rep[c] = t1_rep[c] / np.linalg.norm(t1_rep[c])
+            for c in range(t2_rep.shape[0]):
+                if np.linalg.norm(t2_rep[c]) > EPS:
+                    t2_rep[c] = t2_rep[c] / np.linalg.norm(t2_rep[c])
             mm = t1_rep.dot(np.transpose(t2_rep))
             for (i,j), v in np.ndenumerate(mm):
                 if i >= data1_maxlen:
@@ -451,7 +463,7 @@ class ListGenerator_Feats(ListBasicGenerator):
                     X1[j, :d1_len], X1_len[j] = self.data1[d1][:d1_len], d1_len
                     X2[j, :d2_len], X2_len[j] = self.data2[d2][:d2_len], d2_len
                     X3[j, :self.pair_feat_size] = self.pair_feats[(d1, d2)]
-                    X4[j, :d1_len] = self.idf_feats[self.data1[d1][:d1_len]],reshape((-1,))
+                    X4[j, :d1_len] = self.idf_feats[self.data1[d1][:d1_len]].reshape((-1,))
                     Y[j] = l
                     j += 1
             x1_ls.append(X1)

@@ -3,9 +3,11 @@
 import sys
 import random
 import numpy as np
-from utils.rank_io import *
-from layers import DynamicMaxPooling
+from matchzoo.utils.rank_io import *
+from matchzoo.layers import DynamicMaxPooling
 import scipy.sparse as sp
+
+EPS = 1e-20
 
 class PairBasicGenerator(object):
     def __init__(self, config):
@@ -281,6 +283,12 @@ class DRMM_PairGenerator(PairBasicGenerator):
         else:
             t1_rep = self.embed[self.data1[t1]]
             t2_rep = self.embed[self.data2[t2]]
+            for c in range(t1_rep.shape[0]):
+                if np.linalg.norm(t1_rep[c]) > EPS:
+                    t1_rep[c] = t1_rep[c] / np.linalg.norm(t1_rep[c])
+            for c in range(t2_rep.shape[0]):
+                if np.linalg.norm(t2_rep[c]) > EPS:
+                    t2_rep[c] = t2_rep[c] / np.linalg.norm(t2_rep[c])
             mm = t1_rep.dot(np.transpose(t2_rep))
             for (i,j), v in np.ndenumerate(mm):
                 if i >= data1_maxlen:
@@ -359,7 +367,7 @@ class PairGenerator_Feats(PairBasicGenerator):
         self.fill_word = config['fill_word']
         self.pair_feat_size = config['pair_feat_size']
         pair_feats = read_features(config['pair_feat_file'])
-        idf_feats =  read_embedding(config['idf_file'])
+        idf_feats = read_embedding(config['idf_file'])
         self.idf_feats = convert_embed_2_numpy(idf_feats, len(idf_feats)+1)
         self.pair_feats = {}
         for idx, (label, d1, d2) in enumerate(self.rel):
@@ -423,7 +431,7 @@ class PairGenerator_Feats(PairBasicGenerator):
                     X1[i*2+1, :d1_len],  X1_len[i*2+1] = self.data1[d1][:d1_len],   d1_len
                     X2[i*2+1, :d2n_len], X2_len[i*2+1] = self.data2[d2n][:d2n_len], d2n_len
                     X3[i*2+1, :self.pair_feat_size]    = self.pair_feats[(d1, d2n)][:self.pair_feat_size]
-                    X4[i*2+1, :d1_len] = self.idf_feats[self.data1[d1][:d1_len]],reshape((-1,))
+                    X4[i*2+1, :d1_len] = self.idf_feats[self.data1[d1][:d1_len]].reshape((-1,))
                     
                 yield X1, X1_len, X2, X2_len, X3, X4, Y
 

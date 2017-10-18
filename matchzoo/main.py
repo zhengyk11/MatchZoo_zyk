@@ -15,6 +15,10 @@ import inputs
 import metrics
 from losses import *
 
+word_dict = {}
+word_embed_list = []
+inverse_id_dict = {}
+
 def load_model(config):
     global_conf = config["global"]
     model_type = global_conf['model_type']
@@ -32,6 +36,7 @@ def load_model(config):
 
 def train(config):
 
+
     print(json.dumps(config, indent=2))
     # read basic config
     global_conf = config["global"]
@@ -43,12 +48,44 @@ def train(config):
     input_conf = config['inputs']
     share_input_conf = input_conf['share']
 
+    # collect dataset identification
+    global word_embed_list
+    dataset = {}
+    for tag in input_conf:
+        if tag != 'share' and input_conf[tag]['phase'] == 'PREDICT':
+            continue
+        if 'text1_corpus' in input_conf[tag]:
+            datapath = input_conf[tag]['text1_corpus']
+            if datapath not in dataset:
+                dataset[datapath], data_word_1 = read_data(datapath, word_dict=word_dict)
+                word_embed_list = data_word_1
+        if 'text2_corpus' in input_conf[tag]:
+            datapath = input_conf[tag]['text2_corpus']
+            if datapath not in dataset:
+                dataset[datapath], data_word_2 = read_data(datapath, word_dict=word_dict)
+                word_embed_list += data_word_2
+        word_embed_list = sorted(list(set(word_embed_list)))
+    len_word_embed_list = len(word_embed_list)
+    global inverse_id_dict
+    for i, j in enumerate(word_embed_list):
+        inverse_id_dict[j] = i
+    inverse_id_dict[-1] = len_word_embed_list
 
-    # collect embedding 
+    for d in dataset:
+        for tid in dataset[d]:
+            for i, j in enumerate(dataset[d][tid]):
+                dataset[d][tid][i] = inverse_id_dict[j]
+    inverse_id_dict.pop(-1)
+    print '[Dataset] %s Dataset Load Done.' % len(dataset)
+    ##
+
+    # collect embedding
+
+    share_input_conf['fill_word'] = len_word_embed_list
+    share_input_conf['vocab_size'] = len_word_embed_list + 1
     if 'embed_path' in share_input_conf:
-        embed_dict = read_embedding(filename=share_input_conf['embed_path'])
-        _PAD_ = share_input_conf['fill_word']
-        embed_dict[_PAD_] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
+        embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
+        embed_dict[share_input_conf['fill_word']] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
         embed = np.float32(np.random.uniform(-0.2, 0.2, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = convert_embed_2_numpy(embed_dict, embed = embed)
     else:
@@ -73,19 +110,19 @@ def train(config):
     print '[Input] Process Input Tags. %s in TRAIN, %s in EVAL.' % (input_train_conf.keys(), input_eval_conf.keys())
 
     # collect dataset identification
-    dataset = {}
-    for tag in input_conf:
-        if tag != 'share' and input_conf[tag]['phase'] == 'PREDICT':
-            continue
-        if 'text1_corpus' in input_conf[tag]:
-            datapath = input_conf[tag]['text1_corpus']
-            if datapath not in dataset:
-                dataset[datapath], _ = read_data(datapath)
-        if 'text2_corpus' in input_conf[tag]:
-            datapath = input_conf[tag]['text2_corpus']
-            if datapath not in dataset:
-                dataset[datapath], _ = read_data(datapath)
-    print '[Dataset] %s Dataset Load Done.' % len(dataset)
+    # dataset = {}
+    # for tag in input_conf:
+    #     if tag != 'share' and input_conf[tag]['phase'] == 'PREDICT':
+    #         continue
+    #     if 'text1_corpus' in input_conf[tag]:
+    #         datapath = input_conf[tag]['text1_corpus']
+    #         if datapath not in dataset:
+    #             dataset[datapath], _ = read_data(datapath)
+    #     if 'text2_corpus' in input_conf[tag]:
+    #         datapath = input_conf[tag]['text2_corpus']
+    #         if datapath not in dataset:
+    #             dataset[datapath], _ = read_data(datapath)
+    # print '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
     train_gen = OrderedDict()
@@ -132,7 +169,7 @@ def train(config):
                     genfun,
                     steps_per_epoch = num_batch,
                     epochs = 1,
-                    verbose = 1
+                    verbose = 2
                 ) #callbacks=[eval_map])
         
         for tag, generator in eval_gen.items():
@@ -169,7 +206,7 @@ def predict(config):
 
     # collect embedding 
     if 'embed_path' in share_input_conf:
-        embed_dict = read_embedding(filename=share_input_conf['embed_path'])
+        embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
         _PAD_ = share_input_conf['fill_word']
         embed_dict[_PAD_] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
         embed = np.float32(np.random.uniform(-0.02, 0.02, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
@@ -197,11 +234,11 @@ def predict(config):
             if 'text1_corpus' in input_conf[tag]:
                 datapath = input_conf[tag]['text1_corpus']
                 if datapath not in dataset:
-                    dataset[datapath], _ = read_data(datapath)
+                    dataset[datapath], _ = read_data(datapath, word_dict=word_dict)
             if 'text2_corpus' in input_conf[tag]:
                 datapath = input_conf[tag]['text2_corpus']
                 if datapath not in dataset:
-                    dataset[datapath], _ = read_data(datapath)
+                    dataset[datapath], _ = read_data(datapath, word_dict=word_dict)
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
@@ -281,15 +318,28 @@ def predict(config):
         print '[Predict] results: ', '  '.join(['%s:%f'%(k,v/num_valid) for k, v in res.items()])
         sys.stdout.flush()
 
+
+def read_word_dict_zyk(config):
+    global word_dict
+    word_dict_filepath = config['inputs']['share']['word_dict']
+    with open(word_dict_filepath) as f:
+        for line in f:
+            w, id = line[:-1].split('\t')
+            word_dict[w] = int(id)
+
+
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--phase', default='train', help='Phase: Can be train or predict, the default value is train.')
     parser.add_argument('--model_file', default='./models/matchzoo.model', help='Model_file: MatchZoo model file for the chosen model.')
     args = parser.parse_args()
-    model_file =  args.model_file
+    model_file = args.model_file
     with open(model_file, 'r') as f:
         config = json.load(f)
     phase = args.phase
+
+    read_word_dict_zyk(config)
+
     if args.phase == 'train':
         train(config)
     elif args.phase == 'predict':
@@ -298,5 +348,6 @@ def main(argv):
         print 'Phase Error.'
     return
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     main(sys.argv)

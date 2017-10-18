@@ -38,10 +38,10 @@ class CDSSM(BasicModel):
                 seq.add(Dense(self.config['hidden_sizes'][0], input_shape=(input_dim,)))
             else:
                 seq.add(Dense(self.config['hidden_sizes'][0], activation='relu', input_shape=(input_dim,)))
-
                 for i in range(num_hidden_layers - 2):
                     seq.add(Dense(self.config['hidden_sizes'][i+1], activation='relu'))
                 seq.add(Dense(self.config['hidden_sizes'][num_hidden_layers-1]))
+
             return seq
         query = Input(name='query', shape=(self.config['text1_maxlen'],))
         print('[Input] query:\t%s' % str(query.get_shape().as_list())) 

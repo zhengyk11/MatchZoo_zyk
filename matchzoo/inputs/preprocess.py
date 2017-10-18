@@ -9,7 +9,7 @@ import numpy as np
 from nltk.stem import SnowballStemmer
 
 sys.path.append('../utils/')
-from rank_io import *
+from matchzoo.utils.rank_io import *
 
 class Preprocess(object):
 
@@ -395,7 +395,7 @@ def _test_hist():
     docfile = '../../data/mq2007/docid_doc.txt'
     relfile = '../../data/mq2007/relation.test.fold5.txt'
     histfile = '../../data/mq2007/relation.test.fold5.hist-30.txt'
-    embed_dict = read_embedding(filename = embedfile)
+    embed_dict = read_embedding(filename = embedfile, word_ids=[0])
     print('after read embedding ...')
     _PAD_ = 193367
     embed_dict[_PAD_] = np.zeros((50, ), dtype=np.float32)

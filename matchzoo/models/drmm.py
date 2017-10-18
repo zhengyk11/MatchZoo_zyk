@@ -15,6 +15,7 @@ class DRMM(BasicModel):
                 'embed', 'embed_size', 'vocab_size',
                 'num_layers', 'hidden_sizes']
         self.setup(config)
+        self.embed_trainable = config['train_embed']
         self.initializer_fc = keras.initializers.RandomUniform(minval=-0.1, maxval=0.1, seed=11)
         self.initializer_gate = keras.initializers.RandomUniform(minval=-0.01, maxval=0.01, seed=11)
         if not self.check():
@@ -41,7 +42,7 @@ class DRMM(BasicModel):
         doc = Input(name='doc', shape=(self.config['text1_maxlen'], self.config['hist_size']))
         print('[Input] doc:\t%s' % str(doc.get_shape().as_list())) 
 
-        embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = False)
+        embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = self.embed_trainable)
 
         q_embed = embedding(query)
         print('[Embedding] q_embed:\t%s' % str(q_embed.get_shape().as_list())) 

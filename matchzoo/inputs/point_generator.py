@@ -3,8 +3,8 @@
 import sys
 import random
 import numpy as np
-from utils.rank_io import *
-from layers import DynamicMaxPooling
+from matchzoo.utils.rank_io import *
+from matchzoo.layers import DynamicMaxPooling
 
 class PointGenerator(object):
     def __init__(self, config):

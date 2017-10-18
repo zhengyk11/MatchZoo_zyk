@@ -15,12 +15,26 @@ def read_word_dict(filename):
     print '[%s]\n\tWord dict size: %d' % (filename, len(word_dict))
     return word_dict, iword_dict
 
+
 # Read Embedding File
-def read_embedding(filename):
+def read_embedding(filename, word_ids):
     embed = {}
+    len_word_ids = len(word_ids)
+    word_ids = sorted(word_ids.items(), key=lambda x:x[0])
+    cnt = -1
+    ids_idx = 0
     for line in open(filename):
+        if cnt == -1:
+            cnt += 1
+            continue
         line = line.strip().split()
-        embed[int(line[0])] = map(float, line[1:])
+        if ids_idx >= len_word_ids:
+            break
+        if cnt == word_ids[ids_idx][0]:
+            embed[word_ids[ids_idx][1]] = map(float, line[1:])
+            # embed[cnt] = np.
+            ids_idx += 1
+        cnt += 1
     print '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
     return embed
 
@@ -41,7 +55,7 @@ def read_relation(filename, verbose=True):
     data = []
     for line in open(filename):
         line = line.strip().split()
-        data.append( (int(line[0]), line[1], line[2]) )
+        data.append( (float(line[0]), line[1], line[2]) )
     if verbose:
         print '[%s]\n\tInstance size: %s' % (filename, len(data))
     return data
@@ -59,19 +73,23 @@ def read_features(filename, verbose=True):
 # Read Data Dict
 def read_data(filename, word_dict = None):
     data = {}
+    data_word = []
     for line in open(filename):
         line = line.strip().split()
         tid = line[0]
         if word_dict == None:
-            data[tid] = map(int, line[2:])
+            data[tid] = map(int, line[1:])
         else:
             data[tid] = []
-            for w in line[2:]:
+            for w in line[1:]:
                 if w not in word_dict:
-                    word_dict[w] = len(word_dict)
-                data[tid].append(word_dict[w])
+                    word_dict[w] = -1
+                    data[tid].append(-1)
+                else:
+                    data_word.append(word_dict[w])
+                    data[tid].append(word_dict[w])
     print '[%s]\n\tData size: %s' % (filename, len(data))
-    return data, word_dict
+    return data, sorted(list(set(data_word)))
 
 # Convert Embedding Dict 2 numpy array
 def convert_embed_2_numpy(embed_dict, max_size=0, embed=None):
