@@ -53,7 +53,7 @@ class CDSSM(BasicModel):
         print('[Embedding] query wordhash:\t%s' % str(q_embed.get_shape().as_list())) 
         d_embed = wordhashing(doc)
         print('[Embedding] doc wordhash:\t%s' % str(d_embed.get_shape().as_list())) 
-        conv1d = Convolution1D(self.config['filters'], self.config['kernel_size'], padding='same', activation='relu')
+        conv1d = Convolution1D(filters=self.config['filters'], kernel_size=self.config['kernel_size'], padding='same', activation='relu')
         q_conv = conv1d(q_embed)
         print('[Conv1D] query_conv1:\t%s' % str(q_conv.get_shape().as_list())) 
         d_conv = conv1d(d_embed)

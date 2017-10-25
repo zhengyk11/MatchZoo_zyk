@@ -12,8 +12,7 @@ class DRMM(BasicModel):
         super(DRMM, self).__init__(config)
         self._name = 'DRMM'
         self.check_list = [ 'text1_maxlen', 'hist_size',
-                'embed', 'embed_size', 'vocab_size',
-                'num_layers', 'hidden_sizes']
+                'embed', 'embed_size', 'vocab_size', 'hidden_sizes', 'idf_feat']
         self.setup(config)
         self.embed_trainable = config['train_embed']
         self.initializer_fc = keras.initializers.RandomUniform(minval=-0.1, maxval=0.1, seed=11)
@@ -42,8 +41,9 @@ class DRMM(BasicModel):
         doc = Input(name='doc', shape=(self.config['text1_maxlen'], self.config['hist_size']))
         print('[Input] doc:\t%s' % str(doc.get_shape().as_list())) 
 
-        embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = self.embed_trainable)
-
+        # embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = self.embed_trainable)
+        embedding = Embedding(self.config['vocab_size'], 1, weights=[self.config['idf_feat']],
+                              trainable=self.embed_trainable)
         q_embed = embedding(query)
         print('[Embedding] q_embed:\t%s' % str(q_embed.get_shape().as_list())) 
         q_w = Dense(1, kernel_initializer=self.initializer_gate, use_bias=False)(q_embed)
@@ -51,7 +51,7 @@ class DRMM(BasicModel):
         q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['text1_maxlen'], ))(q_w)
         print('[Softmax] q_gate:\t%s' % str(q_w.get_shape().as_list())) 
         z = doc
-        for i in range(self.config['num_layers']):
+        for i in range(len(self.config['hidden_sizes'])):
             z = Dense(self.config['hidden_sizes'][i], kernel_initializer=self.initializer_fc)(z)
             z = Activation('tanh')(z)
             print('[Dense] z (full connection):\t%s' % str(z.get_shape().as_list())) 

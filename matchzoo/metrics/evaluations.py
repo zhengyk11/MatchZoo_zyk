@@ -46,12 +46,14 @@ def ndcg(k=10):
             if i >= k:
                 break
             if g > rel_threshold:
-                idcg += (math.pow(2., g) - 1.) / math.log(2. + i)
+                # idcg += (math.pow(2., g) - 1.) / math.log(2. + i)
+                idcg +=  g / math.log(2. + i) * math.log(2.)
         for i, (g,p) in enumerate(c_p):
             if i >= k:
                 break
             if g > rel_threshold:
-                ndcg += (math.pow(2., g) - 1.) / math.log(2. + i)
+                # ndcg += (math.pow(2., g) - 1.) / math.log(2. + i)
+                ndcg +=  g / math.log(2. + i) * math.log(2.)
         if idcg == 0.:
             return 0.
         else:

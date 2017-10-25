@@ -39,9 +39,13 @@ class ListBasicGenerator(object):
             list_list[d1].append( (label, d2) )
         for d1 in list_list:
             list_list[d1] = sorted(list_list[d1], reverse = True)
-        print list_list[d1]
+            # print list_list[d1]
         print 'List Instance Count:', len(list_list)
+
         return list_list.items()
+
+    def get_list_list(self):
+        return self.list_list
 
     def get_batch(self):
         pass

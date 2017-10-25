@@ -9,8 +9,8 @@ from model import BasicModel
 
 import sys
 sys.path.append('../matchzoo/layers/')
-from DynamicMaxPooling import *
-from Match import *
+from matchzoo.layers.DynamicMaxPooling import *
+from matchzoo.layers.Match import *
 
 class ARCII(BasicModel):
     def __init__(self, config):
@@ -18,7 +18,7 @@ class ARCII(BasicModel):
         self.__name = 'ARCII'
         self.check_list = [ 'text1_maxlen', 'text2_maxlen', 
                    'embed', 'embed_size', 'vocab_size',
-                   'kernel_size', 'kernel_count',
+                   'kernel_size', 'filters',
                    'q_pool_size', 'd_pool_size']
         self.embed_trainable = config['train_embed']
         self.setup(config)
@@ -30,7 +30,7 @@ class ARCII(BasicModel):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
             
-        self.set_default('kernel_count', 32)
+        self.set_default('filters', 32)
         self.set_default('kernel_size', 3)
         self.set_default('q_pool_size', 2)
         self.set_default('d_pool_size', 2)
@@ -45,14 +45,14 @@ class ARCII(BasicModel):
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        q_conv1 = Conv1D(self.config['kernel_count'], self.config['kernel_size'], padding='same') (q_embed)
-        d_conv1 = Conv1D(self.config['kernel_count'], self.config['kernel_size'], padding='same') (d_embed)
+        q_conv1 = Conv1D(self.config['filters'], self.config['kernel_size'], padding='same') (q_embed)
+        d_conv1 = Conv1D(self.config['filters'], self.config['kernel_size'], padding='same') (d_embed)
 
         cross = Match(match_type='plus')([q_conv1, d_conv1])
 
         cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
 
-        conv2d = Conv2D(self.config['kernel_count'], self.config['kernel_size'], padding='same', activation='relu')
+        conv2d = Conv2D(self.config['filters'], self.config['kernel_size'], padding='same', activation='relu')
         dpool = DynamicMaxPooling(self.config['dpool_size'][0], self.config['dpool_size'][1])
 
         conv1 = conv2d(cross_reshape)

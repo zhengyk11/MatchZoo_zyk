@@ -9,6 +9,8 @@ from collections import OrderedDict
 import keras
 import keras.backend as K
 from keras.models import Sequential, Model
+import tensorflow as tf
+import keras.backend.tensorflow_backend as KTF
 
 from utils import *
 import inputs
@@ -51,30 +53,60 @@ def train(config):
     # collect dataset identification
     global word_embed_list
     dataset = {}
-    for tag in input_conf:
-        if tag != 'share' and input_conf[tag]['phase'] == 'PREDICT':
-            continue
-        if 'text1_corpus' in input_conf[tag]:
-            datapath = input_conf[tag]['text1_corpus']
-            if datapath not in dataset:
-                dataset[datapath], data_word_1 = read_data(datapath, word_dict=word_dict)
-                word_embed_list = data_word_1
-        if 'text2_corpus' in input_conf[tag]:
-            datapath = input_conf[tag]['text2_corpus']
-            if datapath not in dataset:
-                dataset[datapath], data_word_2 = read_data(datapath, word_dict=word_dict)
-                word_embed_list += data_word_2
-        word_embed_list = sorted(list(set(word_embed_list)))
+    invalid_idf = 0.
+    for tag in input_conf['share']:
+        # if tag != 'share' and input_conf[tag]['phase'] == 'PREDICT':
+        #     continue
+        if 'text1_corpus' in tag:
+            datapath = input_conf['share'][tag]
+            # if datapath not in dataset:
+            data, data_word = read_data(datapath, word_dict=word_dict)
+            word_embed_list += data_word
+            if 'text1_corpus' not in dataset:
+                dataset['text1_corpus'] = data
+            else:
+                dataset['text1_corpus'].update(data)
+        if 'text2_corpus' in tag:
+            datapath = input_conf['share'][tag]
+            # if datapath not in dataset:
+            data, data_word = read_data(datapath, word_dict=word_dict)
+            word_embed_list += data_word
+            if 'text2_corpus' not in dataset:
+                dataset['text2_corpus'] = data
+            else:
+                dataset['text2_corpus'].update(data)
+        if 'idf_feat' in tag:
+            datapath = input_conf['share'][tag]
+            data = read_idf(datapath, word_dict=word_dict)
+            invalid_idf = data[-1]
+            if 'idf_feat' not in dataset:
+                dataset['idf_feat'] = data
+
+    word_embed_list = sorted(list(set(word_embed_list)))
     len_word_embed_list = len(word_embed_list)
     global inverse_id_dict
     for i, j in enumerate(word_embed_list):
         inverse_id_dict[j] = i
     inverse_id_dict[-1] = len_word_embed_list
 
+    new_idf_dict = {}
+    #
     for d in dataset:
-        for tid in dataset[d]:
-            for i, j in enumerate(dataset[d][tid]):
-                dataset[d][tid][i] = inverse_id_dict[j]
+        if 'text' in d:
+            for tid in dataset[d]:
+                for i, j in enumerate(dataset[d][tid]):
+                    dataset[d][tid][i] = inverse_id_dict[j]
+        elif 'idf' in d:
+            for i, j in enumerate(word_embed_list):
+                if j in dataset[d]:
+                    new_idf_dict[i] = [dataset[d][j]]
+                else:
+                    new_idf_dict[i] = [dataset[d][-1]]
+
+            print 'idf feat size: %s' % len(new_idf_dict)
+            dataset['idf_feat'] = convert_embed_2_numpy(new_idf_dict, max_size=len_word_embed_list+1)
+            dataset['idf_feat'][-1] = np.array([invalid_idf], dtype=np.float32)# np.float32(np.random.uniform(-0.2, 0.2, [1]))
+            config['inputs']['share']['idf_feat'] = dataset['idf_feat']
     inverse_id_dict.pop(-1)
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
     ##
@@ -83,6 +115,8 @@ def train(config):
 
     share_input_conf['fill_word'] = len_word_embed_list
     share_input_conf['vocab_size'] = len_word_embed_list + 1
+    share_input_conf['feat_size'] = len_word_embed_list + 1
+    config['inputs']['share']['feat_size'] = len_word_embed_list + 1 # can delete, the same effect as last code
     if 'embed_path' in share_input_conf:
         embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
         embed_dict[share_input_conf['fill_word']] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
@@ -130,16 +164,20 @@ def train(config):
 
 
     for tag, conf in input_train_conf.items():
-        print conf
-        conf['data1'] = dataset[conf['text1_corpus']]
-        conf['data2'] = dataset[conf['text2_corpus']]
+        # print conf
+        conf['data1'] = dataset['text1_corpus']
+        conf['data2'] = dataset['text2_corpus']
+        # if 'idf_feat' in dataset:
+        #     config['idf_feat'] = dataset['idf_feat']
         generator = inputs.get(conf['input_type'])
         train_gen[tag] = generator( config = conf )
 
     for tag, conf in input_eval_conf.items():
-        print conf
-        conf['data1'] = dataset[conf['text1_corpus']]
-        conf['data2'] = dataset[conf['text2_corpus']]
+        # print conf
+        conf['data1'] = dataset['text1_corpus']
+        conf['data2'] = dataset['text2_corpus']
+        # if 'idf_feat' in dataset:
+        #     config['idf_feat'] = dataset['idf_feat']
         generator = inputs.get(conf['input_type'])
         eval_gen[tag] = generator( config = conf )  
 
@@ -171,14 +209,32 @@ def train(config):
                     epochs = 1,
                     verbose = 2
                 ) #callbacks=[eval_map])
-        
+
         for tag, generator in eval_gen.items():
+            output = open('models/output/%s_%s_output_%s.txt' % (config['model']['model_py'].split('.')[0], tag, str(i_e)), 'w')
+            qid_rel_uid = {}
             genfun = generator.get_batch_generator()
+            list_list = generator.get_list_list()
             print '[Eval] @ %s ' % tag,
             res = dict([[k,0.] for k in eval_metrics.keys()])
             num_valid = 0
+            # eval_cnt = 0
+            # sum_loss = 0.
             for input_data, y_true in genfun:
+                # eval_cnt += 1
                 y_pred = model.predict(input_data, batch_size=len(y_true))
+                cnt = 0
+                for q, d_list in list_list:
+                    if q not in qid_rel_uid:
+                        qid_rel_uid[q] = {}
+                    for d in d_list:
+                        if d[0] not in qid_rel_uid[q]:
+                            qid_rel_uid[q][d[0]] = {}
+                        qid_rel_uid[q][d[0]][d[1]] = float(y_pred[cnt][0])
+                        output.write('%s %s %s %s\n'%(str(q), str(d[1]), str(d[0]), str(y_pred[cnt][0])))
+                        cnt += 1
+                # sum_loss += rank_hinge_loss(y_pred=np.squeeze(y_pred), y_true=y_true)
+                # loss_and_metrics = model.evaluate(x=input_data, y=y_true, batch_size=len(y_true), verbose=2)
                 if issubclass(type(generator), inputs.list_generator.ListBasicGenerator):
                     list_counts = input_data['list_counts']
                     for k, eval_func in eval_metrics.items():
@@ -192,8 +248,21 @@ def train(config):
                         res[k] += eval_func(y_true = y_true, y_pred = y_pred)
                     num_valid += 1
             generator.reset()
+            test_loss = []
+            for q in qid_rel_uid:
+                for hr in qid_rel_uid[q]:
+                    for lr in qid_rel_uid[q]:
+                        if hr - lr <= input_eval_conf[tag]['rel_gap']:
+                            continue
+                        for hu in qid_rel_uid[q][hr]:
+                            for lu in qid_rel_uid[q][lr]:
+                                test_loss.append(max(0., 1. + qid_rel_uid[q][lr][lu] - qid_rel_uid[q][hr][hu]))
+            test_loss = sum(test_loss) / len(test_loss)
             print 'epoch: %d,' %( i_e ), '  '.join(['%s:%f'%(k,v/num_valid) for k, v in res.items()])
+            print 'test loss: %f' % test_loss
+            # print 'test loss: %f' %(sum_loss/eval_cnt)
             sys.stdout.flush()
+            output.close()
 
     model.save_weights(weights_file)
 
@@ -330,10 +399,16 @@ def read_word_dict_zyk(config):
 
 def main(argv):
     parser = argparse.ArgumentParser()
+    parser.add_argument('--device', default='')
     parser.add_argument('--phase', default='train', help='Phase: Can be train or predict, the default value is train.')
     parser.add_argument('--model_file', default='./models/matchzoo.model', help='Model_file: MatchZoo model file for the chosen model.')
     args = parser.parse_args()
     model_file = args.model_file
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.device
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth=True
+    sess = tf.Session(config=config)
+    KTF.set_session(sess)
     with open(model_file, 'r') as f:
         config = json.load(f)
     phase = args.phase

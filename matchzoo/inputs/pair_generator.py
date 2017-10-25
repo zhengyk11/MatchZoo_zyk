@@ -13,6 +13,7 @@ class PairBasicGenerator(object):
     def __init__(self, config):
         self.__name = 'PairBasicGenerator'
         self.config = config
+        self.rel_gap = config['rel_gap']
         rel_file = config['relation_file']
         self.rel = read_relation(filename=rel_file)
         self.batch_size = config['batch_size']
@@ -31,6 +32,7 @@ class PairBasicGenerator(object):
                 print '[%s] Error %s not in config' % (self.__name, e)
                 return False
         return True
+
     def make_pair_static(self, rel):
         rel_set = {}
         pair_list = []
@@ -44,6 +46,8 @@ class PairBasicGenerator(object):
             label_list = sorted(rel_set[d1].keys(), reverse = True)
             for hidx, high_label in enumerate(label_list[:-1]):
                 for low_label in label_list[hidx+1:]:
+                    if high_label - low_label <= self.rel_gap:
+                        continue
                     for high_d2 in rel_set[d1][high_label]:
                         for low_d2 in rel_set[d1][low_label]:
                             pair_list.append( (d1, high_d2, low_d2) )
@@ -211,8 +215,9 @@ class DSSM_PairGenerator(PairBasicGenerator):
             X1.append(self.data1[d1])
             X2.append(self.data2[d2p])
             X2.append(self.data2[d2n])
-            
-        return self.transfer_feat_dense2sparse(X1).toarray(), X1_len, self.transfer_feat_dense2sparse(X2).toarray(), X2_len, Y    
+        X1 = self.transfer_feat_dense2sparse(X1).toarray()
+        X2 = self.transfer_feat_dense2sparse(X2).toarray()
+        return X1, X1_len, X2, X2_len, Y
 
     def get_batch_iter(self):
         while True:

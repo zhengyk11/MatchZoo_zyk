@@ -3,6 +3,7 @@
 
 import json
 import numpy as np
+import re
 
 # Read Word Dict and Inverse Word Dict
 def read_word_dict(filename):
@@ -54,8 +55,8 @@ def read_data_old_version(filename):
 def read_relation(filename, verbose=True):
     data = []
     for line in open(filename):
-        line = line.strip().split()
-        data.append( (float(line[0]), line[1], line[2]) )
+        line = re.split('\t| ', line.strip())
+        data.append( (float(line[2]), line[0], line[1]) )
     if verbose:
         print '[%s]\n\tInstance size: %s' % (filename, len(data))
     return data
@@ -70,19 +71,38 @@ def read_features(filename, verbose=True):
         print '[%s]\n\tFeature size: %s' % (filename, len(features))
     return features
 
+def read_idf(filename, word_dict = None):
+    data = {}
+    data[-1] = []
+    for line in open(filename):
+        line = re.split('\t', line[:-1])
+        term = line[0]
+        idf = float(line[1])
+        if word_dict == None:
+            print "error!"
+            exit(0)
+        if term not in word_dict or word_dict[term] == -1:
+            data[-1].append(idf)
+        else:
+            data[word_dict[term]] = idf
+    data[-1] = sum(data[-1])/len(data[-1])
+    # print '[%s]\n\tidf feat size: %s' % (filename, len(data))
+    return data
+
 # Read Data Dict
 def read_data(filename, word_dict = None):
     data = {}
     data_word = []
     for line in open(filename):
-        line = line.strip().split()
+        line = re.split('\t| ', line.strip())
         tid = line[0]
+        # data = line[1].split()
         if word_dict == None:
             data[tid] = map(int, line[1:])
         else:
             data[tid] = []
             for w in line[1:]:
-                if w not in word_dict:
+                if w not in word_dict or word_dict[w] == -1:
                     word_dict[w] = -1
                     data[tid].append(-1)
                 else:
@@ -97,7 +117,7 @@ def convert_embed_2_numpy(embed_dict, max_size=0, embed=None):
     if embed is None:
         embed = np.zeros( (max_size, feat_size), dtype = np.float32 )
     for k in embed_dict:
-        embed[k] = np.array(embed_dict[k])
+        embed[k] = np.array(embed_dict[k], dtype=np.float32)
     print 'Generate numpy embed:', embed.shape
     return embed
 
