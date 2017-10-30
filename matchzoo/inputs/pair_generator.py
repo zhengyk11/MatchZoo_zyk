@@ -3,8 +3,12 @@
 import sys
 import random
 import numpy as np
-from matchzoo.utils.rank_io import *
-from matchzoo.layers import DynamicMaxPooling
+
+# from matchzoo.utils.rank_io import *
+# from matchzoo.layers import DynamicMaxPooling
+from utils.rank_io import *
+from layers import DynamicMaxPooling
+
 import scipy.sparse as sp
 
 EPS = 1e-20
@@ -13,7 +17,14 @@ class PairBasicGenerator(object):
     def __init__(self, config):
         self.__name = 'PairBasicGenerator'
         self.config = config
-        self.rel_gap = config['rel_gap']
+        if 'rel_gap' in config:
+            self.rel_gap = config['rel_gap']
+        else:
+            self.rel_gap = 0.
+        if 'high_label' in config:
+            self.high_label = config['high_label']
+        else:
+            self.high_label = 0.
         rel_file = config['relation_file']
         self.rel = read_relation(filename=rel_file)
         self.batch_size = config['batch_size']
@@ -46,6 +57,8 @@ class PairBasicGenerator(object):
             label_list = sorted(rel_set[d1].keys(), reverse = True)
             for hidx, high_label in enumerate(label_list[:-1]):
                 for low_label in label_list[hidx+1:]:
+                    if high_label < self.high_label:
+                        continue
                     if high_label - low_label <= self.rel_gap:
                         continue
                     for high_d2 in rel_set[d1][high_label]:

@@ -9,7 +9,8 @@ from model import BasicModel
 
 import sys
 sys.path.append('../matchzoo/layers/')
-from matchzoo.layers.DynamicMaxPooling import *
+# from matchzoo.layers.DynamicMaxPooling import *
+from DynamicMaxPooling import *
 
 
 class MatchPyramid(BasicModel):

@@ -9,8 +9,10 @@ from model import BasicModel
 
 import sys
 sys.path.append('../matchzoo/layers/')
-from matchzoo.layers.DynamicMaxPooling import *
-from matchzoo.layers.Match import *
+# from matchzoo.layers.DynamicMaxPooling import *
+# from matchzoo.layers.Match import *
+from DynamicMaxPooling import *
+from Match import *
 
 class ARCII(BasicModel):
     def __init__(self, config):

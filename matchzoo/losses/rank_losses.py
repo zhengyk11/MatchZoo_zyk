@@ -9,13 +9,16 @@ from keras import backend as K
 from keras.losses import *
 from keras.layers import Lambda
 from keras.utils.generic_utils import deserialize_keras_object
+import tensorflow as tf
 
+def my_categorical_crossentropy(target, output):
+    target = tf.reshape(target, [-1,2])
+    output = tf.reshape(output, [-1,2])
+    return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=target, logits=output))
 
 def rank_hinge_loss(y_true, y_pred):
-    #output_shape = K.int_shape(y_pred)
-    y_pos = Lambda(lambda a: a[::2, :], output_shape= (1,))(y_pred) 
+    y_pos = Lambda(lambda a: a[::2, :], output_shape= (1,))(y_pred)
     y_neg = Lambda(lambda a: a[1::2, :], output_shape= (1,))(y_pred)
-
     loss = K.maximum(0., 1. + y_neg - y_pos)
     return K.mean(loss)
 

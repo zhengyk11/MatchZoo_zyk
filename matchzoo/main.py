@@ -96,7 +96,7 @@ def train(config):
             for tid in dataset[d]:
                 for i, j in enumerate(dataset[d][tid]):
                     dataset[d][tid][i] = inverse_id_dict[j]
-        elif 'idf' in d:
+        elif 'idf' in d and 'drmm' in config['model']['model_py'].split('.')[0].lower():
             for i, j in enumerate(word_embed_list):
                 if j in dataset[d]:
                     new_idf_dict[i] = [dataset[d][j]]
@@ -211,7 +211,7 @@ def train(config):
                 ) #callbacks=[eval_map])
 
         for tag, generator in eval_gen.items():
-            output = open('models/output/%s_%s_output_%s.txt' % (config['model']['model_py'].split('.')[0], tag, str(i_e)), 'w')
+            output = open('../output/%s/%s_%s_output_%s.txt' % (config['net_name'].split('_')[0], config['net_name'], tag, str(i_e)), 'w')
             qid_rel_uid = {}
             genfun = generator.get_batch_generator()
             list_list = generator.get_list_list()
@@ -264,7 +264,7 @@ def train(config):
             sys.stdout.flush()
             output.close()
 
-    model.save_weights(weights_file)
+    # model.save_weights(weights_file)
 
 def predict(config):
     ######## Read input config ########

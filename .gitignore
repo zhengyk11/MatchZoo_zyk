@@ -1,3 +1,6 @@
 data/
+config/
+output/
+logs/
 *.pyc
-matchzoo/models/output/
+*.weights
