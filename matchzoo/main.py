@@ -196,33 +196,41 @@ def train(config):
         else:
             eval_metrics[mobj] = metrics.get(mobj)
     model.compile(optimizer=optimizer, loss=loss)
-    print '[Model] Model Compile Done.'
+    print '[Model] Model Compile Done.\n'
 
     for i_e in range(global_conf['num_epochs']):
-        print '[Train] @ %s epoch.' % i_e
+        # print '[Train] @ %s epoch.' % i_e
         for tag, generator in train_gen.items():
             genfun = generator.get_batch_generator()
-            print '[Train] @ %s' % tag
-            model.fit_generator(
-                    genfun,
-                    steps_per_epoch = num_batch,
-                    epochs = 1,
-                    verbose = 2
-                ) #callbacks=[eval_map])
+            # print '[Train] @ %s' % tag
+            num_batch_cnt = 0
+            for input_data, y_true in genfun:
+                num_batch_cnt += 1
+                if num_batch_cnt > num_batch:
+                    break
+                info = model.fit(x=input_data, y=y_true, epochs=1, verbose=0)
+                # y_pred = model.predict(x=input_data, batch_size=len(y_true))
+                # print metrics.ndcg(10)(y_true, y_pred)
+                print '[Train] @ iter: %d,' % (i_e*num_batch+num_batch_cnt-1), 'loss: %.4f' %info.history['loss'][0]
+            # model.fit_generator(
+            #         genfun,
+            #         steps_per_epoch = num_batch,
+            #         epochs = 1,
+            #         verbose = 2
+            #     ) #callbacks=[eval_map])
 
         for tag, generator in eval_gen.items():
             output = open('../output/%s/%s_%s_output_%s.txt' % (config['net_name'].split('_')[0], config['net_name'], tag, str(i_e)), 'w')
             qid_rel_uid = {}
             genfun = generator.get_batch_generator()
             list_list = generator.get_list_list()
-            print '[Eval] @ %s ' % tag,
+            # print '\n[Eval] @ %s ' % tag,
             res = dict([[k,0.] for k in eval_metrics.keys()])
             num_valid = 0
-            # eval_cnt = 0
-            # sum_loss = 0.
+
             for input_data, y_true in genfun:
-                # eval_cnt += 1
                 y_pred = model.predict(input_data, batch_size=len(y_true))
+                # output the predict scores
                 cnt = 0
                 for q, d_list in list_list:
                     if q not in qid_rel_uid:
@@ -231,10 +239,9 @@ def train(config):
                         if d[0] not in qid_rel_uid[q]:
                             qid_rel_uid[q][d[0]] = {}
                         qid_rel_uid[q][d[0]][d[1]] = float(y_pred[cnt][0])
-                        output.write('%s %s %s %s\n'%(str(q), str(d[1]), str(d[0]), str(y_pred[cnt][0])))
+                        output.write('%s %s %s %s\n'%(str(q), str(d[1]), str(int(d[0])), str(y_pred[cnt][0])))
                         cnt += 1
-                # sum_loss += rank_hinge_loss(y_pred=np.squeeze(y_pred), y_true=y_true)
-                # loss_and_metrics = model.evaluate(x=input_data, y=y_true, batch_size=len(y_true), verbose=2)
+                # calculate the metrices
                 if issubclass(type(generator), inputs.list_generator.ListBasicGenerator):
                     list_counts = input_data['list_counts']
                     for k, eval_func in eval_metrics.items():
@@ -248,23 +255,33 @@ def train(config):
                         res[k] += eval_func(y_true = y_true, y_pred = y_pred)
                     num_valid += 1
             generator.reset()
-            test_loss = []
-            for q in qid_rel_uid:
-                for hr in qid_rel_uid[q]:
-                    for lr in qid_rel_uid[q]:
-                        if hr - lr <= input_eval_conf[tag]['rel_gap']:
-                            continue
-                        for hu in qid_rel_uid[q][hr]:
-                            for lu in qid_rel_uid[q][lr]:
-                                test_loss.append(max(0., 1. + qid_rel_uid[q][lr][lu] - qid_rel_uid[q][hr][hu]))
-            test_loss = sum(test_loss) / len(test_loss)
-            print 'epoch: %d,' %( i_e ), '  '.join(['%s:%f'%(k,v/num_valid) for k, v in res.items()])
-            print 'test loss: %f' % test_loss
-            # print 'test loss: %f' %(sum_loss/eval_cnt)
+            # calculate the eval_loss
+            eval_loss = cal_eval_loss(qid_rel_uid, input_eval_conf[tag])
+            print '[Eval] @ epoch: %d,' %( i_e ), ', '.join(['%s: %.4f'%(k,v) for k, v in eval_loss.items()]), ',' ,', '.join(['%s: %.4f'%(k,v/num_valid) for k, v in res.items()]), '\n'
             sys.stdout.flush()
             output.close()
 
     # model.save_weights(weights_file)
+
+def cal_eval_loss(qid_rel_uid, conf):
+    hinge_loss_list = []
+    crossentropy_loss_list = dict(y_true=list(), y_pred=list())
+    for q in qid_rel_uid:
+        for hr in qid_rel_uid[q]:
+            for lr in qid_rel_uid[q]:
+                if 'rel_gap' in conf and hr - lr <= conf['rel_gap']:
+                    continue
+                if 'high_label' in conf and hr < conf['high_label']:
+                    continue
+                for hu in qid_rel_uid[q][hr]:
+                    for lu in qid_rel_uid[q][lr]:
+                        crossentropy_loss_list['y_true'].append([1., 0.])
+                        crossentropy_loss_list['y_pred'].append([qid_rel_uid[q][hr][hu], qid_rel_uid[q][lr][lu]])
+                        hinge_loss_list.append(max(0., 1. + qid_rel_uid[q][lr][lu] - qid_rel_uid[q][hr][hu]))
+    hinge_loss = sum(hinge_loss_list) / len(hinge_loss_list)
+    with tf.Session() as sess:
+        crossentropy_loss = my_categorical_crossentropy(crossentropy_loss_list['y_true'], crossentropy_loss_list['y_pred']).eval()
+    return dict(RankHingeLoss=hinge_loss, CrossEntropyLoss=crossentropy_loss)
 
 def predict(config):
     ######## Read input config ########

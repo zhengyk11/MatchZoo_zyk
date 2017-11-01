@@ -31,8 +31,7 @@ class ARCI(BasicModel):
         self.set_default('q_pool_size', 2)
         self.set_default('d_pool_size', 2)
         self.config.update(config)
-        # print '!!!!'
-        # print self.config
+
 
     def build(self):
         query = Input(name='query', shape=(self.config['text1_maxlen'],))

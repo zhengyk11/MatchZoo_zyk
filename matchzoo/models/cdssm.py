@@ -40,7 +40,7 @@ class CDSSM(BasicModel):
                 seq.add(Dense(self.config['hidden_sizes'][0], activation='relu', input_shape=(input_dim,)))
                 for i in range(num_hidden_layers - 2):
                     seq.add(Dense(self.config['hidden_sizes'][i+1], activation='relu'))
-                seq.add(Dense(self.config['hidden_sizes'][num_hidden_layers-1]))
+                seq.add(Dense(self.config['hidden_sizes'][-1]))
 
             return seq
         query = Input(name='query', shape=(self.config['text1_maxlen'],))
@@ -66,7 +66,8 @@ class CDSSM(BasicModel):
         print('[MaxPooling1D] doc_pool1:\t%s' % str(d_pool.get_shape().as_list())) 
 
         
-        mlp = mlp_work(self.config['embed_size'])
+        # mlp = mlp_work(self.config['embed_size'])
+        mlp = mlp_work(self.config['filters'])
 
         rq = mlp(q_pool_re)
         rd = mlp(d_pool_re)
