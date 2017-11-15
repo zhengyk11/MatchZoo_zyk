@@ -9,8 +9,8 @@ from model import BasicModel
 
 import sys
 sys.path.append('../matchzoo/layers/')
-# from matchzoo.layers.DynamicMaxPooling import *
-from DynamicMaxPooling import *
+from matchzoo.layers.DynamicMaxPooling import *
+# from DynamicMaxPooling import *
 
 
 class MatchPyramid(BasicModel):
@@ -46,6 +46,7 @@ class MatchPyramid(BasicModel):
         d_embed = embedding(doc)
 
         cross = Dot(axes=[2, 2])([q_embed, d_embed])
+
         cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
 
         conv2d = Conv2D(self.config['filters'], self.config['kernel_size'], padding='same', activation='relu')
@@ -55,6 +56,7 @@ class MatchPyramid(BasicModel):
         pool1 = dpool([conv1, dpool_index])
         pool1_flat = Flatten()(pool1)
         out_ = Dense(1)(pool1_flat)
+        # out_ = Dense(1)(pool1_flat, activations='softmax') # changed by zyk
 
         model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         return model

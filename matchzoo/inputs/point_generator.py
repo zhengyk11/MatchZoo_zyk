@@ -4,10 +4,10 @@ import sys
 import random
 import numpy as np
 
-# from matchzoo.utils.rank_io import *
-# from matchzoo.layers import DynamicMaxPooling
-from utils.rank_io import *
-from layers import DynamicMaxPooling
+from matchzoo.utils.rank_io import *
+from matchzoo.layers import DynamicMaxPooling
+# from utils.rank_io import *
+# from layers import DynamicMaxPooling
 
 
 class PointGenerator(object):

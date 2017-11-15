@@ -11,8 +11,8 @@ import tensorflow as tf
 from model import BasicModel
 import sys
 sys.path.append('../matchzoo/layers/')
-# from matchzoo.layers.SparseFullyConnectedLayer import *
-from SparseFullyConnectedLayer import *
+from matchzoo.layers.SparseFullyConnectedLayer import *
+# from SparseFullyConnectedLayer import *
 
 class DSSM(BasicModel):
     def __init__(self, config):

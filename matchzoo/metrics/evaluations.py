@@ -8,8 +8,14 @@ import math
 
 def map(y_true, y_pred, rel_threshold=0):
     s = 0.
-    y_true = np.squeeze(y_true)
-    y_pred = np.squeeze(y_pred)
+    # y_true = np.squeeze(y_true)
+    # y_pred = np.squeeze(y_pred)
+    y_true = np.squeeze(y_true).tolist()
+    y_pred = np.squeeze(y_pred).tolist()
+    if type(y_true) != type([]):
+        y_true = [y_true]
+    if type(y_pred) != type([]):
+        y_pred = [y_pred]
     c = zip(y_true, y_pred)
     random.shuffle(c)
     c = sorted(c, key=lambda x:x[1], reverse=True)
@@ -34,8 +40,12 @@ def ndcg(k=10):
         if k <= 0.:
             return 0.
         s = 0.
-        y_true = np.squeeze(y_true)
-        y_pred = np.squeeze(y_pred)
+        y_true = np.squeeze(y_true).tolist()
+        y_pred = np.squeeze(y_pred).tolist()
+        if type(y_true) != type([]):
+            y_true = [y_true]
+        if type(y_pred) != type([]):
+            y_pred = [y_pred]
         c = zip(y_true, y_pred)
         random.shuffle(c)
         c_g = sorted(c, key=lambda x:x[0], reverse=True)
@@ -65,8 +75,14 @@ def precision(k=10):
         if k <= 0:
             return 0.
         s = 0.
-        y_true = np.squeeze(y_true)
-        y_pred = np.squeeze(y_pred)
+        # y_true = np.squeeze(y_true)
+        # y_pred = np.squeeze(y_pred)
+        y_true = np.squeeze(y_true).tolist()
+        y_pred = np.squeeze(y_pred).tolist()
+        if type(y_true) != type([]):
+            y_true = [y_true]
+        if type(y_pred) != type([]):
+            y_pred = [y_pred]
         c = zip(y_true, y_pred)
         random.shuffle(c)
         c = sorted(c, key=lambda x:x[1], reverse=True)

@@ -17,9 +17,7 @@ import inputs
 import metrics
 from losses import *
 
-word_dict = {}
-word_embed_list = []
-inverse_id_dict = {}
+
 
 def load_model(config):
     global_conf = config["global"]
@@ -36,8 +34,10 @@ def load_model(config):
     return mo
 
 
-def train(config):
+def train(config, word_dict):
 
+    word_embed_list = []
+    inverse_id_dict = {}
 
     print(json.dumps(config, indent=2))
     # read basic config
@@ -51,9 +51,9 @@ def train(config):
     share_input_conf = input_conf['share']
 
     # collect dataset identification
-    global word_embed_list
+    # global word_embed_list
     dataset = {}
-    invalid_idf = 0.
+    # invalid_idf = 0.
     for tag in input_conf['share']:
         # if tag != 'share' and input_conf[tag]['phase'] == 'PREDICT':
         #     continue
@@ -78,13 +78,13 @@ def train(config):
         if 'idf_feat' in tag:
             datapath = input_conf['share'][tag]
             data = read_idf(datapath, word_dict=word_dict)
-            invalid_idf = data[-1]
+            # invalid_idf = data[-1]
             if 'idf_feat' not in dataset:
                 dataset['idf_feat'] = data
 
     word_embed_list = sorted(list(set(word_embed_list)))
     len_word_embed_list = len(word_embed_list)
-    global inverse_id_dict
+    # global inverse_id_dict
     for i, j in enumerate(word_embed_list):
         inverse_id_dict[j] = i
     inverse_id_dict[-1] = len_word_embed_list
@@ -96,16 +96,16 @@ def train(config):
             for tid in dataset[d]:
                 for i, j in enumerate(dataset[d][tid]):
                     dataset[d][tid][i] = inverse_id_dict[j]
-        elif 'idf' in d and 'drmm' in config['model']['model_py'].split('.')[0].lower():
+        elif 'idf' in d and 'drmm' in config['model']['model_py'].lower():
             for i, j in enumerate(word_embed_list):
                 if j in dataset[d]:
                     new_idf_dict[i] = [dataset[d][j]]
                 else:
                     new_idf_dict[i] = [dataset[d][-1]]
-
+            new_idf_dict[len(word_embed_list)] = [dataset[d][-1]]
             print 'idf feat size: %s' % len(new_idf_dict)
-            dataset['idf_feat'] = convert_embed_2_numpy(new_idf_dict, max_size=len_word_embed_list+1)
-            dataset['idf_feat'][-1] = np.array([invalid_idf], dtype=np.float32)# np.float32(np.random.uniform(-0.2, 0.2, [1]))
+            dataset['idf_feat'] = convert_embed_2_numpy(new_idf_dict, max_size=len(new_idf_dict))
+            # dataset['idf_feat'][-1] = np.array([invalid_idf], dtype=np.float32)# np.float32(np.random.uniform(-0.2, 0.2, [1]))
             config['inputs']['share']['idf_feat'] = dataset['idf_feat']
     inverse_id_dict.pop(-1)
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
@@ -119,11 +119,11 @@ def train(config):
     config['inputs']['share']['feat_size'] = len_word_embed_list + 1 # can delete, the same effect as last code
     if 'embed_path' in share_input_conf:
         embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
-        embed_dict[share_input_conf['fill_word']] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
-        embed = np.float32(np.random.uniform(-0.2, 0.2, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
-        share_input_conf['embed'] = convert_embed_2_numpy(embed_dict, embed = embed)
+        # embed_dict[share_input_conf['fill_word']] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
+        embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
+        share_input_conf['embed'] = convert_embed_2_numpy(embed_dict=embed_dict, embed=embed)
     else:
-        embed = np.float32(np.random.uniform(-0.2, 0.2, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
+        embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = embed
     print '[Embedding] Embedding Load Done.'
 
@@ -206,12 +206,12 @@ def train(config):
             num_batch_cnt = 0
             for input_data, y_true in genfun:
                 num_batch_cnt += 1
-                if num_batch_cnt > num_batch:
-                    break
                 info = model.fit(x=input_data, y=y_true, epochs=1, verbose=0)
                 # y_pred = model.predict(x=input_data, batch_size=len(y_true))
                 # print metrics.ndcg(10)(y_true, y_pred)
-                print '[Train] @ iter: %d,' % (i_e*num_batch+num_batch_cnt-1), 'loss: %.4f' %info.history['loss'][0]
+                print '[Train] @ iter: %d,' % (i_e*num_batch+num_batch_cnt), 'loss: %.4f' %info.history['loss'][0]
+                if num_batch_cnt == num_batch:
+                    break
             # model.fit_generator(
             #         genfun,
             #         steps_per_epoch = num_batch,
@@ -220,55 +220,79 @@ def train(config):
             #     ) #callbacks=[eval_map])
 
         for tag, generator in eval_gen.items():
-            output = open('../output/%s/%s_%s_output_%s.txt' % (config['net_name'].split('_')[0], config['net_name'], tag, str(i_e)), 'w')
+            output = open('../output/%s/%s_%s_output_%s.txt' % (config['net_name'].split('_')[0], config['net_name'], tag, str(i_e+1)), 'w')
             qid_rel_uid = {}
+            qid_uid_rel_score = {}
             genfun = generator.get_batch_generator()
-            list_list = generator.get_list_list()
+            # list_list = generator.get_list_list()
             # print '\n[Eval] @ %s ' % tag,
             res = dict([[k,0.] for k in eval_metrics.keys()])
-            num_valid = 0
+            # num_valid = 0
 
             for input_data, y_true in genfun:
+                curr_list = generator.get_currbatch()
                 y_pred = model.predict(input_data, batch_size=len(y_true))
                 # output the predict scores
                 cnt = 0
-                for q, d_list in list_list:
+                for q, d_list in curr_list:
                     if q not in qid_rel_uid:
                         qid_rel_uid[q] = {}
+                    if q not in qid_uid_rel_score:
+                        qid_uid_rel_score[q] = dict(rel=list(), score=list())
                     for d in d_list:
                         if d[0] not in qid_rel_uid[q]:
                             qid_rel_uid[q][d[0]] = {}
+                        # if d[1] not in qid_uid_rel_score[q]:
+
                         qid_rel_uid[q][d[0]][d[1]] = float(y_pred[cnt][0])
-                        output.write('%s %s %s %s\n'%(str(q), str(d[1]), str(int(d[0])), str(y_pred[cnt][0])))
+                        qid_uid_rel_score[q]['rel'].append(d[0])
+                        qid_uid_rel_score[q]['score'].append(y_pred[cnt][0])
+                        output.write('%s\t%s\t%s\t%s\n'%(str(q), str(d[1]), str(d[0]), str(y_pred[cnt][0])))
                         cnt += 1
+                        # if cnt == len(y_pred):
+
                 # calculate the metrices
-                if issubclass(type(generator), inputs.list_generator.ListBasicGenerator):
-                    list_counts = input_data['list_counts']
-                    for k, eval_func in eval_metrics.items():
-                        for lc_idx in range(len(list_counts)-1):
-                            pre = list_counts[lc_idx]
-                            suf = list_counts[lc_idx+1]
-                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                    num_valid += len(list_counts) - 1
-                else:
-                    for k, eval_func in eval_metrics.items():
-                        res[k] += eval_func(y_true = y_true, y_pred = y_pred)
-                    num_valid += 1
+                # if issubclass(type(generator), inputs.list_generator.ListBasicGenerator):
+                #     list_counts = input_data['list_counts']
+                #     for k, eval_func in eval_metrics.items():
+                #         for lc_idx in range(len(list_counts)-1):
+                #             pre = list_counts[lc_idx]
+                #             suf = list_counts[lc_idx+1]
+                #             res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                #     num_valid += len(list_counts) - 1
+                # else:
+                #     for k, eval_func in eval_metrics.items():
+                #         res[k] += eval_func(y_true = y_true, y_pred = y_pred)
+                #     num_valid += 1
             generator.reset()
+            output.close()
+            # calculate the metrices
+            for k, eval_func in eval_metrics.items():
+                for qid in qid_uid_rel_score:
+                    res[k] += eval_func(y_true=qid_uid_rel_score[qid]['rel'], y_pred=qid_uid_rel_score[qid]['score'])
+                res[k] /= len(qid_uid_rel_score)
+            # num_valid += len(qid_uid_rel_score) - 1
+
+
+            # f = open('../output/%s/%s_%s_output_%s.txt' % (config['net_name'].split('_')[0], config['net_name'], tag, str(i_e)), 'w')
             # calculate the eval_loss
             eval_loss = cal_eval_loss(qid_rel_uid, input_eval_conf[tag])
-            print '[Eval] @ epoch: %d,' %( i_e ), ', '.join(['%s: %.4f'%(k,v) for k, v in eval_loss.items()]), ',' ,', '.join(['%s: %.4f'%(k,v/num_valid) for k, v in res.items()]), '\n'
+            print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_loss.items()]), ',' ,', '.join(['%s: %.5f'%(k,v) for k, v in res.items()]), '\n'
             sys.stdout.flush()
-            output.close()
+
 
     # model.save_weights(weights_file)
 
 def cal_eval_loss(qid_rel_uid, conf):
+    # print qid_rel_uid
+    # exit(0)
     hinge_loss_list = []
     crossentropy_loss_list = dict(y_true=list(), y_pred=list())
     for q in qid_rel_uid:
         for hr in qid_rel_uid[q]:
             for lr in qid_rel_uid[q]:
+                if hr <= lr:
+                    continue
                 if 'rel_gap' in conf and hr - lr <= conf['rel_gap']:
                     continue
                 if 'high_label' in conf and hr < conf['high_label']:
@@ -283,7 +307,7 @@ def cal_eval_loss(qid_rel_uid, conf):
         crossentropy_loss = my_categorical_crossentropy(crossentropy_loss_list['y_true'], crossentropy_loss_list['y_pred']).eval()
     return dict(RankHingeLoss=hinge_loss, CrossEntropyLoss=crossentropy_loss)
 
-def predict(config):
+def predict(config, word_dict):
     ######## Read input config ########
 
     print(json.dumps(config, indent=2))
@@ -293,9 +317,9 @@ def predict(config):
     # collect embedding 
     if 'embed_path' in share_input_conf:
         embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
-        _PAD_ = share_input_conf['fill_word']
-        embed_dict[_PAD_] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
-        embed = np.float32(np.random.uniform(-0.02, 0.02, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
+        # _PAD_ = share_input_conf['fill_word']
+        # embed_dict[_PAD_] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
+        embed = np.float32(np.random.uniform(-0.2, 0.2, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = convert_embed_2_numpy(embed_dict, embed = embed)
     else:
         embed = np.float32(np.random.uniform(-0.2, 0.2, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
@@ -406,12 +430,15 @@ def predict(config):
 
 
 def read_word_dict_zyk(config):
-    global word_dict
+    word_dict = {}
     word_dict_filepath = config['inputs']['share']['word_dict']
     with open(word_dict_filepath) as f:
         for line in f:
             w, id = line[:-1].split('\t')
-            word_dict[w] = int(id)
+            w = w.lower()
+            if w not in word_dict:
+                word_dict[w] = int(id)
+    return word_dict
 
 
 def main(argv):
@@ -430,12 +457,12 @@ def main(argv):
         config = json.load(f)
     phase = args.phase
 
-    read_word_dict_zyk(config)
+    word_dict = read_word_dict_zyk(config)
 
     if args.phase == 'train':
-        train(config)
+        train(config, word_dict)
     elif args.phase == 'predict':
-        predict(config)
+        predict(config, word_dict)
     else:
         print 'Phase Error.'
     return

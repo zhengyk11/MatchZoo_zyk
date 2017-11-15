@@ -20,22 +20,19 @@ def read_word_dict(filename):
 # Read Embedding File
 def read_embedding(filename, word_ids):
     embed = {}
-    len_word_ids = len(word_ids)
-    word_ids = sorted(word_ids.items(), key=lambda x:x[0])
-    cnt = -1
-    ids_idx = 0
+    cnt = -2
+    max_cnt = max(word_ids.keys())
     for line in open(filename):
-        if cnt == -1:
-            cnt += 1
-            continue
-        line = line.strip().split()
-        if ids_idx >= len_word_ids:
-            break
-        if cnt == word_ids[ids_idx][0]:
-            embed[word_ids[ids_idx][1]] = map(float, line[1:])
-            # embed[cnt] = np.
-            ids_idx += 1
         cnt += 1
+        if cnt == -1:
+            continue
+        if cnt > max_cnt:
+            break
+        if cnt in word_ids:
+            line = line.strip().split()
+            new_id = word_ids[cnt]
+            embed[new_id] = map(float, line[1:])
+
     print '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
     return embed
 
@@ -73,19 +70,20 @@ def read_features(filename, verbose=True):
 
 def read_idf(filename, word_dict = None):
     data = {}
-    data[-1] = []
+    data[-1] = 0
     for line in open(filename):
         line = re.split('\t', line[:-1])
-        term = line[0]
+        term = line[0].lower().strip()
         idf = float(line[1])
         if word_dict == None:
             print "error!"
             exit(0)
         if term not in word_dict or word_dict[term] == -1:
-            data[-1].append(idf)
-        else:
-            data[word_dict[term]] = idf
-    data[-1] = sum(data[-1])/len(data[-1])
+            continue
+            # data[-1].append(idf)
+        # else:
+        data[word_dict[term]] = idf
+    data[-1] = sorted(data.values())[len(data)/2] # median
     # print '[%s]\n\tidf feat size: %s' % (filename, len(data))
     return data
 
@@ -93,7 +91,11 @@ def read_idf(filename, word_dict = None):
 def read_data(filename, word_dict = None):
     data = {}
     data_word = []
+    cnt = 0
     for line in open(filename):
+        cnt += 1
+        if cnt > 500:
+            break
         line = re.split('\t| ', line.strip())
         tid = line[0]
         # data = line[1].split()
@@ -102,6 +104,7 @@ def read_data(filename, word_dict = None):
         else:
             data[tid] = []
             for w in line[1:]:
+                w = w.lower()
                 if w not in word_dict or word_dict[w] == -1:
                     word_dict[w] = -1
                     data[tid].append(-1)

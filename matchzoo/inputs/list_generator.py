@@ -4,10 +4,10 @@ import sys
 import random
 import numpy as np
 
-# from matchzoo.utils.rank_io import *
-# from matchzoo.layers import DynamicMaxPooling
-from utils.rank_io import *
-from layers import DynamicMaxPooling
+from matchzoo.utils.rank_io import *
+from matchzoo.layers import DynamicMaxPooling
+# from utils.rank_io import *
+# from layers import DynamicMaxPooling
 
 import scipy.sparse as sp
 
@@ -17,6 +17,9 @@ class ListBasicGenerator(object):
     def __init__(self, config={}):
         self.__name = 'ListBasicGenerator'
         self.config = config
+        self.data1 = config['data1']
+        self.data2 = config['data2']
+        self.currbatch = []
         if 'relation_file' in config:
             self.rel = read_relation(filename=config['relation_file'])
             self.list_list = self.make_list(self.rel)
@@ -38,6 +41,10 @@ class ListBasicGenerator(object):
     def make_list(self, rel):
         list_list = {}
         for label, d1, d2 in rel:
+            if d1 not in self.data1:
+                continue
+            if d2 not in self.data2:
+                continue
             if d1 not in list_list:
                 list_list[d1] = []
             list_list[d1].append( (label, d2) )
@@ -48,8 +55,11 @@ class ListBasicGenerator(object):
 
         return list_list.items()
 
-    def get_list_list(self):
-        return self.list_list
+    # def get_list_list(self):
+    #     return self.list_list
+
+    def get_currbatch(self):
+        return self.currbatch
 
     def get_batch(self):
         pass
@@ -66,8 +76,8 @@ class ListGenerator(ListBasicGenerator):
     def __init__(self, config={}):
         super(ListGenerator, self).__init__(config=config)
         self.__name = 'ListGenerator'
-        self.data1 = config['data1']
-        self.data2 = config['data2']
+        # self.data1 = config['data1']
+        # self.data2 = config['data2']
         self.data1_maxlen = config['text1_maxlen']
         self.data2_maxlen = config['text2_maxlen']
         self.fill_word = config['fill_word']
@@ -108,6 +118,7 @@ class ListGenerator(ListBasicGenerator):
                     ID_pairs.append((d1, d2))
                     Y[j] = l
                     j += 1
+            self.currbatch = currbatch
             yield X1, X1_len, X2, X2_len, Y, ID_pairs, list_count
 
     def get_batch_generator(self):
@@ -160,8 +171,8 @@ class DSSM_ListGenerator(ListBasicGenerator):
     def __init__(self, config={}):
         super(DSSM_ListGenerator, self).__init__(config=config)
         self.__name = 'DSSM_ListGenerator'
-        self.data1 = config['data1']
-        self.data2 = config['data2']
+        # self.data1 = config['data1']
+        # self.data2 = config['data2']
         self.feat_size = config['feat_size']
         self.check_list.extend(['data1', 'data2', 'feat_size'])
         if not self.check():
@@ -209,6 +220,7 @@ class DSSM_ListGenerator(ListBasicGenerator):
                     ID_pairs.append((d1, d2))
                     Y[j] = l
                     j += 1
+            self.currbatch = currbatch
             yield self.transfer_feat_dense2sparse(X1).toarray(), X1_len, self.transfer_feat_dense2sparse(X2).toarray(), X2_len, Y, ID_pairs, list_count
 
     def get_batch_generator(self):
@@ -255,8 +267,8 @@ class DSSM_ListGenerator(ListBasicGenerator):
 class DRMM_ListGenerator(ListBasicGenerator):
     def __init__(self, config={}):
         super(DRMM_ListGenerator, self).__init__(config=config)
-        self.data1 = config['data1']
-        self.data2 = config['data2']
+        # self.data1 = config['data1']
+        # self.data2 = config['data2']
         self.data1_maxlen = config['text1_maxlen']
         self.data2_maxlen = config['text2_maxlen']
         self.fill_word = config['fill_word']
@@ -333,6 +345,7 @@ class DRMM_ListGenerator(ListBasicGenerator):
                     ID_pairs.append((d1, d2))
                     Y[j] = l
                     j += 1
+            self.currbatch = currbatch
             yield X1, X1_len, X2, X2_len, Y, ID_pairs, list_count
 
     def get_batch_generator(self):
@@ -383,9 +396,8 @@ class ListGenerator_Feats(ListBasicGenerator):
         self.check_list.extend(['data1', 'data2', 'text1_maxlen', 'text2_maxlen', 'pair_feat_size', 'pair_feat_file', 'idf_file'])
         if not self.check():
             raise TypeError('[ListGenerator] parameter check wrong.')
-
-        self.data1 = config['data1']
-        self.data2 = config['data2']
+        # self.data1 = config['data1']
+        # self.data2 = config['data2']
         self.data1_maxlen = config['text1_maxlen']
         self.data2_maxlen = config['text2_maxlen']
         self.fill_word = config['fill_word']
@@ -435,6 +447,7 @@ class ListGenerator_Feats(ListBasicGenerator):
                     ID_pairs.append((d1, d2))
                     Y[j] = l
                     j += 1
+            self.currbatch = currbatch
             yield X1, X1_len, X2, X2_len, X3, X4, Y, ID_pairs, list_count
 
     def get_batch_generator(self):

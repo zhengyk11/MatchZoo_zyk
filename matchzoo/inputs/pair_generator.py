@@ -4,10 +4,10 @@ import sys
 import random
 import numpy as np
 
-# from matchzoo.utils.rank_io import *
-# from matchzoo.layers import DynamicMaxPooling
-from utils.rank_io import *
-from layers import DynamicMaxPooling
+from matchzoo.utils.rank_io import *
+from matchzoo.layers import DynamicMaxPooling
+# from utils.rank_io import *
+# from layers import DynamicMaxPooling
 
 import scipy.sparse as sp
 
@@ -17,6 +17,8 @@ class PairBasicGenerator(object):
     def __init__(self, config):
         self.__name = 'PairBasicGenerator'
         self.config = config
+        self.data1 = config['data1']
+        self.data2 = config['data2']
         if 'rel_gap' in config:
             self.rel_gap = config['rel_gap']
         else:
@@ -48,11 +50,16 @@ class PairBasicGenerator(object):
         rel_set = {}
         pair_list = []
         for label, d1, d2 in rel:
+            if d1 not in self.data1:
+                continue
+            if d2 not in self.data2:
+                continue
             if d1 not in rel_set:
                 rel_set[d1] = {}
             if label not in rel_set[d1]:
                 rel_set[d1][label] = []
             rel_set[d1][label].append(d2)
+
         for d1 in rel_set:
             label_list = sorted(rel_set[d1].keys(), reverse = True)
             for hidx, high_label in enumerate(label_list[:-1]):
@@ -71,6 +78,10 @@ class PairBasicGenerator(object):
         rel_set = {}
         pair_list = []
         for label, d1, d2 in rel:
+            if d1 not in self.data1:
+                continue
+            if d2 not in self.data2:
+                continue
             if d1 not in rel_set:
                 rel_set[d1] = {}
             if label not in rel_set[d1]:
@@ -78,16 +89,23 @@ class PairBasicGenerator(object):
             rel_set[d1][label].append(d2)
         
         while True:
+            pair_list = []
             rel_set_sample = random.sample(rel_set.keys(), self.config['query_per_iter'])
 
             for d1 in rel_set_sample:
                 label_list = sorted(rel_set[d1].keys(), reverse = True)
                 for hidx, high_label in enumerate(label_list[:-1]):
                     for low_label in label_list[hidx+1:]:
+                        if high_label < self.high_label:
+                            continue
+                        if high_label - low_label <= self.rel_gap:
+                            continue
                         for high_d2 in rel_set[d1][high_label]:
                             for low_d2 in rel_set[d1][low_label]:
                                 pair_list.append( (d1, high_d2, low_d2) )
-            #print 'Pair Instance Count:', len(pair_list)
+            if len(pair_list) == 0:
+                continue
+            print 'Pair Instance Count:', len(pair_list)
             yield pair_list
         
     def get_batch_static(self):
@@ -117,8 +135,8 @@ class PairGenerator(PairBasicGenerator):
         super(PairGenerator, self).__init__(config=config)
         self.__name = 'PairGenerator'
         self.config = config
-        self.data1 = config['data1']
-        self.data2 = config['data2']
+        # self.data1 = config['data1']
+        # self.data2 = config['data2']
         self.data1_maxlen = config['text1_maxlen']
         self.data2_maxlen = config['text2_maxlen']
         self.fill_word = config['fill_word']
@@ -188,8 +206,8 @@ class DSSM_PairGenerator(PairBasicGenerator):
     def __init__(self, config):
         super(DSSM_PairGenerator, self).__init__(config=config)
         self.__name = 'DSSM_PairGenerator'
-        self.data1 = config['data1']
-        self.data2 = config['data2']
+        # self.data1 = config['data1']
+        # self.data2 = config['data2']
         self.feat_size = config['feat_size']
         self.check_list.extend(['data1', 'data2', 'feat_size'])
         if config['use_iter']:
@@ -267,8 +285,8 @@ class DRMM_PairGenerator(PairBasicGenerator):
     def __init__(self, config):
         super(DRMM_PairGenerator, self).__init__(config=config)
         self.__name = 'DRMM_PairGenerator'
-        self.data1 = config['data1']
-        self.data2 = config['data2']
+        # self.data1 = config['data1']
+        # self.data2 = config['data2']
         self.data1_maxlen = config['text1_maxlen']
         self.data2_maxlen = config['text2_maxlen']
         self.embed = config['embed']
@@ -378,8 +396,8 @@ class PairGenerator_Feats(PairBasicGenerator):
         if not self.check():
             raise TypeError('[PairGenerator] parameter check wrong.')
 
-        self.data1 = config['data1']
-        self.data2 = config['data2']
+        # self.data1 = config['data1']
+        # self.data2 = config['data2']
         self.data1_maxlen = config['text1_maxlen']
         self.data2_maxlen = config['text2_maxlen']
         self.fill_word = config['fill_word']

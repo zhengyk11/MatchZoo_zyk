@@ -1,4 +1,5 @@
 # -*- coding=utf-8 -*-
+import random
 import keras
 import keras.backend as K
 from keras.models import Sequential, Model
@@ -15,8 +16,8 @@ class DRMM(BasicModel):
                 'embed', 'embed_size', 'vocab_size', 'hidden_sizes', 'idf_feat']
         self.setup(config)
         self.embed_trainable = config['train_embed']
-        self.initializer_fc = keras.initializers.RandomUniform(minval=-0.1, maxval=0.1, seed=11)
-        self.initializer_gate = keras.initializers.RandomUniform(minval=-0.01, maxval=0.01, seed=11)
+        # self.initializer_fc = keras.initializers.RandomUniform(minval=-0.1, maxval=0.1, seed=random.randint(0,100))# 11)
+        # self.initializer_gate = keras.initializers.RandomUniform(minval=-0.01, maxval=0.01, seed=random.randint(0,100))# 11)
         if not self.check():
             raise TypeError('[DRMM] parameter check wrong')
         print '[DRMM] init done'
@@ -46,13 +47,15 @@ class DRMM(BasicModel):
                               trainable=self.embed_trainable)
         q_embed = embedding(query)
         print('[Embedding] q_embed:\t%s' % str(q_embed.get_shape().as_list())) 
-        q_w = Dense(1, kernel_initializer=self.initializer_gate, use_bias=False)(q_embed)
+        # q_w = Dense(1, kernel_initializer=self.initializer_gate, use_bias=False)(q_embed)
+        q_w = Dense(1, use_bias=False)(q_embed)
         print('[Dense] q_gate:\t%s' % str(q_w.get_shape().as_list())) 
         q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['text1_maxlen'], ))(q_w)
         print('[Softmax] q_gate:\t%s' % str(q_w.get_shape().as_list())) 
         z = doc
         for i in range(len(self.config['hidden_sizes'])):
-            z = Dense(self.config['hidden_sizes'][i], kernel_initializer=self.initializer_fc)(z)
+            # z = Dense(self.config['hidden_sizes'][i], kernel_initializer=self.initializer_fc)(z)
+            z = Dense(self.config['hidden_sizes'][i])(z)
             z = Activation('tanh')(z)
             print('[Dense] z (full connection):\t%s' % str(z.get_shape().as_list())) 
         z = Permute((2, 1))(z)
