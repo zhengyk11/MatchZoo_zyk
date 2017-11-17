@@ -1,6 +1,7 @@
 # -*- coding=utf-8 -*-
 import keras
 import keras.backend as K
+import time
 from keras.models import Sequential, Model
 from keras.layers import *
 from keras.layers import Reshape, Embedding, Merge, Dot
@@ -9,8 +10,8 @@ from model import BasicModel
 
 import sys
 sys.path.append('../matchzoo/layers/')
-from matchzoo.layers.DynamicMaxPooling import *
-# from DynamicMaxPooling import *
+# from matchzoo.layers.DynamicMaxPooling import *
+from DynamicMaxPooling import *
 
 
 class MatchPyramid(BasicModel):
@@ -25,7 +26,7 @@ class MatchPyramid(BasicModel):
         self.setup(config)
         if not self.check():
             raise TypeError('[MatchPyramid] parameter check wrong')
-        print '[MatchPyramid] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[MatchPyramid] init done'
         
     def setup(self, config):
         if not isinstance(config, dict):

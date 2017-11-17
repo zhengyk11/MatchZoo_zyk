@@ -3,11 +3,12 @@
 import sys
 import random
 import numpy as np
+import time
 
-from matchzoo.utils.rank_io import *
-from matchzoo.layers import DynamicMaxPooling
-# from utils.rank_io import *
-# from layers import DynamicMaxPooling
+# from matchzoo.utils.rank_io import *
+# from matchzoo.layers import DynamicMaxPooling
+from utils.rank_io import *
+from layers import DynamicMaxPooling
 
 import scipy.sparse as sp
 
@@ -27,8 +28,14 @@ class PairBasicGenerator(object):
             self.high_label = config['high_label']
         else:
             self.high_label = 0.
-        rel_file = config['relation_file']
-        self.rel = read_relation(filename=rel_file)
+        self.rel = []
+        for key in config:
+            if 'relation_file' in key:
+                rel_file = config[key]
+                self.rel += read_relation(filename=rel_file)
+        self.rel = list(set(self.rel))
+        # rel_file = config['relation_file']
+        # self.rel = read_relation(filename=rel_file)
         self.batch_size = config['batch_size']
         self.check_list = ['relation_file', 'batch_size']
         self.point = 0
@@ -42,7 +49,7 @@ class PairBasicGenerator(object):
     def check(self):
         for e in self.check_list:
             if e not in self.config:
-                print '[%s] Error %s not in config' % (self.__name, e)
+                print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s] Error %s not in config' % (self.__name, e)
                 return False
         return True
 
@@ -71,7 +78,7 @@ class PairBasicGenerator(object):
                     for high_d2 in rel_set[d1][high_label]:
                         for low_d2 in rel_set[d1][low_label]:
                             pair_list.append( (d1, high_d2, low_d2) )
-        print 'Pair Instance Count:', len(pair_list)
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Pair Instance Count:', len(pair_list)
         return pair_list
 
     def make_pair_iter(self, rel):
@@ -105,7 +112,7 @@ class PairBasicGenerator(object):
                                 pair_list.append( (d1, high_d2, low_d2) )
             if len(pair_list) == 0:
                 continue
-            print 'Pair Instance Count:', len(pair_list)
+            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Pair Instance Count:', len(pair_list)
             yield pair_list
         
     def get_batch_static(self):
@@ -145,7 +152,7 @@ class PairGenerator(PairBasicGenerator):
             self.batch_iter = self.get_batch_iter()
         if not self.check():
             raise TypeError('[PairGenerator] parameter check wrong.')
-        print '[PairGenerator] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[PairGenerator] init done'
 
     def get_batch_static(self):
         X1 = np.zeros((self.batch_size*2, self.data1_maxlen), dtype=np.int32)
@@ -214,7 +221,7 @@ class DSSM_PairGenerator(PairBasicGenerator):
             self.batch_iter = self.get_batch_iter()
         if not self.check():
             raise TypeError('[DSSM_PairGenerator] parameter check wrong.')
-        print '[DSSM_PairGenerator] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[DSSM_PairGenerator] init done'
 
     def transfer_feat_dense2sparse(self, dense_feat):
         data = []
@@ -304,7 +311,7 @@ class DRMM_PairGenerator(PairBasicGenerator):
             self.batch_iter = self.get_batch_iter()
         if not self.check():
             raise TypeError('[DRMM_PairGenerator] parameter check wrong.')
-        print '[DRMM_PairGenerator] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[DRMM_PairGenerator] init done'
 
     def cal_hist(self, t1, t2, data1_maxlen, hist_size):
         mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
@@ -410,7 +417,7 @@ class PairGenerator_Feats(PairBasicGenerator):
             self.pair_feats[(d1, d2)] = pair_feats[idx]
         if config['use_iter']:
             self.batch_iter = self.get_batch_iter()
-        print '[PairGenerator] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[PairGenerator] init done'
 
     def get_batch_static(self):
         X1 = np.zeros((self.batch_size*2, self.data1_maxlen), dtype=np.int32)

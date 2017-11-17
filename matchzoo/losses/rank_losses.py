@@ -11,7 +11,7 @@ from keras.layers import Lambda
 from keras.utils.generic_utils import deserialize_keras_object
 import tensorflow as tf
 
-def my_categorical_crossentropy(target, output):
+def cross_entropy_loss(target, output):
     target = tf.reshape(target, [-1,2])
     output = tf.reshape(output, [-1,2])
     return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=target, logits=output))

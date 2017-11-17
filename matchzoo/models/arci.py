@@ -1,6 +1,7 @@
 # -*- coding=utf-8 -*-
 import keras
 import keras.backend as K
+import time
 from keras.models import Sequential, Model
 from keras.layers import *
 from keras.layers import Reshape, Embedding,Merge, Dot
@@ -20,7 +21,7 @@ class ARCI(BasicModel):
         self.setup(config)
         if not self.check():
             raise TypeError('[ARCI] parameter check wrong')
-        print '[ARCI] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[ARCI] init done'
         
     def setup(self, config):
         if not isinstance(config, dict):
@@ -42,8 +43,8 @@ class ARCI(BasicModel):
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        q_conv1 = Conv1D(filters=self.config['filters'], kernel_size=self.config['kernel_size'], padding='same') (q_embed)
-        d_conv1 = Conv1D(filters=self.config['filters'], kernel_size=self.config['kernel_size'], padding='same') (d_embed)
+        q_conv1 = Conv1D(filters=self.config['filters'], kernel_size=self.config['kernel_size'], activation=None, padding='same') (q_embed)
+        d_conv1 = Conv1D(filters=self.config['filters'], kernel_size=self.config['kernel_size'], activation=None, padding='same') (d_embed)
 
         q_pool1 = MaxPooling1D(pool_size=self.config['q_pool_size']) (q_conv1)
         d_pool1 = MaxPooling1D(pool_size=self.config['d_pool_size']) (d_conv1)
@@ -52,7 +53,7 @@ class ARCI(BasicModel):
 
         pool1_flat = Flatten()(pool1)
         out_ = Dense(1)(pool1_flat)
-
+        # out_ = Dense(1, activation='tanh')(pool1_flat)
         #model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         model = Model(inputs=[query, doc], outputs=out_)
         return model

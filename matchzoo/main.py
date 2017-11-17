@@ -8,6 +8,7 @@ from collections import OrderedDict
 
 import keras
 import keras.backend as K
+import time
 from keras.models import Sequential, Model
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
@@ -103,12 +104,12 @@ def train(config, word_dict):
                 else:
                     new_idf_dict[i] = [dataset[d][-1]]
             new_idf_dict[len(word_embed_list)] = [dataset[d][-1]]
-            print 'idf feat size: %s' % len(new_idf_dict)
+            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'idf feat size: %s' % len(new_idf_dict)
             dataset['idf_feat'] = convert_embed_2_numpy(new_idf_dict, max_size=len(new_idf_dict))
             # dataset['idf_feat'][-1] = np.array([invalid_idf], dtype=np.float32)# np.float32(np.random.uniform(-0.2, 0.2, [1]))
             config['inputs']['share']['idf_feat'] = dataset['idf_feat']
     inverse_id_dict.pop(-1)
-    print '[Dataset] %s Dataset Load Done.' % len(dataset)
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Dataset] %s Dataset Load Done.' % len(dataset)
     ##
 
     # collect embedding
@@ -117,15 +118,15 @@ def train(config, word_dict):
     share_input_conf['vocab_size'] = len_word_embed_list + 1
     share_input_conf['feat_size'] = len_word_embed_list + 1
     config['inputs']['share']['feat_size'] = len_word_embed_list + 1 # can delete, the same effect as last code
-    if 'embed_path' in share_input_conf:
+    if 'embed_path' in share_input_conf and 'embed_size' in share_input_conf:
         embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
         # embed_dict[share_input_conf['fill_word']] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
         embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = convert_embed_2_numpy(embed_dict=embed_dict, embed=embed)
-    else:
+    elif 'embed_size' in share_input_conf:
         embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = embed
-    print '[Embedding] Embedding Load Done.'
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Embedding] Embedding Load Done.'
 
     # list all input tags and construct tags config
     input_train_conf = OrderedDict()
@@ -141,7 +142,7 @@ def train(config, word_dict):
             input_eval_conf[tag] = {}
             input_eval_conf[tag].update(share_input_conf)
             input_eval_conf[tag].update(input_conf[tag])
-    print '[Input] Process Input Tags. %s in TRAIN, %s in EVAL.' % (input_train_conf.keys(), input_eval_conf.keys())
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Input] Process Input Tags. %s in TRAIN, %s in EVAL.' % (input_train_conf.keys(), input_eval_conf.keys())
 
     # collect dataset identification
     # dataset = {}
@@ -196,7 +197,7 @@ def train(config, word_dict):
         else:
             eval_metrics[mobj] = metrics.get(mobj)
     model.compile(optimizer=optimizer, loss=loss)
-    print '[Model] Model Compile Done.\n'
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Model] Model Compile Done.\n'
 
     for i_e in range(global_conf['num_epochs']):
         # print '[Train] @ %s epoch.' % i_e
@@ -209,7 +210,7 @@ def train(config, word_dict):
                 info = model.fit(x=input_data, y=y_true, epochs=1, verbose=0)
                 # y_pred = model.predict(x=input_data, batch_size=len(y_true))
                 # print metrics.ndcg(10)(y_true, y_pred)
-                print '[Train] @ iter: %d,' % (i_e*num_batch+num_batch_cnt), 'loss: %.4f' %info.history['loss'][0]
+                print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Train] @ iter: %d,' % (i_e*num_batch+num_batch_cnt), 'loss: %.4f' %info.history['loss'][0]
                 if num_batch_cnt == num_batch:
                     break
             # model.fit_generator(
@@ -242,14 +243,11 @@ def train(config, word_dict):
                     for d in d_list:
                         if d[0] not in qid_rel_uid[q]:
                             qid_rel_uid[q][d[0]] = {}
-                        # if d[1] not in qid_uid_rel_score[q]:
-
                         qid_rel_uid[q][d[0]][d[1]] = float(y_pred[cnt][0])
                         qid_uid_rel_score[q]['rel'].append(d[0])
                         qid_uid_rel_score[q]['score'].append(y_pred[cnt][0])
                         output.write('%s\t%s\t%s\t%s\n'%(str(q), str(d[1]), str(d[0]), str(y_pred[cnt][0])))
                         cnt += 1
-                        # if cnt == len(y_pred):
 
                 # calculate the metrices
                 # if issubclass(type(generator), inputs.list_generator.ListBasicGenerator):
@@ -271,13 +269,11 @@ def train(config, word_dict):
                 for qid in qid_uid_rel_score:
                     res[k] += eval_func(y_true=qid_uid_rel_score[qid]['rel'], y_pred=qid_uid_rel_score[qid]['score'])
                 res[k] /= len(qid_uid_rel_score)
-            # num_valid += len(qid_uid_rel_score) - 1
 
 
-            # f = open('../output/%s/%s_%s_output_%s.txt' % (config['net_name'].split('_')[0], config['net_name'], tag, str(i_e)), 'w')
             # calculate the eval_loss
             eval_loss = cal_eval_loss(qid_rel_uid, input_eval_conf[tag])
-            print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_loss.items()]), ',' ,', '.join(['%s: %.5f'%(k,v) for k, v in res.items()]), '\n'
+            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_loss.items()]), ',' ,', '.join(['%s: %.5f'%(k,v) for k, v in res.items()]), '\n'
             sys.stdout.flush()
 
 
@@ -304,7 +300,7 @@ def cal_eval_loss(qid_rel_uid, conf):
                         hinge_loss_list.append(max(0., 1. + qid_rel_uid[q][lr][lu] - qid_rel_uid[q][hr][hu]))
     hinge_loss = sum(hinge_loss_list) / len(hinge_loss_list)
     with tf.Session() as sess:
-        crossentropy_loss = my_categorical_crossentropy(crossentropy_loss_list['y_true'], crossentropy_loss_list['y_pred']).eval()
+        crossentropy_loss = cross_entropy_loss(crossentropy_loss_list['y_true'], crossentropy_loss_list['y_pred']).eval()
     return dict(RankHingeLoss=hinge_loss, CrossEntropyLoss=crossentropy_loss)
 
 def predict(config, word_dict):
@@ -324,7 +320,7 @@ def predict(config, word_dict):
     else:
         embed = np.float32(np.random.uniform(-0.2, 0.2, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = embed
-    print '[Embedding] Embedding Load Done.'
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Embedding] Embedding Load Done.'
 
     # list all input tags and construct tags config
     input_predict_conf = OrderedDict()
@@ -335,7 +331,7 @@ def predict(config, word_dict):
             input_predict_conf[tag] = {}
             input_predict_conf[tag].update(share_input_conf)
             input_predict_conf[tag].update(input_conf[tag])
-    print '[Input] Process Input Tags. %s in PREDICT.' % (input_predict_conf.keys())
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Input] Process Input Tags. %s in PREDICT.' % (input_predict_conf.keys())
 
     # collect dataset identification
     dataset = {}
@@ -349,7 +345,7 @@ def predict(config, word_dict):
                 datapath = input_conf[tag]['text2_corpus']
                 if datapath not in dataset:
                     dataset[datapath], _ = read_data(datapath, word_dict=word_dict)
-    print '[Dataset] %s Dataset Load Done.' % len(dataset)
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
     predict_gen = OrderedDict()
@@ -386,7 +382,7 @@ def predict(config, word_dict):
 
     for tag, generator in predict_gen.items():
         genfun = generator.get_batch_generator()
-        print '[Predict] @ %s ' % tag,
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Predict] @ %s ' % tag,
         num_valid = 0
         res_scores = {} 
         for input_data, y_true in genfun:
@@ -425,7 +421,7 @@ def predict(config, word_dict):
                         for inum,(did, (score, gt)) in enumerate(dinfo):
                             print >> f, '%s %s %s %s'%(gt, qid, did, score)
 
-        print '[Predict] results: ', '  '.join(['%s:%f'%(k,v/num_valid) for k, v in res.items()])
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Predict] results: ', '  '.join(['%s:%f'%(k,v/num_valid) for k, v in res.items()])
         sys.stdout.flush()
 
 
@@ -464,7 +460,7 @@ def main(argv):
     elif args.phase == 'predict':
         predict(config, word_dict)
     else:
-        print 'Phase Error.'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Phase Error.'
     return
 
 

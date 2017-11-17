@@ -2,6 +2,7 @@
 
 import keras
 import keras.backend as K
+import time
 from keras.models import Sequential, Model
 from keras.layers import Input, Embedding, Dense, Activation, Merge, Lambda, Permute
 from keras.layers import Reshape, Dot
@@ -11,8 +12,8 @@ import tensorflow as tf
 from model import BasicModel
 import sys
 sys.path.append('../matchzoo/layers/')
-from matchzoo.layers.SparseFullyConnectedLayer import *
-# from SparseFullyConnectedLayer import *
+# from matchzoo.layers.SparseFullyConnectedLayer import *
+from SparseFullyConnectedLayer import *
 
 class DSSM(BasicModel):
     def __init__(self, config):
@@ -22,7 +23,7 @@ class DSSM(BasicModel):
         self.setup(config)
         if not self.check():
             raise TypeError('[DSSM] parameter check wrong')
-        print '[DSSM] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[DSSM] init done'
 
     def setup(self, config):
         if not isinstance(config, dict):

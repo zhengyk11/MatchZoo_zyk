@@ -3,11 +3,12 @@
 import sys
 import random
 import numpy as np
+import time
 
-from matchzoo.utils.rank_io import *
-from matchzoo.layers import DynamicMaxPooling
-# from utils.rank_io import *
-# from layers import DynamicMaxPooling
+# from matchzoo.utils.rank_io import *
+# from matchzoo.layers import DynamicMaxPooling
+from utils.rank_io import *
+from layers import DynamicMaxPooling
 
 import scipy.sparse as sp
 
@@ -20,8 +21,17 @@ class ListBasicGenerator(object):
         self.data1 = config['data1']
         self.data2 = config['data2']
         self.currbatch = []
-        if 'relation_file' in config:
-            self.rel = read_relation(filename=config['relation_file'])
+
+        self.rel = []
+        for key in config:
+            if 'relation_file' in key:
+                rel_file = config[key]
+                self.rel += read_relation(filename=rel_file)
+        self.rel = list(set(self.rel))
+
+        # if 'relation_file' in config:
+        if len(self.rel) > 0:
+            # self.rel = read_relation(filename=config['relation_file'])
             self.list_list = self.make_list(self.rel)
             self.num_list = len(self.list_list)
         if 'batch_list' in config:
@@ -34,7 +44,7 @@ class ListBasicGenerator(object):
     def check(self):
         for e in self.check_list:
             if e not in self.config:
-                print '[%s] Error %s not in config' % (self.__name, e)
+                print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s] Error %s not in config' % (self.__name, e)
                 return False
         return True
 
@@ -51,7 +61,7 @@ class ListBasicGenerator(object):
         for d1 in list_list:
             list_list[d1] = sorted(list_list[d1], reverse = True)
             # print list_list[d1]
-        print 'List Instance Count:', len(list_list)
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'List Instance Count:', len(list_list)
 
         return list_list.items()
 
@@ -84,7 +94,7 @@ class ListGenerator(ListBasicGenerator):
         self.check_list.extend(['data1', 'data2', 'text1_maxlen', 'text2_maxlen'])
         if not self.check():
             raise TypeError('[ListGenerator] parameter check wrong.')
-        print '[ListGenerator] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[ListGenerator] init done'
 
     def get_batch(self):
         while self.point < self.num_list:
@@ -177,7 +187,7 @@ class DSSM_ListGenerator(ListBasicGenerator):
         self.check_list.extend(['data1', 'data2', 'feat_size'])
         if not self.check():
             raise TypeError('[DSSM_ListGenerator] parameter check wrong.')
-        print '[DSSM_ListGenerator] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[DSSM_ListGenerator] init done'
 
     def transfer_feat_dense2sparse(self, dense_feat):
         data = []
@@ -284,7 +294,7 @@ class DRMM_ListGenerator(ListBasicGenerator):
             self.use_hist_feats = True
         if not self.check():
             raise TypeError('[DRMM_ListGenerator] parameter check wrong.')
-        print '[DRMM_ListGenerator] init done, list number: %d. ' % (self.num_list)
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[DRMM_ListGenerator] init done, list number: %d. ' % (self.num_list)
 
     def cal_hist(self, t1, t2, data1_maxlen, hist_size):
         mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
@@ -409,7 +419,7 @@ class ListGenerator_Feats(ListBasicGenerator):
         for idx, (label, d1, d2) in enumerate(self.rel):
             self.pair_feats[(d1, d2)] = pair_feats[idx]
 
-        print '[ListGenerator] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[ListGenerator] init done'
 
     def get_batch(self):
         while self.point < self.num_list:

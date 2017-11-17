@@ -2,6 +2,7 @@
 # -*- coding=utf-8 -*-
 import keras
 import keras.backend as K
+import time
 from keras.models import Sequential, Model
 from keras.layers import Input, Embedding, Dense, Activation, Merge, Lambda, Permute
 from keras.layers import Convolution1D, MaxPooling1D, Reshape, Dot
@@ -20,7 +21,7 @@ class CDSSM(BasicModel):
         self.setup(config)
         if not self.check():
             raise TypeError('[CDSSM] parameter check wrong')
-        print '[CDSSM] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[CDSSM] init done'
 
     def setup(self, config):
         if not isinstance(config, dict):

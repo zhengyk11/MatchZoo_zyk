@@ -1,6 +1,7 @@
 # -*- coding=utf-8 -*-
 import keras
 import keras.backend as K
+import time
 from keras.models import Sequential, Model
 from keras.layers import *
 from keras.layers import Reshape, Embedding,Merge, Dot
@@ -9,10 +10,10 @@ from model import BasicModel
 
 import sys
 sys.path.append('../matchzoo/layers/')
-from matchzoo.layers.DynamicMaxPooling import *
-from matchzoo.layers.Match import *
-# from DynamicMaxPooling import *
-# from Match import *
+# from matchzoo.layers.DynamicMaxPooling import *
+# from matchzoo.layers.Match import *
+from DynamicMaxPooling import *
+from Match import *
 
 class ARCII(BasicModel):
     def __init__(self, config):
@@ -25,7 +26,7 @@ class ARCII(BasicModel):
         self.setup(config)
         if not self.check():
             raise TypeError('[ARCII] parameter check wrong')
-        print '[ARCII] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[ARCII] init done'
         
     def setup(self, config):
         if not isinstance(config, dict):
@@ -44,34 +45,61 @@ class ARCII(BasicModel):
         doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
         # print('[Input] doc:\t%s' % str(doc.get_shape().as_list()))
         dpool_index = Input(name='dpool_index', shape=[self.config['text1_maxlen'], self.config['text2_maxlen'], 3], dtype='int32')
-        print('[Input] dpool_index:\t%s' % str(dpool_index.get_shape().as_list()))
+        # print('[Input] dpool_index:\t%s' % str(dpool_index.get_shape().as_list()))
 
         embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = self.embed_trainable)
         q_embed = embedding(query)
-        print('[Embedding] query_embed:\t%s' % str(q_embed.get_shape().as_list()))
+        # print('[Embedding] query_embed:\t%s' % str(q_embed.get_shape().as_list()))
         d_embed = embedding(doc)
-        print('[Embedding] doc_embed:\t%s' % str(d_embed.get_shape().as_list()))
+        # print('[Embedding] doc_embed:\t%s' % str(d_embed.get_shape().as_list()))
 
         q_conv1 = Conv1D(self.config['filters'], self.config['kernel_size_1d'], padding='same') (q_embed)
-        print('[Conv1D] query_conv1:\t%s' % str(q_conv1.get_shape().as_list()))
+        # print('[Conv1D] query_conv1:\t%s' % str(q_conv1.get_shape().as_list()))
         d_conv1 = Conv1D(self.config['filters'], self.config['kernel_size_1d'], padding='same') (d_embed)
-        print('[Conv1D] doc_conv1:\t%s' % str(d_conv1.get_shape().as_list()))
+        # print('[Conv1D] doc_conv1:\t%s' % str(d_conv1.get_shape().as_list()))
 
-        cross = Match(match_type='plus')([q_conv1, d_conv1]) #(batchsize, 10, 1000, 200)
-        print('[Match: plus] cross:\t%s' % str(cross.get_shape().as_list()))
+        cross = Match(match_type='plus')([q_conv1, d_conv1])
+        # print('[Match: plus] cross:\t%s' % str(cross.get_shape().as_list()))
 
         #cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], -1))(cross)
         #print('[Reshape] cross_reshape:\t%s' % str(cross_reshape.get_shape().as_list()))
 
         conv2d = Conv2D(self.config['filters'], self.config['kernel_size_2d'], padding='same', activation='relu')(cross)
-        print('[Conv2D] conv2d:\t%s' % str(conv2d.get_shape().as_list()))
+        # print('[Conv2D] conv2d:\t%s' % str(conv2d.get_shape().as_list()))
         dpool = DynamicMaxPooling(self.config['dpool_size'][0], self.config['dpool_size'][1])([conv2d, dpool_index])
-        print('[DynamicMaxPooling] dpool:\t%s' % str(dpool.get_shape().as_list()))
+        # print('[DynamicMaxPooling] dpool:\t%s' % str(dpool.get_shape().as_list()))
 
         pool1_flat = Flatten()(dpool)
-        print('[Flatten] pool1_flat:\t%s' % str(pool1_flat.get_shape().as_list()))
+        # print('[Flatten] pool1_flat:\t%s' % str(pool1_flat.get_shape().as_list()))
         out_ = Dense(1)(pool1_flat)
-        print('[Dense] out_:\t%s' % str(out_.get_shape().as_list()))
+        # print('[Dense] out_:\t%s' % str(out_.get_shape().as_list()))
 
         model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         return model
+
+        # query = Input(name='query', shape=(self.config['text1_maxlen'],))
+        # doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
+        # dpool_index = Input(name='dpool_index', shape=[self.config['text1_maxlen'], self.config['text2_maxlen'], 3], dtype='int32')
+
+        # embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = self.embed_trainable)
+        # q_embed = embedding(query)
+        # d_embed = embedding(doc)
+
+        # q_conv1 = Conv1D(self.config['filters'], self.config['kernel_size'], padding='same') (q_embed)
+        # d_conv1 = Conv1D(self.config['filters'], self.config['kernel_size'], padding='same') (d_embed)
+
+        # cross = Match(match_type='plus')([q_conv1, d_conv1])
+
+        # cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], -1))(cross)
+
+        # conv2d = Conv2D(self.config['filters'], self.config['kernel_size'], padding='same', activation='relu')
+        # dpool = DynamicMaxPooling(self.config['dpool_size'][0], self.config['dpool_size'][1])
+
+        # conv1 = conv2d(cross_reshape)
+        # conv1 = conv2d(cross)
+        # pool1 = dpool([conv1, dpool_index])
+        # pool1_flat = Flatten()(pool1)
+        # out_ = Dense(1)(pool1_flat)
+
+        # model = Model(inputs=[query, doc, dpool_index], outputs=out_)
+        # return model

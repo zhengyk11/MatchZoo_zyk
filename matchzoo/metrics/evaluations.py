@@ -40,6 +40,8 @@ def ndcg(k=10):
         if k <= 0.:
             return 0.
         s = 0.
+        # y_true = np.squeeze(y_true)
+        # y_pred = np.squeeze(y_pred)
         y_true = np.squeeze(y_true).tolist()
         y_pred = np.squeeze(y_pred).tolist()
         if type(y_true) != type([]):
