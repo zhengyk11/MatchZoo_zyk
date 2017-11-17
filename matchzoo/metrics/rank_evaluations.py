@@ -18,12 +18,9 @@ class rank_eval():
         random.shuffle(c)
         return c
 
-#     def eval(self, y_true, y_pred, metrics=None, k = 20):
-#         if metrics is None:
-#             metrics = ['map', 'p@1', 'p@5', 'p@10', 'p@20', 'ndcg@1', 'ndcg@5', 'ndcg@10', 'ndcg@20']
-    def eval(self, y_true, y_pred, 
-            metrics=['map', 'p@1', 'p@5', 'p@10', 'p@20', 
-                'ndcg@1', 'ndcg@5', 'ndcg@10', 'ndcg@20'], k = 20):
+    def eval(self, y_true, y_pred, metrics=None, k = 20):
+        if metrics is None:
+            metrics = ['map', 'p@1', 'p@5', 'p@10', 'p@20', 'ndcg@1', 'ndcg@5', 'ndcg@10', 'ndcg@20']
         res = {}
         res['map'] = self.map(y_true, y_pred)
         all_ndcg = self.ndcg(y_true, y_pred, k=k)

@@ -9,8 +9,13 @@ import numpy as np
 from nltk.stem import SnowballStemmer
 
 sys.path.append('../utils/')
-# from matchzoo.utils.rank_io import *
-from rank_io import *
+
+
+from matchzoo import RUN_ENV
+if RUN_ENV == 'pc':
+    from matchzoo.utils.rank_io import *
+else:
+    from rank_io import *
 
 
 class Preprocess(object):

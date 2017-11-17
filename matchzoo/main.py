@@ -447,10 +447,16 @@ def read_word_dict_zyk(config):
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', default='')
+    parser.add_argument('--run_env', default='cmd')
     parser.add_argument('--phase', default='train', help='Phase: Can be train or predict, the default value is train.')
     parser.add_argument('--model_file', default='./models/matchzoo.model', help='Model_file: MatchZoo model file for the chosen model.')
     args = parser.parse_args()
     model_file = args.model_file
+    if args.run_env not in ['cmd', 'pc']:
+        print 'run_env error: --run_env cmd|pc'
+        exit(0)
+    global RUN_ENV
+    RUN_ENV = args.run_env
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device
     config = tf.ConfigProto()
     config.gpu_options.allow_growth=True

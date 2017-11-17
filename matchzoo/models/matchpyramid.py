@@ -9,9 +9,14 @@ from keras.optimizers import Adam
 from model import BasicModel
 
 import sys
-sys.path.append('../matchzoo/layers/')
-# from matchzoo.layers.DynamicMaxPooling import *
-from DynamicMaxPooling import *
+
+
+from matchzoo import RUN_ENV
+if RUN_ENV == 'pc':
+    from matchzoo.layers.DynamicMaxPooling import *
+else:
+    sys.path.append('../matchzoo/layers/')
+    from DynamicMaxPooling import *
 
 
 class MatchPyramid(BasicModel):
