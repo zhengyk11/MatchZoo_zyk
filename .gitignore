@@ -3,3 +3,4 @@ output/
 logs/
 *.pyc
 *.weights
+graph/
