@@ -5,13 +5,8 @@ import random
 import numpy as np
 import time
 
-from matchzoo import RUN_ENV
-if RUN_ENV == 'pc':
-    from matchzoo.utils.rank_io import *
-    from matchzoo.layers import DynamicMaxPooling
-else:
-    from utils.rank_io import *
-    from layers import DynamicMaxPooling
+from utils.rank_io import *
+from layers import DynamicMaxPooling
 
 import scipy.sparse as sp
 

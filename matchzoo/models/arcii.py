@@ -10,14 +10,9 @@ from model import BasicModel
 
 import sys
 
-from matchzoo import RUN_ENV
-if RUN_ENV == 'pc':
-    from matchzoo.layers.DynamicMaxPooling import *
-    from matchzoo.layers.Match import *
-else:
-    sys.path.append('../matchzoo/layers/')
-    from DynamicMaxPooling import *
-    from Match import *
+sys.path.append('../matchzoo/layers/')
+from DynamicMaxPooling import *
+from Match import *
 
 class ARCII(BasicModel):
     def __init__(self, config):

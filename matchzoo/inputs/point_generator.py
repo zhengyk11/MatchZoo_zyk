@@ -4,13 +4,8 @@ import sys
 import random
 import numpy as np
 
-from matchzoo import RUN_ENV
-if RUN_ENV == 'pc':
-    from matchzoo.utils.rank_io import *
-    from matchzoo.layers import DynamicMaxPooling
-else:
-    from utils.rank_io import *
-    from layers import DynamicMaxPooling
+from utils.rank_io import *
+from layers import DynamicMaxPooling
 
 class PointGenerator(object):
     def __init__(self, config):
