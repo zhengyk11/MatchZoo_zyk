@@ -18,10 +18,10 @@ class MatchPyramid(BasicModel):
     def __init__(self, config):
         super(MatchPyramid, self).__init__(config)
         self.__name = 'MatchPyramid'
-        self.check_list = [ 'text1_maxlen', 'text2_maxlen', 
+        self.check_list = [ 'text1_maxlen', 'text2_maxlen',
                    'embed', 'embed_size', 'vocab_size',
-                   'kernel_size', 'filters',
-                   'dpool_size']
+                   'kernel_size', 'kernel_count',
+                   'dpool_size', 'dropout_rate']
         self.embed_trainable = config['train_embed']
         self.setup(config)
         if not self.check():
@@ -32,9 +32,10 @@ class MatchPyramid(BasicModel):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
             
-        self.set_default('filters', 32)
+        self.set_default('kernel_count', 32)
         self.set_default('kernel_size', [3, 3])
         self.set_default('dpool_size', [3, 10])
+        self.set_default('dropout_rate', 0)
         self.config.update(config)
 
     def build(self):
@@ -47,17 +48,16 @@ class MatchPyramid(BasicModel):
         d_embed = embedding(doc)
 
         cross = Dot(axes=[2, 2])([q_embed, d_embed])
-
         cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
 
-        conv2d = Conv2D(self.config['filters'], self.config['kernel_size'], padding='same', activation='relu')
+        conv2d = Conv2D(self.config['kernel_count'], self.config['kernel_size'], padding='same', activation='relu')
         dpool = DynamicMaxPooling(self.config['dpool_size'][0], self.config['dpool_size'][1])
 
         conv1 = conv2d(cross_reshape)
         pool1 = dpool([conv1, dpool_index])
         pool1_flat = Flatten()(pool1)
-        out_ = Dense(1)(pool1_flat)
-        # out_ = Dense(1)(pool1_flat, activations='softmax') # changed by zyk
+        pool1_flat_drop = Dropout(rate=self.config['dropout_rate'])(pool1_flat)
+        out_ = Dense(1)(pool1_flat_drop)
 
         model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         return model

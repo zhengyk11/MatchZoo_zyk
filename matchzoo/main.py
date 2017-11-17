@@ -1,14 +1,21 @@
 # -*- coding: utf8 -*-
 import os
 import sys
+import time
 import json
 import argparse
+import random
+random.seed(49999)
+import numpy
+numpy.random.seed(49999)
+import tensorflow
+tensorflow.set_random_seed(49999)
 
 from collections import OrderedDict
 
 import keras
 import keras.backend as K
-import time
+
 from keras.models import Sequential, Model
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF

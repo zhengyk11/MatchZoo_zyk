@@ -6,16 +6,15 @@ import random
 import numpy as np
 import math
 
+def _to_list(x):
+    if isinstance(x, list):
+        return x
+    return [x]
+
 def map(y_true, y_pred, rel_threshold=0):
     s = 0.
-    # y_true = np.squeeze(y_true)
-    # y_pred = np.squeeze(y_pred)
-    y_true = np.squeeze(y_true).tolist()
-    y_pred = np.squeeze(y_pred).tolist()
-    if type(y_true) != type([]):
-        y_true = [y_true]
-    if type(y_pred) != type([]):
-        y_pred = [y_pred]
+    y_true = _to_list(np.squeeze(y_true).tolist())
+    y_pred = _to_list(np.squeeze(y_pred).tolist())
     c = zip(y_true, y_pred)
     random.shuffle(c)
     c = sorted(c, key=lambda x:x[1], reverse=True)
@@ -40,14 +39,8 @@ def ndcg(k=10):
         if k <= 0.:
             return 0.
         s = 0.
-        # y_true = np.squeeze(y_true)
-        # y_pred = np.squeeze(y_pred)
-        y_true = np.squeeze(y_true).tolist()
-        y_pred = np.squeeze(y_pred).tolist()
-        if type(y_true) != type([]):
-            y_true = [y_true]
-        if type(y_pred) != type([]):
-            y_pred = [y_pred]
+        y_true = _to_list(np.squeeze(y_true).tolist())
+        y_pred = _to_list(np.squeeze(y_pred).tolist())
         c = zip(y_true, y_pred)
         random.shuffle(c)
         c_g = sorted(c, key=lambda x:x[0], reverse=True)
@@ -77,14 +70,8 @@ def precision(k=10):
         if k <= 0:
             return 0.
         s = 0.
-        # y_true = np.squeeze(y_true)
-        # y_pred = np.squeeze(y_pred)
-        y_true = np.squeeze(y_true).tolist()
-        y_pred = np.squeeze(y_pred).tolist()
-        if type(y_true) != type([]):
-            y_true = [y_true]
-        if type(y_pred) != type([]):
-            y_pred = [y_pred]
+        y_true = _to_list(np.squeeze(y_true).tolist())
+        y_pred = _to_list(np.squeeze(y_pred).tolist())
         c = zip(y_true, y_pred)
         random.shuffle(c)
         c = sorted(c, key=lambda x:x[1], reverse=True)
@@ -99,17 +86,41 @@ def precision(k=10):
         return prec
     return top_k
 
+# compute recall@k
+# the input is all documents under a single query
+def recall(k=10):
+    def top_k(y_true, y_pred, rel_threshold=0.):
+        if k <= 0:
+            return 0.
+        s = 0.
+        y_true = _to_list(np.squeeze(y_true).tolist()) # y_true: the ground truth scores for documents under a query
+        y_pred = _to_list(np.squeeze(y_pred).tolist()) # y_pred: the predicted scores for documents under a query
+        pos_count = sum(i > rel_threshold for i in y_true) # total number of positive documents under this query
+        c = zip(y_true, y_pred)
+        random.shuffle(c)
+        c = sorted(c, key=lambda x: x[1], reverse=True)
+        ipos = 0
+        recall = 0.
+        for i, (g, p) in enumerate(c):
+            if i >= k:
+                break
+            if g > rel_threshold:
+                recall += 1
+        recall /= pos_count
+        return recall
+    return top_k
+
 def mse(y_true, y_pred, rel_threshold=0.):
     s = 0.
-    y_true = np.squeeze(y_true)
-    y_pred = np.squeeze(y_pred)
+    y_true = _to_list(np.squeeze(y_true).tolist())
+    y_pred = _to_list(np.squeeze(y_pred).tolist())
     return np.mean(np.square(y_pred - y_true), axis=-1)
 
 def accuracy(y_true, y_pred):
-    y_true = np.squeeze(y_true)
-    y_pred = np.squeeze(y_pred)
+    y_true = _to_list(np.squeeze(y_true).tolist())
+    y_pred = _to_list(np.squeeze(y_pred).tolist())
     y_true_idx = np.argmax(y_true, axis = 1)
     y_pred_idx = np.argmax(y_pred, axis = 1)
     assert y_true_idx.shape == y_pred_idx.shape
-    return 1.0 * np.sum(y_true_idx == y_pred_idx) / y_true.shape[0]
+    return 1.0 * np.sum(y_true_idx == y_pred_idx) / len(y_true)
 

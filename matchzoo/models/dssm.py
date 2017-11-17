@@ -28,15 +28,13 @@ class DSSM(BasicModel):
     def setup(self, config):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
-            
+
         self.set_default('hidden_sizes', [300, 128])
         self.config.update(config)
 
     def build(self):
         query = Input(name='query', shape=(self.config['feat_size'],))#, sparse=True)
-        print('[Input] query:\t%s' % str(query.get_shape().as_list())) 
         doc = Input(name='doc', shape=(self.config['feat_size'],))#, sparse=True)
-        print('[Input] doc:\t%s' % str(doc.get_shape().as_list())) 
 
         def mlp_work(input_dim):
             seq = Sequential()
@@ -50,7 +48,7 @@ class DSSM(BasicModel):
                     seq.add(Dense(self.config['hidden_sizes'][i+1], activation='relu'))
                 seq.add(Dense(self.config['hidden_sizes'][num_hidden_layers-1]))
             return seq
-            
+
         mlp = mlp_work(self.config['feat_size'])
         rq = mlp(query)
         rd = mlp(doc)
