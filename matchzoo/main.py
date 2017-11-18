@@ -35,7 +35,7 @@ def cal_hist(config):
                 hist_feats = read_features(config[k], config['hist_size'])
                 hist_feats_all.update(hist_feats)
         return hist_feats_all
-    print 'starting cal_hist...'
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'starting cal_hist...'
     data1_maxlen = config['text1_maxlen']
     data2_maxlen = config['text2_maxlen']
     hist_size = config['hist_size']
@@ -67,7 +67,7 @@ def cal_hist(config):
             for k, v in hist_feats.items():
                 output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, np.reshape(v, [-1])))))
             output.close()
-    print 'cal_hist done!'
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'cal_hist done!'
     return hist_feats_all
 
 

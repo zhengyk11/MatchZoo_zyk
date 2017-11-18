@@ -6,6 +6,9 @@ import numpy as np
 import re
 
 # Read Word Dict and Inverse Word Dict
+import time
+
+
 def read_word_dict(filename):
     word_dict = {}
     iword_dict = {}
@@ -13,7 +16,7 @@ def read_word_dict(filename):
         line = line.strip().split()
         word_dict[int(line[1])] = line[0]
         iword_dict[line[0]] = int(line[1])
-    print '[%s]\n\tWord dict size: %d' % (filename, len(word_dict))
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tWord dict size: %d' % (filename, len(word_dict))
     return word_dict, iword_dict
 
 
@@ -57,7 +60,7 @@ def read_embedding(filename, word_ids, normalize=False):
                 x = np.array(embed[new_id], dtype=np.float32)
                 embed[new_id] = (x / np.linalg.norm(x)).tolist()
 
-    print '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
     return embed
 
 # Read old version data
@@ -69,7 +72,7 @@ def read_data_old_version(filename):
         len2 = int(line[2])
         data.append([map(int, line[3:3+len1]), map(int, line[3+len1:])])
         assert len2 == len(data[idx][1])
-    print '[%s]\n\tInstance size: %d' % (filename, len(data))
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tInstance size: %d' % (filename, len(data))
     return data
 
 # Read Relation Data
@@ -83,7 +86,7 @@ def read_relation(filename, verbose=True):
         line = re.split('\t| ', line.strip())
         data.append( (float(line[2]), line[0], line[1]) )
     if verbose:
-        print '[%s]\n\tInstance size: %s' % (filename, len(data))
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tInstance size: %s' % (filename, len(data))
     return data
 
 # Read varied-length features without id
@@ -95,7 +98,7 @@ def read_features(filename, hist_size, verbose=True):
         d2 = line[1]
         features[(d1, d2)] = np.reshape(map(float, line[2:], [hist_size, -1]))
     if verbose:
-        print '[%s]\n\tFeature size: %s' % (filename, len(features))
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tFeature size: %s' % (filename, len(features))
     return features
 
 # def read_idf(filename, word_dict = None):
@@ -124,7 +127,7 @@ def read_idf(filename, word_dict = None):
         term = line[0].lower().strip()
         idf = float(line[1])
         if word_dict == None:
-            print "error!"
+            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "error!"
             exit(0)
         if term not in word_dict or word_dict[term] == -1:
             continue
@@ -155,7 +158,7 @@ def read_data(filename, word_dict = None):
                 else:
                     data_word.append(word_dict[w])
                     data[tid].append(word_dict[w])
-    print '[%s]\n\tData size: %s' % (filename, len(data))
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tData size: %s' % (filename, len(data))
     return data, sorted(list(set(data_word)))
 
 # Convert Embedding Dict 2 numpy array
@@ -168,6 +171,6 @@ def convert_embed_2_numpy(embed_dict, max_size=0, embed=None, normalize=False):
     if normalize:
         for i in range(len(embed)):
             embed[i] = embed[i]/np.linalg.norm(embed[i])
-    print 'Generate numpy embed:', embed.shape
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Generate numpy embed:', embed.shape
     return embed
 
