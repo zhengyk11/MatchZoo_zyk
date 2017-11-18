@@ -33,13 +33,13 @@ class ARCII(BasicModel):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
 
-        self.set_default('1d_kernel_count', 32)
-        self.set_default('1d_kernel_size', 3)
-        self.set_default('num_conv2d_layers', 2)
-        self.set_default('2d_kernel_counts', [32, 32])
-        self.set_default('2d_kernel_sizes', [3, 3])
-        self.set_default('2d_mpool_sizes', [[3, 3], [3,3]])
-        self.set_default('dropout_rate', 0)
+        # self.set_default('1d_kernel_count', 32)
+        # self.set_default('1d_kernel_size', 3)
+        # self.set_default('num_conv2d_layers', 2)
+        # self.set_default('2d_kernel_counts', [32, 32])
+        # self.set_default('2d_kernel_sizes', [3, 3])
+        # self.set_default('2d_mpool_sizes', [[3, 3], [3,3]])
+        # self.set_default('dropout_rate', 0)
         self.config.update(config)
 
     def build(self):

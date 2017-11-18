@@ -28,8 +28,8 @@ class DRMM(BasicModel):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
 
-        self.set_default('text1_maxlen', 5)
-        self.set_default('hist_size', 60)
+        # self.set_default('text1_maxlen', 5)
+        # self.set_default('hist_size', 60)
         self.config.update(config)
 
     def build(self):

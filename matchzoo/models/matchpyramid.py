@@ -33,10 +33,10 @@ class MatchPyramid(BasicModel):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
             
-        self.set_default('kernel_count', 32)
-        self.set_default('kernel_size', [3, 3])
-        self.set_default('dpool_size', [3, 10])
-        self.set_default('dropout_rate', 0)
+        # self.set_default('kernel_count', 32)
+        # self.set_default('kernel_size', [3, 3])
+        # self.set_default('dpool_size', [3, 10])
+        # self.set_default('dropout_rate', 0)
         self.config.update(config)
 
     def build(self):

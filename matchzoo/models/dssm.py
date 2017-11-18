@@ -29,7 +29,7 @@ class DSSM(BasicModel):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
 
-        self.set_default('hidden_sizes', [300, 128])
+        # self.set_default('hidden_sizes', [300, 128])
         self.config.update(config)
 
     def build(self):
