@@ -109,7 +109,7 @@ def fun(x, y, r):
     new_y = []
     new_x = []
     for i in range(len(y)):
-        if i < r/2 or len(y) - i < r/2:
+        if i < r/2 or len(y) - i < r/2 + 1:
             continue
         new_x.append(x[i])
         new_y_tmp = []
