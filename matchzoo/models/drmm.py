@@ -45,6 +45,7 @@ class DRMM(BasicModel):
         # embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = self.embed_trainable)
         embedding = Embedding(self.config['vocab_size'], 1, weights=[self.config['idf_feat']], trainable=self.embed_trainable)
         q_embed = embedding(query)
+        print q_embed.shape
         # q_w = Dense(1, kernel_initializer=self.initializer_gate, use_bias=False)(q_embed)
         # q_w = Dense(1, use_bias=False)(q_embed)
 
@@ -56,7 +57,7 @@ class DRMM(BasicModel):
             for i in range(num_hidden_layers - 1):
                 hidden_res = Activation('relu')(Dense(self.config['hidden_sizes_qw'][i], use_bias=False)(hidden_res))
             q_w = Dense(self.config['hidden_sizes_qw'][-1], activation='tanh', use_bias=False)(hidden_res)
-
+        print q_w.shape
         q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['text1_maxlen'], ))(q_w)
         z = doc
         for i in range(len(self.config['hidden_sizes_hist'])):
@@ -64,11 +65,16 @@ class DRMM(BasicModel):
             z = Dense(self.config['hidden_sizes_hist'][i])(z)
             z = BatchNormalization()(z)
             z = Activation('tanh')(z)
+        print z.shape
         z = Permute((2, 1))(z)
+        print z.shape
         z = Reshape((self.config['text1_maxlen'],))(z)
+        print z.shape
         q_w = Reshape((self.config['text1_maxlen'],))(q_w)
+        print q_w.shape
 
         out_ = Dot(axes= [1, 1])([z, q_w])
+        print out_.shape
 
         model = Model(inputs=[query, doc], outputs=[out_])
         return model
