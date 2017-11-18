@@ -68,6 +68,7 @@ class ARCI(BasicModel):
 
                 # hidden_res = Dense(self.config['hidden_sizes'][i + 1], activation='relu')(hidden_res)
             out_ = Dense(self.config['hidden_sizes'][-1])(hidden_res)
+        out_ = Activation('tanh')(out_)
         # out_ = Dense(1)(pool1_flat_drop)
 
         #model = Model(inputs=[query, doc, dpool_index], outputs=out_)
