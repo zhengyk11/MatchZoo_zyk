@@ -32,7 +32,7 @@ def cal_hist(config):
     if 'hist_feats_file' in config:
         for k in config:
             if 'hist_feats_file' in k:
-                hist_feats = read_features(config[k])
+                hist_feats = read_features(config[k], config['hist_size'])
                 hist_feats_all.update(hist_feats)
         return hist_feats_all
     print 'starting cal_hist...'
@@ -65,7 +65,7 @@ def cal_hist(config):
             hist_feats_all.update(hist_feats)
             output = open(rel_file.replace('.txt', '')+'_hist.txt', 'w')
             for k, v in hist_feats.items():
-                output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, v))))
+                output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, np.reshape(v, [-1])))))
             output.close()
     print 'cal_hist done!'
     return hist_feats_all

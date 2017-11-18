@@ -87,13 +87,13 @@ def read_relation(filename, verbose=True):
     return data
 
 # Read varied-length features without id
-def read_features(filename, verbose=True):
+def read_features(filename, hist_size, verbose=True):
     features = {}
     for line in open(filename):
         line = re.split('\t| ', line.strip())
         d1 = line[0]
         d2 = line[1]
-        features[(d1, d2)] = map(float, line[2:])
+        features[(d1, d2)] = np.reshape(map(float, line[2:], [hist_size, -1]))
     if verbose:
         print '[%s]\n\tFeature size: %s' % (filename, len(features))
     return features
