@@ -52,8 +52,8 @@ def cal_hist(config):
                 if d2 not in config['data2']:
                     continue
                 mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
-                t1_rep = embed[config[d1][:data1_maxlen]]
-                t2_rep = embed[config[d2][:data2_maxlen]]
+                t1_rep = embed[config['data1'][d1][:data1_maxlen]]
+                t2_rep = embed[config['data2'][d2][:data2_maxlen]]
                 mm = t1_rep.dot(np.transpose(t2_rep))
                 for (i, j), v in np.ndenumerate(mm):
                     vid = int((v + 1.) / 2. * (hist_size - 1.))
