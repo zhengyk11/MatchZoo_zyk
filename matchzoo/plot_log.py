@@ -53,7 +53,7 @@ def plot_log_file(path):
     if 'iter' not in train_iters:
         return
 
-    colors = ['pink', 'red', 'gold', 'lightyellow', 'palegreen', 'g', 'lightblue', 'blue']
+    colors = ['pink', 'red', 'gold', 'lightyellow', 'lightgreen', 'g', 'lightblue', 'blue']
     idx = 0
     k = 5
     x = train_iters['iter']
