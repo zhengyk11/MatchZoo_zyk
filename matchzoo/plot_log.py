@@ -50,15 +50,33 @@ def plot_log_file(path):
         print 'more than one line containing "num_batch"'
         exit(0)
 
-    if 'iter' in train_iters:
-        x = train_iters['iter']
-        for k in train_iters:
-            if 'iter' == k.lower():
-                continue
-            y = train_iters[k]
-            plt.plot(x, y, label=k,linewidth=0.5)
-    else:
+    if 'iter' not in train_iters:
         return
+
+    colors = ['pink', 'red', 'gold', 'lightyellow', 'palegreen', 'g', 'lightblue', 'blue']
+    idx = 0
+    k = 5
+    x = train_iters['iter']
+    for k in train_iters:
+        if 'iter' == k.lower():
+            continue
+        y = train_iters[k]
+        plt.plot(x, y, label=k, colors=colors[idx], linewidth=0.5)
+        idx += 1
+        new_y = []
+        new_x = []
+        for i in range(len(y)):
+            if i < round(k/2.) or len(y) - i < round(k/2.):
+                continue
+            new_x.append(x[i])
+            new_y_tmp = []
+            for j in range(-k/2, round(k/2.)):
+                new_y_tmp.append(y[i+j])
+            new_y.append(sum(new_y_tmp)/k)
+        plt.plot(new_x, new_y, label=k, colors=colors[idx], linewidth=1)
+        idx += 1
+
+
 
     if 'epoch' in eval_epochs:
         x = [i*num_batch for i in eval_epochs['epoch']]
@@ -66,7 +84,21 @@ def plot_log_file(path):
             if 'epoch' == k.lower() or 'ndcg' in k.lower() or 'map' == k.lower():
                 continue
             y = eval_epochs[k]
-            plt.plot(x, y, label=k,linewidth=0.5)
+            plt.plot(x, y, label=k, colors=colors[idx], linewidth=0.5)
+            idx += 1
+            new_y = []
+            new_x = []
+            for i in range(len(y)):
+                if i < round(k / 2.) or len(y) - i < round(k / 2.):
+                    continue
+                new_x.append(x[i])
+                new_y_tmp = []
+                for j in range(-k / 2, round(k / 2.)):
+                    new_y_tmp.append(y[i + j])
+                new_y.append(sum(new_y_tmp) / k)
+            plt.plot(new_x, new_y, colors=colors[idx], label=k, linewidth=1)
+            idx += 1
+
     plt.xlabel('Iteration')
     plt.ylabel('Loss')
     plt.legend(loc=1)
@@ -78,7 +110,21 @@ def plot_log_file(path):
         for k in eval_epochs:
             if 'ndcg@10' == k.lower():#  or 'map' in k:#  or 'map' in k:
                 y = eval_epochs[k]
-                plt.plot(x, y, label=k,linewidth=0.5)
+                plt.plot(x, y, label=k, colors=colors[idx],linewidth=0.5)
+                idx += 1
+                new_y = []
+                new_x = []
+                for i in range(len(y)):
+                    if i < round(k / 2.) or len(y) - i < round(k / 2.):
+                        continue
+                    new_x.append(x[i])
+                    new_y_tmp = []
+                    for j in range(-k / 2, round(k / 2.)):
+                        new_y_tmp.append(y[i + j])
+                    new_y.append(sum(new_y_tmp) / k)
+                plt.plot(new_x, new_y, label=k, colors=colors[idx], linewidth=1)
+                idx += 1
+
         plt.xlabel('Iteration')
         plt.ylabel('Metrics')
         plt.legend(loc=1)
