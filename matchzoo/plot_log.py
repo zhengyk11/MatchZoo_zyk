@@ -49,7 +49,7 @@ def plot_log_file(path):
 
 
 
-    colors = ['pink', 'red', 'gold', 'lightyellow', 'lightgreen', 'g', 'lightblue', 'blue']
+    colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue']
     idx = 0
     r = 10
     stride = 10
@@ -61,7 +61,7 @@ def plot_log_file(path):
         # print colors[idx]
         plt.plot(x, y, label=k, color=colors[idx], linewidth=0.5)
         idx += 1
-        new_y, new_x = fun(x, y, r, stride)
+        new_y, new_x = fun(x, y, 100, 50)
         plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
         idx += 1
 
@@ -76,7 +76,7 @@ def plot_log_file(path):
             # print colors[idx]
             plt.plot(x, y, label=k, color=colors[idx], linewidth=0.5)
             idx += 1
-            new_y, new_x = fun(x, y, r, stride)
+            new_y, new_x = fun(x, y, 20, 10)
             plt.plot(new_x, new_y, color=colors[idx], label=k, linewidth=1)
             idx += 1
 
@@ -94,7 +94,7 @@ def plot_log_file(path):
                 # print colors[idx]
                 plt.plot(x, y, label=k, color=colors[idx],linewidth=0.5)
                 idx += 1
-                new_y, new_x = fun(x, y, r, stride)
+                new_y, new_x = fun(x, y, 20, 10)
                 plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
                 idx += 1
 
