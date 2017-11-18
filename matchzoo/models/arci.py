@@ -58,17 +58,12 @@ class ARCI(BasicModel):
 
         num_hidden_layers = len(self.config['hidden_sizes'])
         if num_hidden_layers == 1:
-            out_ = Dense(self.config['hidden_sizes'][0])(pool1_flat_drop)
+            out_ = Dense(self.config['hidden_sizes'][0], activation='tanh')(pool1_flat_drop)
         else:
-            # hidden_res = Dense(self.config['hidden_sizes'][0], activation='relu')(pool1_flat_drop)
+            hidden_res = pool1_flat_drop
             for i in range(num_hidden_layers - 1):
-                hidden_res = Dense(self.config['hidden_sizes'][0])(pool1_flat_drop)
-                hidden_res = BatchNormalization()(hidden_res)
-                hidden_res = Activation('relu')(hidden_res)
-
-                # hidden_res = Dense(self.config['hidden_sizes'][i + 1], activation='relu')(hidden_res)
-            out_ = Dense(self.config['hidden_sizes'][-1])(hidden_res)
-        out_ = Activation('tanh')(out_)
+                hidden_res = Activation('relu')(BatchNormalization()(Dense(self.config['hidden_sizes'][i])(hidden_res)))
+            out_ = Dense(self.config['hidden_sizes'][-1], activation='tanh')(hidden_res)
         # out_ = Dense(1)(pool1_flat_drop)
 
         #model = Model(inputs=[query, doc, dpool_index], outputs=out_)

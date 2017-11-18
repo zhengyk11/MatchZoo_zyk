@@ -22,7 +22,7 @@ class ARCII(BasicModel):
                    'embed', 'embed_size', 'vocab_size',
                    '1d_kernel_size', '1d_kernel_count',
                    'num_conv2d_layers','2d_kernel_sizes',
-                   '2d_kernel_counts','2d_mpool_sizes', 'dropout_rate']
+                   '2d_kernel_counts','2d_mpool_sizes', 'dropout_rate', 'hidden_sizes']
         self.embed_trainable = config['train_embed']
         self.setup(config)
         if not self.check():
@@ -74,7 +74,17 @@ class ARCII(BasicModel):
 
         pool1_flat = Flatten()(z)
         pool1_flat_drop = Dropout(rate=self.config['dropout_rate'])(pool1_flat)
-        out_ = Dense(1)(pool1_flat_drop)
+
+        num_hidden_layers = len(self.config['hidden_sizes'])
+        if num_hidden_layers == 1:
+            out_ = Dense(self.config['hidden_sizes'][0], activation='tanh')(pool1_flat_drop)
+        else:
+            hidden_res = pool1_flat_drop
+            for i in range(num_hidden_layers - 1):
+                hidden_res = Activation('relu')(BatchNormalization()(Dense(self.config['hidden_sizes'][i])(hidden_res)))
+            out_ = Dense(self.config['hidden_sizes'][-1], activation='tanh')(hidden_res)
+
+        # out_ = Dense(1)(pool1_flat_drop)
 
         model = Model(inputs=[query, doc], outputs=out_)
         return model
