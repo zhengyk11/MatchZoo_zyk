@@ -48,7 +48,7 @@ class MatchPyramid(BasicModel):
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        cross = Dot(axes=[2, 2])([q_embed, d_embed])
+        cross = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
         cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
 
         conv2d = Conv2D(self.config['kernel_count'], self.config['kernel_size'], padding='same', activation='relu')

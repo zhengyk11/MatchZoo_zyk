@@ -4,7 +4,7 @@ import keras
 import keras.backend as K
 import time
 from keras.models import Sequential, Model
-from keras.layers import Input, Embedding, Dense, Activation, Merge, Lambda, Permute
+from keras.layers import Input, Embedding, Dense, Activation, Merge, Lambda, Permute, BatchNormalization
 from keras.layers import Reshape, Dot
 from keras.activations import softmax
 from model import BasicModel
@@ -52,6 +52,7 @@ class DRMM(BasicModel):
         for i in range(len(self.config['hidden_sizes'])):
             # z = Dense(self.config['hidden_sizes'][i], kernel_initializer=self.initializer_fc)(z)
             z = Dense(self.config['hidden_sizes'][i])(z)
+            z = BatchNormalization()(z)
             z = Activation('tanh')(z)
         z = Permute((2, 1))(z)
         z = Reshape((self.config['text1_maxlen'],))(z)
