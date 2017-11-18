@@ -52,6 +52,7 @@ def plot_log_file(path):
     colors = ['pink', 'red', 'gold', 'lightyellow', 'lightgreen', 'g', 'lightblue', 'blue']
     idx = 0
     r = 10
+    stride = 10
     x = train_iters['iter']
     for k in train_iters:
         if 'iter' == k.lower():
@@ -60,7 +61,7 @@ def plot_log_file(path):
         # print colors[idx]
         plt.plot(x, y, label=k, color=colors[idx], linewidth=0.5)
         idx += 1
-        new_y, new_x = fun(x, y, r)
+        new_y, new_x = fun(x, y, r, stride)
         plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
         idx += 1
 
@@ -72,10 +73,10 @@ def plot_log_file(path):
             if 'epoch' == k.lower() or 'ndcg' in k.lower() or 'map' == k.lower():
                 continue
             y = eval_epochs[k]
-            print colors[idx]
+            # print colors[idx]
             plt.plot(x, y, label=k, color=colors[idx], linewidth=0.5)
             idx += 1
-            new_y, new_x = fun(x, y, r)
+            new_y, new_x = fun(x, y, r, stride)
             plt.plot(new_x, new_y, color=colors[idx], label=k, linewidth=1)
             idx += 1
 
@@ -90,10 +91,10 @@ def plot_log_file(path):
         for k in eval_epochs:
             if 'ndcg@10' == k.lower():#  or 'map' in k:#  or 'map' in k:
                 y = eval_epochs[k]
-                print colors[idx]
+                # print colors[idx]
                 plt.plot(x, y, label=k, color=colors[idx],linewidth=0.5)
                 idx += 1
-                new_y, new_x = fun(x, y, r)
+                new_y, new_x = fun(x, y, r, stride)
                 plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
                 idx += 1
 
@@ -105,10 +106,10 @@ def plot_log_file(path):
 
     f.close()
 
-def fun(x, y, r):
+def fun(x, y, r, s):
     new_y = []
     new_x = []
-    for i in range(len(y)):
+    for i in range(0,len(y),s):
         if i < r/2 or len(y) - i < r/2 + 1:
             continue
         new_x.append(x[i])
