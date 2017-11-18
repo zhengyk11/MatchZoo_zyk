@@ -53,7 +53,7 @@ def plot_log_file(path):
     if 'iter' in train_iters:
         x = train_iters['iter']
         for k in train_iters:
-            if 'iter' in k.lower():
+            if 'iter' == k.lower():
                 continue
             y = train_iters[k]
             plt.plot(x, y, label=k,linewidth=0.5)
@@ -63,7 +63,7 @@ def plot_log_file(path):
     if 'epoch' in eval_epochs:
         x = [i*num_batch for i in eval_epochs['epoch']]
         for k in eval_epochs:
-            if 'epoch' in k.lower() or 'ndcg' in k.lower() or 'map' in k.lower():
+            if 'epoch' == k.lower() or 'ndcg' in k.lower() or 'map' == k.lower():
                 continue
             y = eval_epochs[k]
             plt.plot(x, y, label=k,linewidth=0.5)
@@ -74,9 +74,9 @@ def plot_log_file(path):
     plt.close()
 
     if 'epoch' in eval_epochs:
-        x = [i*num_batch for i in eval_epochs['epoch']]
+        # x = [i*num_batch for i in eval_epochs['epoch']]
         for k in eval_epochs:
-            if 'ndcg@10' in k.lower():#  or 'map' in k:#  or 'map' in k:
+            if 'ndcg@10' == k.lower():#  or 'map' in k:#  or 'map' in k:
                 y = eval_epochs[k]
                 plt.plot(x, y, label=k,linewidth=0.5)
         plt.xlabel('Iteration')

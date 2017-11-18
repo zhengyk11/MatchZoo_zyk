@@ -35,6 +35,19 @@ class ARCI(BasicModel):
         self.config.update(config)
 
     def build(self):
+        def mlp_work(input_dim):
+            seq = Sequential()
+            num_hidden_layers = len(self.config['hidden_sizes'])
+            assert num_hidden_layers > 0
+            if num_hidden_layers == 1:
+                seq.add(Dense(self.config['hidden_sizes'][0], input_shape=(input_dim,)))
+            else:
+                seq.add(Dense(self.config['hidden_sizes'][0], activation='relu', input_shape=(input_dim,)))
+                for i in range(num_hidden_layers - 2):
+                    seq.add(Dense(self.config['hidden_sizes'][i+1], activation='relu'))
+                seq.add(Dense(self.config['hidden_sizes'][-1]))
+            return seq
+
         query = Input(name='query', shape=(self.config['text1_maxlen'],))
         doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
         #dpool_index = Input(name='dpool_index', shape=[self.config['text1_maxlen'], self.config['text2_maxlen'], 3], dtype='int32')
@@ -54,8 +67,10 @@ class ARCI(BasicModel):
         pool1_flat = Flatten()(pool1)
 
         pool1_flat_drop = Dropout(rate=self.config['dropout_rate'])(pool1_flat)
+        mlp = mlp_work(pool1_flat_drop.shape[1])
+        out_ = mlp(pool1_flat_drop)
+        # out_ = Dense(1)(pool1_flat_drop)
 
-        out_ = Dense(1)(pool1_flat_drop)
 
         #model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         model = Model(inputs=[query, doc], outputs=out_)

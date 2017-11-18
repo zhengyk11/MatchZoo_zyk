@@ -281,7 +281,7 @@ def train(config, word_dict):
             # calculate the eval_loss
             eval_loss = cal_eval_loss(qid_rel_uid, tag, input_eval_conf[tag], config['losses'])
             eval_res_list = eval_loss.items() + res.items()
-            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list]) # +',' ,', '.join(['%s: %.5f'%(k,v) for k, v in ]), '\n'
+            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list])+'\n' # +',' ,', '.join(['%s: %.5f'%(k,v) for k, v in ]), '\n'
             sys.stdout.flush()
 
 
