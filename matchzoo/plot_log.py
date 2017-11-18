@@ -81,7 +81,7 @@ def plot_log_file(path):
     plt.ylabel('Loss')
     plt.legend(loc=1)
     plt.savefig(path[:-4].replace('/logs/', '/graph/')+'_loss.pdf')
-    plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_loss.jpg')
+    plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_loss.png')
     plt.close()
 
     if 'epoch' in eval_epochs:
@@ -100,7 +100,7 @@ def plot_log_file(path):
         plt.ylabel('Metrics')
         plt.legend(loc=1)
         plt.savefig(path[:-4].replace('/logs/', '/graph/')+'_metrics.pdf')
-        plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.jpg')
+        plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.png')
         plt.close()
 
     f.close()
