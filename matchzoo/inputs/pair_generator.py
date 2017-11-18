@@ -299,12 +299,15 @@ class DRMM_PairGenerator(PairBasicGenerator):
         self.fill_word = config['fill_word']
         self.check_list.extend(['data1', 'data2', 'text1_maxlen', 'text2_maxlen', 'embed', 'hist_size', 'fill_word'])
         self.use_hist_feats = False
-        if 'hist_feats_file' in config:
-            hist_feats = read_features(config['hist_feats_file'])
-            self.hist_feats = {}
-            for idx, (label, d1, d2) in enumerate(self.rel):
-                self.hist_feats[(d1, d2)] = hist_feats[idx]
+        if 'hist_feats' in config:
             self.use_hist_feats = True
+            self.hist_feats = config['hist_feats']
+        # if 'hist_feats_file' in config:
+        #     hist_feats = read_features(config['hist_feats_file'])
+        #     self.hist_feats = {}
+        #     for idx, (label, d1, d2) in enumerate(self.rel):
+        #         self.hist_feats[(d1, d2)] = hist_feats[idx]
+        #     self.use_hist_feats = True
         if config['use_iter']:
             self.batch_iter = self.get_batch_iter()
         if not self.check():

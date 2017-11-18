@@ -39,7 +39,7 @@ def read_word_dict(filename):
 #     print '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
 #     return embed
 
-def read_embedding(filename, word_ids):
+def read_embedding(filename, word_ids, normalize=False):
     embed = {}
     cnt = -2
     max_cnt = max(word_ids.keys())
@@ -53,6 +53,9 @@ def read_embedding(filename, word_ids):
             line = line.strip().split()
             new_id = word_ids[cnt]
             embed[new_id] = map(float, line[1:])
+            if normalize:
+                x = np.array(embed[new_id], dtype=np.float32)
+                embed[new_id] = (x / np.linalg.norm(x)).tolist()
 
     print '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
     return embed

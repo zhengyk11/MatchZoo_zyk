@@ -284,12 +284,15 @@ class DRMM_ListGenerator(ListBasicGenerator):
         self.hist_size = config['hist_size']
         self.check_list.extend(['data1', 'data2', 'text1_maxlen', 'text2_maxlen', 'fill_word', 'embed', 'hist_size'])
         self.use_hist_feats = False
-        if 'hist_feats_file' in config:
-            hist_feats = read_features(config['hist_feats_file'])
-            self.hist_feats = {}
-            for idx, (label, d1, d2) in enumerate(self.rel):
-                self.hist_feats[(d1, d2)] = hist_feats[idx]
+        if 'hist_feats' in config:
             self.use_hist_feats = True
+            self.hist_feats = config['hist_feats']
+        # if 'hist_feats_file' in config:
+        #     hist_feats = read_features(config['hist_feats_file'])
+        #     self.hist_feats = {}
+        #     for idx, (label, d1, d2) in enumerate(self.rel):
+        #         self.hist_feats[(d1, d2)] = hist_feats[idx]
+        #     self.use_hist_feats = True
         if not self.check():
             raise TypeError('[DRMM_ListGenerator] parameter check wrong.')
         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[DRMM_ListGenerator] init done, list number: %d. ' % (self.num_list)

@@ -26,6 +26,38 @@ import metrics
 from losses import *
 
 
+EPS = 1e-20
+def cal_hist(config):
+    print 'starting cal_hist...'
+    rel = []
+    data1_maxlen = config['text1_maxlen']
+    data2_maxlen = config['text2_maxlen']
+    hist_size = config['hist_size']
+    hist_feats = {}
+    embed = config['embed']
+    for key in config:
+        if 'relation_file' in key:
+            rel_file = config[key]
+            rel += read_relation(filename=rel_file)
+    rel = list(set(rel))
+    for label, d1, d2 in rel:
+        if d1 not in config['data1']:
+            continue
+        if d2 not in config['data2']:
+            continue
+        mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
+        t1_rep = embed[config[d1][:data1_maxlen]]
+        t2_rep = embed[config[d2][:data2_maxlen]]
+        mm = t1_rep.dot(np.transpose(t2_rep))
+        for (i, j), v in np.ndenumerate(mm):
+            vid = int((v + 1.) / 2. * (hist_size - 1.))
+            mhist[i][vid] += 1.
+        mhist += 1.
+        mhist = np.log10(mhist)
+        hist_feats[(d1, d2)] = mhist
+    print 'cal_hist done!'
+    return hist_feats
+
 
 def load_model(config):
     global_conf = config["global"]
@@ -126,7 +158,10 @@ def train(config, word_dict):
     share_input_conf['feat_size'] = len_word_embed_list + 1
     config['inputs']['share']['feat_size'] = len_word_embed_list + 1 # can delete, the same effect as last code
     if 'embed_path' in share_input_conf and 'embed_size' in share_input_conf:
-        embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
+        if 'drmm' in config['model']['model_py'].lower():
+            embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict, normalize=True)
+        else:
+            embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict, normalize=False)
         # embed_dict[share_input_conf['fill_word']] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
         embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = convert_embed_2_numpy(embed_dict=embed_dict, embed=embed)
@@ -134,6 +169,8 @@ def train(config, word_dict):
         embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = embed
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Embedding] Embedding Load Done.'
+
+
 
     # list all input tags and construct tags config
     input_train_conf = OrderedDict()
@@ -175,6 +212,8 @@ def train(config, word_dict):
         # print conf
         conf['data1'] = dataset['text1_corpus']
         conf['data2'] = dataset['text2_corpus']
+        if 'drmm' in config['model']['model_py'].lower():
+            conf['hist_feats'] = cal_hist(conf)
         # if 'idf_feat' in dataset:
         #     config['idf_feat'] = dataset['idf_feat']
         generator = inputs.get(conf['input_type'])
@@ -184,6 +223,8 @@ def train(config, word_dict):
         # print conf
         conf['data1'] = dataset['text1_corpus']
         conf['data2'] = dataset['text2_corpus']
+        if 'drmm' in config['model']['model_py'].lower():
+            conf['hist_feats'] = cal_hist(conf)
         # if 'idf_feat' in dataset:
         #     config['idf_feat'] = dataset['idf_feat']
         generator = inputs.get(conf['input_type'])
