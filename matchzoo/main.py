@@ -170,13 +170,13 @@ def train(config, word_dict):
     share_input_conf['feat_size'] = len_word_embed_list + 1
     config['inputs']['share']['feat_size'] = len_word_embed_list + 1 # can delete, the same effect as last code
     if 'embed_path' in share_input_conf and 'embed_size' in share_input_conf:
-        if 'drmm' in config['model']['model_py'].lower():
-            embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict, normalize=True)
-        else:
-            embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict, normalize=False)
+        embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
         # embed_dict[share_input_conf['fill_word']] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
         embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
-        share_input_conf['embed'] = convert_embed_2_numpy(embed_dict=embed_dict, embed=embed)
+        if 'drmm' in config['model']['model_py'].lower():
+            share_input_conf['embed'] = convert_embed_2_numpy(embed_dict=embed_dict, embed=embed, normalize=True)
+        else:
+            share_input_conf['embed'] = convert_embed_2_numpy(embed_dict=embed_dict, embed=embed)
     elif 'embed_size' in share_input_conf:
         embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = embed

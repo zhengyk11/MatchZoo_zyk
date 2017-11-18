@@ -159,12 +159,15 @@ def read_data(filename, word_dict = None):
     return data, sorted(list(set(data_word)))
 
 # Convert Embedding Dict 2 numpy array
-def convert_embed_2_numpy(embed_dict, max_size=0, embed=None):
+def convert_embed_2_numpy(embed_dict, max_size=0, embed=None, normalize=False):
     feat_size = len(embed_dict[embed_dict.keys()[0]])
     if embed is None:
         embed = np.zeros( (max_size, feat_size), dtype = np.float32 )
     for k in embed_dict:
-        embed[k] = np.array(embed_dict[k], dtype=np.float32)
+        if normalize:
+            embed[k] = np.array(embed_dict[k], dtype=np.float32)/np.linalg.norm(embed_dict[k])
+        else:
+            embed[k] = np.array(embed_dict[k], dtype=np.float32)
     print 'Generate numpy embed:', embed.shape
     return embed
 
