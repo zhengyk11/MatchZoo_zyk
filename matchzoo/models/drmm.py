@@ -15,7 +15,7 @@ class DRMM(BasicModel):
         self._name = 'DRMM'
         self.check_list = [ 'text1_maxlen', 'hist_size',
                 'embed', 'embed_size', 'vocab_size',
-                'idf_feat', 'hidden_sizes']
+                'idf_feat', 'hidden_sizes_qw', 'hidden_sizes_hist']
         self.setup(config)
         self.embed_trainable = config['train_embed']
         # self.initializer_fc = keras.initializers.RandomUniform(minval=-0.1, maxval=0.1, seed=11)
@@ -46,19 +46,29 @@ class DRMM(BasicModel):
         embedding = Embedding(self.config['vocab_size'], 1, weights=[self.config['idf_feat']], trainable=self.embed_trainable)
         q_embed = embedding(query)
         # q_w = Dense(1, kernel_initializer=self.initializer_gate, use_bias=False)(q_embed)
-        q_w = Dense(1, use_bias=False)(q_embed)
+        # q_w = Dense(1, use_bias=False)(q_embed)
+
+        num_hidden_layers = len(self.config['hidden_sizes_qw'])
+        if num_hidden_layers == 1:
+            q_w = Dense(self.config['hidden_sizes_qw'][0], activation='tanh', use_bias=False)(q_embed)
+        else:
+            hidden_res = q_embed
+            for i in range(num_hidden_layers - 1):
+                hidden_res = Activation('relu')(Dense(self.config['hidden_sizes_qw'][i], use_bias=False)(hidden_res))
+            q_w = Dense(self.config['hidden_sizes_qw'][-1], activation='tanh', use_bias=False)(hidden_res)
+
         q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['text1_maxlen'], ))(q_w)
         z = doc
-        for i in range(len(self.config['hidden_sizes'])):
-            # z = Dense(self.config['hidden_sizes'][i], kernel_initializer=self.initializer_fc)(z)
-            z = Dense(self.config['hidden_sizes'][i])(z)
+        for i in range(len(self.config['hidden_sizes_hist'])):
+            # z = Dense(self.config['hidden_sizes_hist'][i], kernel_initializer=self.initializer_fc)(z)
+            z = Dense(self.config['hidden_sizes_hist'][i])(z)
             z = BatchNormalization()(z)
             z = Activation('tanh')(z)
         z = Permute((2, 1))(z)
         z = Reshape((self.config['text1_maxlen'],))(z)
         q_w = Reshape((self.config['text1_maxlen'],))(q_w)
 
-        out_ = Dot( axes= [1, 1])([z, q_w])
+        out_ = Dot(axes= [1, 1])([z, q_w])
 
         model = Model(inputs=[query, doc], outputs=[out_])
         return model
