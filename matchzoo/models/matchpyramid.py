@@ -52,7 +52,7 @@ class MatchPyramid(BasicModel):
         cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
 
         conv2d = Conv2D(self.config['kernel_count'], self.config['kernel_size'], padding='same', activation='relu')
-        maxpool = MaxPooling2D(pool_size=(self.config['dpool_sizes'][0], self.config['dpool_sizes'][1]))
+        maxpool = MaxPooling2D(pool_size=(self.config['dpool_size'][0], self.config['dpool_size'][1]))
         # dpool = DynamicMaxPooling(self.config['dpool_size'][0], self.config['dpool_size'][1])
 
         conv1 = conv2d(cross_reshape)
