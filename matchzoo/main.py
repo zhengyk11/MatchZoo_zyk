@@ -26,7 +26,6 @@ import metrics
 from losses import *
 
 
-EPS = 1e-20
 def cal_hist(config):
     hist_feats_all = {}
     if 'hist_feats_file' in config:
@@ -44,7 +43,7 @@ def cal_hist(config):
     for key in config:
         if 'relation_file' in key:
             rel_file = config[key]
-            rel = read_relation(filename=rel_file)
+            rel = read_relation(filename=rel_file, verbose=False)
             hist_feats = {}
             for label, d1, d2 in rel:
                 if d1 not in config['data1']:
@@ -63,7 +62,7 @@ def cal_hist(config):
                 hist_feats[(d1, d2)] = mhist
 
             hist_feats_all.update(hist_feats)
-            output = open(rel_file.replace('.txt', '')+'_hist.txt', 'w')
+            output = open(rel_file.replace('.txt', '')+'_hist_%d.txt'%config['hist_size'], 'w')
             for k, v in hist_feats.items():
                 output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, np.reshape(v, [-1])))))
             output.close()
