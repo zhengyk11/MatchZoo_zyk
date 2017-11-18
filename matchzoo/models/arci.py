@@ -4,7 +4,7 @@ import keras.backend as K
 import time
 from keras.models import Sequential, Model
 from keras.layers import *
-from keras.layers import Reshape, Embedding,Merge, Dot
+from keras.layers import Reshape, Embedding,Merge, Dot, BatchNormalization
 from keras.optimizers import Adam
 from model import BasicModel
 
@@ -60,9 +60,13 @@ class ARCI(BasicModel):
         if num_hidden_layers == 1:
             out_ = Dense(self.config['hidden_sizes'][0])(pool1_flat_drop)
         else:
-            hidden_res = Dense(self.config['hidden_sizes'][0], activation='relu')(pool1_flat_drop)
-            for i in range(num_hidden_layers - 2):
-                hidden_res = Dense(self.config['hidden_sizes'][i + 1], activation='relu')(hidden_res)
+            # hidden_res = Dense(self.config['hidden_sizes'][0], activation='relu')(pool1_flat_drop)
+            for i in range(num_hidden_layers - 1):
+                hidden_res = Dense(self.config['hidden_sizes'][0])(pool1_flat_drop)
+                hidden_res = BatchNormalization()(hidden_res)
+                hidden_res = Activation('relu')(hidden_res)
+
+                # hidden_res = Dense(self.config['hidden_sizes'][i + 1], activation='relu')(hidden_res)
             out_ = Dense(self.config['hidden_sizes'][-1])(hidden_res)
         # out_ = Dense(1)(pool1_flat_drop)
 
