@@ -164,10 +164,10 @@ def convert_embed_2_numpy(embed_dict, max_size=0, embed=None, normalize=False):
     if embed is None:
         embed = np.zeros( (max_size, feat_size), dtype = np.float32 )
     for k in embed_dict:
-        if normalize:
-            embed[k] = np.array(embed_dict[k], dtype=np.float32)/np.linalg.norm(embed_dict[k])
-        else:
-            embed[k] = np.array(embed_dict[k], dtype=np.float32)
+        embed[k] = np.array(embed_dict[k], dtype=np.float32)
+    if normalize:
+        for i in range(len(embed)):
+            embed[i] = embed[i]/np.linalg.norm(embed[i])
     print 'Generate numpy embed:', embed.shape
     return embed
 
