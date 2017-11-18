@@ -217,7 +217,7 @@ def train(config, word_dict):
                 info = model.fit(x=input_data, y=y_true, epochs=1, verbose=0)
                 # y_pred = model.predict(x=input_data, batch_size=len(y_true))
                 # print metrics.ndcg(10)(y_true, y_pred)
-                print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Train] @ iter: %d,' % (i_e*num_batch+num_batch_cnt), 'loss: %.4f' %info.history['loss'][0]
+                print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Train] @ iter: %d,' % (i_e*num_batch+num_batch_cnt), 'train_%s: %.5f' %(config['losses'][0], info.history['loss'][0])
                 if num_batch_cnt == num_batch:
                     break
             # model.fit_generator(
@@ -279,14 +279,15 @@ def train(config, word_dict):
 
 
             # calculate the eval_loss
-            eval_loss = cal_eval_loss(qid_rel_uid, input_eval_conf[tag])
-            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_loss.items()]), ',' ,', '.join(['%s: %.5f'%(k,v) for k, v in res.items()]), '\n'
+            eval_loss = cal_eval_loss(qid_rel_uid, tag, input_eval_conf[tag], config['losses'])
+            eval_res_list = eval_loss.items() + res.items()
+            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list]) # +',' ,', '.join(['%s: %.5f'%(k,v) for k, v in ]), '\n'
             sys.stdout.flush()
 
 
     # model.save_weights(weights_file)
 
-def cal_eval_loss(qid_rel_uid, conf):
+def cal_eval_loss(qid_rel_uid, tag, conf, train_loss):
     # print qid_rel_uid
     # exit(0)
     hinge_loss_list = []
@@ -306,9 +307,14 @@ def cal_eval_loss(qid_rel_uid, conf):
                         crossentropy_loss_list['y_pred'].append([qid_rel_uid[q][hr][hu], qid_rel_uid[q][lr][lu]])
                         hinge_loss_list.append(max(0., 1. + qid_rel_uid[q][lr][lu] - qid_rel_uid[q][hr][hu]))
     hinge_loss = sum(hinge_loss_list) / len(hinge_loss_list)
-
     crossentropy_loss = cross_entropy_loss(crossentropy_loss_list['y_true'], crossentropy_loss_list['y_pred']).eval()
-    return dict(RankHingeLoss=hinge_loss, CrossEntropyLoss=crossentropy_loss)
+    res = {}
+    if 'cross_entropy_loss' in train_loss:
+        res['%s_cross_entropy_loss'%tag]=crossentropy_loss
+    if 'rank_hinge_loss' in train_loss:
+        res['%s_rank_hinge_loss' % tag] = hinge_loss
+    return res
+    # return {'%s_hinge'%tag:hinge_loss, '%s_entropy'%tag:crossentropy_loss}
 
 def predict(config, word_dict):
     ######## Read input config ########
