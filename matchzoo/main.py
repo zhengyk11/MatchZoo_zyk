@@ -28,35 +28,47 @@ from losses import *
 
 EPS = 1e-20
 def cal_hist(config):
+    hist_feats_all = {}
+    if 'hist_feats_file' in config:
+        for k in config:
+            if 'hist_feats_file' in k:
+                hist_feats = read_features(config[k])
+                hist_feats_all.update(hist_feats)
+        return hist_feats_all
     print 'starting cal_hist...'
-    rel = []
     data1_maxlen = config['text1_maxlen']
     data2_maxlen = config['text2_maxlen']
     hist_size = config['hist_size']
-    hist_feats = {}
+
     embed = config['embed']
     for key in config:
         if 'relation_file' in key:
             rel_file = config[key]
-            rel += read_relation(filename=rel_file)
-    rel = list(set(rel))
-    for label, d1, d2 in rel:
-        if d1 not in config['data1']:
-            continue
-        if d2 not in config['data2']:
-            continue
-        mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
-        t1_rep = embed[config[d1][:data1_maxlen]]
-        t2_rep = embed[config[d2][:data2_maxlen]]
-        mm = t1_rep.dot(np.transpose(t2_rep))
-        for (i, j), v in np.ndenumerate(mm):
-            vid = int((v + 1.) / 2. * (hist_size - 1.))
-            mhist[i][vid] += 1.
-        mhist += 1.
-        mhist = np.log10(mhist)
-        hist_feats[(d1, d2)] = mhist
+            rel = read_relation(filename=rel_file)
+            hist_feats = {}
+            for label, d1, d2 in rel:
+                if d1 not in config['data1']:
+                    continue
+                if d2 not in config['data2']:
+                    continue
+                mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
+                t1_rep = embed[config[d1][:data1_maxlen]]
+                t2_rep = embed[config[d2][:data2_maxlen]]
+                mm = t1_rep.dot(np.transpose(t2_rep))
+                for (i, j), v in np.ndenumerate(mm):
+                    vid = int((v + 1.) / 2. * (hist_size - 1.))
+                    mhist[i][vid] += 1.
+                mhist += 1.
+                mhist = np.log10(mhist)
+                hist_feats[(d1, d2)] = mhist
+
+            hist_feats_all.update(hist_feats)
+            output = open(rel_file.replace('.txt', '')+'_hist.txt', 'w')
+            for k, v in hist_feats.items():
+                output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, v))))
+            output.close()
     print 'cal_hist done!'
-    return hist_feats
+    return hist_feats_all
 
 
 def load_model(config):

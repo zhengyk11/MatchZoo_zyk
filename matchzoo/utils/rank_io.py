@@ -88,10 +88,12 @@ def read_relation(filename, verbose=True):
 
 # Read varied-length features without id
 def read_features(filename, verbose=True):
-    features = []
+    features = {}
     for line in open(filename):
-        line = line.strip().split()
-        features.append(map(float, line))
+        line = re.split('\t| ', line.strip())
+        d1 = line[0]
+        d2 = line[1]
+        features[(d1, d2)] = map(float, line[2:])
     if verbose:
         print '[%s]\n\tFeature size: %s' % (filename, len(features))
     return features

@@ -8,3 +8,4 @@ from .rank_io import read_idf
 from .rank_io import convert_embed_2_numpy
 from .utility import import_class
 from .utility import import_object
+from .rank_io import read_features
