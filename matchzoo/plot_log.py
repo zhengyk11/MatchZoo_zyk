@@ -46,9 +46,6 @@ def plot_log_file(path):
     if 'iter' not in train_iters:
         return
 
-
-
-
     colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue']
     idx = 0
     r = 10
@@ -59,9 +56,9 @@ def plot_log_file(path):
             continue
         y = train_iters[k]
         # print colors[idx]
-        plt.plot(x, y, label=k, color=colors[idx], linewidth=0.5)
+        plt.plot(x, y, color=colors[idx], linewidth=0.5)
         idx += 1
-        new_y, new_x = fun(x, y, 100, 50)
+        new_y, new_x = fun(x, y, 200, 100)
         plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
         idx += 1
 
@@ -74,10 +71,10 @@ def plot_log_file(path):
                 continue
             y = eval_epochs[k]
             # print colors[idx]
-            plt.plot(x, y, label=k, color=colors[idx], linewidth=0.5)
+            plt.plot(x, y, color=colors[idx], linewidth=0.5)
             idx += 1
             new_y, new_x = fun(x, y, 20, 10)
-            plt.plot(new_x, new_y, color=colors[idx], label=k, linewidth=1)
+            plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
             idx += 1
 
     plt.xlabel('Iteration')
@@ -92,7 +89,7 @@ def plot_log_file(path):
             if 'ndcg@10' == k.lower():#  or 'map' in k:#  or 'map' in k:
                 y = eval_epochs[k]
                 # print colors[idx]
-                plt.plot(x, y, label=k, color=colors[idx],linewidth=0.5)
+                plt.plot(x, y, color=colors[idx],linewidth=0.5)
                 idx += 1
                 new_y, new_x = fun(x, y, 20, 10)
                 plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
