@@ -306,8 +306,8 @@ def cal_eval_loss(qid_rel_uid, conf):
                         crossentropy_loss_list['y_pred'].append([qid_rel_uid[q][hr][hu], qid_rel_uid[q][lr][lu]])
                         hinge_loss_list.append(max(0., 1. + qid_rel_uid[q][lr][lu] - qid_rel_uid[q][hr][hu]))
     hinge_loss = sum(hinge_loss_list) / len(hinge_loss_list)
-    with tf.Session() as sess:
-        crossentropy_loss = cross_entropy_loss(crossentropy_loss_list['y_true'], crossentropy_loss_list['y_pred']).eval()
+
+    crossentropy_loss = cross_entropy_loss(crossentropy_loss_list['y_true'], crossentropy_loss_list['y_pred']).eval()
     return dict(RankHingeLoss=hinge_loss, CrossEntropyLoss=crossentropy_loss)
 
 def predict(config, word_dict):
@@ -462,9 +462,11 @@ def main(argv):
     word_dict = read_word_dict_zyk(config)
 
     if args.phase == 'train':
-        train(config, word_dict)
+        with tf.Session() as sess:
+            train(config, word_dict)
     elif args.phase == 'predict':
-        predict(config, word_dict)
+        with tf.Session() as sess:
+            predict(config, word_dict)
     else:
         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Phase Error.'
     return
