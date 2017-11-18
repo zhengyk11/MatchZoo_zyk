@@ -302,11 +302,11 @@ class DRMM_ListGenerator(ListBasicGenerator):
         d1len = len(self.data1[t1]) 
         if self.use_hist_feats:
             assert (t1, t2) in self.hist_feats
-            caled_hist = np.reshape(self.hist_feats[(t1, t2)], (d1len, hist_size))
-            if d1len < data1_maxlen:
-                mhist[:d1len, :] = caled_hist[:, :]
-            else:
-                mhist[:, :] = caled_hist[:data1_maxlen, :]
+            mhist = np.reshape(self.hist_feats[(t1, t2)], (data1_maxlen, hist_size))
+            # if d1len < data1_maxlen:
+            #     mhist[:d1len, :] = caled_hist[:, :]
+            # else:
+            #     mhist[:, :] = caled_hist[:data1_maxlen, :]
         else:
             t1_rep = self.embed[self.data1[t1]]
             t2_rep = self.embed[self.data2[t2]]
