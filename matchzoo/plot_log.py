@@ -8,13 +8,18 @@ def plot_log_file(path):
     f = open(path)
     # loss_dict = {}
     num_batch = -1
+    net_name = ''
     eval_epochs = {}
     train_iters = {}
     num_batch_cnt = 0
+    num_net_name = 0
     for line in f.readlines()[:-1]:
         if 'num_batch' in line:
             num_batch_cnt += 1
             num_batch = int(line.strip().replace(',', '').replace(' ', '').split(':')[-1])
+        if 'net_name' in line:
+            num_net_name += 1
+            net_name = line.strip().replace(',', '').replace(' ', '').replace('"', '').split(':')[-1].strip()
         if '[Train] @ ' in line:
             line = line.split('[Train] @ ')[1]
             line = line.strip().replace(',', '').replace(':', '').strip()
@@ -42,6 +47,12 @@ def plot_log_file(path):
     if num_batch_cnt != 1:
         print 'more than one line containing "num_batch"'
         exit(0)
+    if net_name == '':
+        print 'no net name'
+        exit(0)
+    if num_net_name != 1:
+        print 'more than one line containing "net_name"'
+        exit(0)
 
     if 'iter' not in train_iters:
         return
@@ -62,8 +73,6 @@ def plot_log_file(path):
         plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
         idx += 1
 
-
-
     if 'epoch' in eval_epochs:
         x = [i*num_batch for i in eval_epochs['epoch']]
         for k in eval_epochs:
@@ -80,6 +89,7 @@ def plot_log_file(path):
     plt.xlabel('Iteration')
     plt.ylabel('Loss')
     plt.legend(loc=1)
+    plt.title(net_name)
     plt.savefig(path[:-4].replace('/logs/', '/graph/')+'_loss.pdf')
     plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_loss.png')
     plt.close()
@@ -99,6 +109,7 @@ def plot_log_file(path):
         plt.xlabel('Iteration')
         plt.ylabel('Metrics')
         plt.legend(loc=1)
+        plt.title(net_name)
         plt.savefig(path[:-4].replace('/logs/', '/graph/')+'_metrics.pdf')
         plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.png')
         plt.close()
