@@ -16,7 +16,7 @@ class ARCI(BasicModel):
         self.check_list = [ 'text1_maxlen', 'text2_maxlen',
                    'embed', 'embed_size', 'train_embed',  'vocab_size',
                    'kernel_size', 'kernel_count', 'dropout_rate',
-                   'q_pool_size', 'd_pool_size']
+                   'q_pool_size', 'd_pool_size', 'hidden_sizes']
         self.embed_trainable = config['train_embed']
         self.setup(config)
         if not self.check():
@@ -32,6 +32,7 @@ class ARCI(BasicModel):
         self.set_default('q_pool_size', 2)
         self.set_default('d_pool_size', 2)
         self.set_default('dropout_rate', 0)
+        self.set_default('hidden_sizes', [300, 128])
         self.config.update(config)
 
     def build(self):

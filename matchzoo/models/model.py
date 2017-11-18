@@ -20,11 +20,15 @@ class BasicModel(object):
         pass
 
     def check(self):
+        print 'checking model setting...'
         for e in self.check_list:
             if e not in self.config:
                 print(e)
                 print '[Model] Error %s not in config' % e
                 return False
+            else:
+                print str(e)+': '+str(self.config[e])
+        print ''
         return True
 
     def build(self):
