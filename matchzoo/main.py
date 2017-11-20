@@ -40,8 +40,16 @@ def cal_hist(config):
     hist_size = config['hist_size']
 
     embed = config['embed']
+    rel_file_cnt = 0
     for key in config:
         if 'relation_file' in key:
+            rel_file_cnt += 1
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),'[%d rel files]'%rel_file_cnt,
+    cnt = 0
+    for key in config:
+        if 'relation_file' in key:
+            cnt += 1
+            print cnt,
             rel_file = config[key]
             rel = read_relation(filename=rel_file, verbose=False)
             hist_feats = {}
