@@ -4,7 +4,7 @@ import keras
 import keras.backend as K
 import time
 from keras.models import Sequential, Model
-from keras.layers import Input, Embedding, Dense, Activation, Merge, Lambda, Permute, BatchNormalization
+from keras.layers import Input, Embedding, Dense, Activation, Merge, Lambda, Permute, BatchNormalization, Dropout
 from keras.layers import Reshape, Dot
 from keras.activations import softmax
 from model import BasicModel
@@ -14,8 +14,8 @@ class DRMM(BasicModel):
         super(DRMM, self).__init__(config)
         self._name = 'DRMM'
         self.check_list = [ 'text1_maxlen', 'hist_size',
-                'embed', 'embed_size', 'vocab_size',
-                'idf_feat', 'hidden_sizes_qw', 'hidden_sizes_hist']
+                            'embed', 'embed_size', 'vocab_size',
+                            'idf_feat', 'hidden_sizes_qw', 'hidden_sizes_hist', 'dropout_rate']
         self.setup(config)
         self.embed_trainable = config['train_embed']
         # self.initializer_fc = keras.initializers.RandomUniform(minval=-0.1, maxval=0.1, seed=11)
@@ -33,12 +33,12 @@ class DRMM(BasicModel):
         self.config.update(config)
 
     def build(self):
-        def tensor_product(x):
-            a = x[0]
-            b = x[1]
-            y = K.batch_dot(a, b, axis=1)
-            y = K.einsum('ijk, ikl->ijl', a, b)
-            return y
+        # def tensor_product(x):
+        #     a = x[0]
+        #     b = x[1]
+        #     y = K.batch_dot(a, b, axis=1)
+        #     y = K.einsum('ijk, ikl->ijl', a, b)
+        #     return y
         query = Input(name='query', shape=(self.config['text1_maxlen'],))
         doc = Input(name='doc', shape=(self.config['text1_maxlen'], self.config['hist_size']))
 
@@ -49,22 +49,29 @@ class DRMM(BasicModel):
         # q_w = Dense(1, kernel_initializer=self.initializer_gate, use_bias=False)(q_embed)
         # q_w = Dense(1, use_bias=False)(q_embed)
 
-        num_hidden_layers = len(self.config['hidden_sizes_qw'])
-        if num_hidden_layers == 1:
-            q_w = Dense(self.config['hidden_sizes_qw'][0], activation='tanh', use_bias=False)(q_embed)
-        else:
-            hidden_res = q_embed
-            for i in range(num_hidden_layers - 1):
-                hidden_res = Activation('relu')(Dense(self.config['hidden_sizes_qw'][i], use_bias=False)(hidden_res))
-            q_w = Dense(self.config['hidden_sizes_qw'][-1], activation='tanh', use_bias=False)(hidden_res)
+        q_w = q_embed
+        for i in range(len(self.config['hidden_sizes_qw']) - 1):
+            q_w = Dropout(self.config['dropout_rate'])(q_w)
+            q_w = Dense(self.config['hidden_sizes_qw'][i], use_bias=False)(q_w)
+            q_w = BatchNormalization()(q_w)
+            q_w = Activation('relu')(q_w)
+        q_w = Dropout(self.config['dropout_rate'])(q_w)
+        q_w = Dense(self.config['hidden_sizes_qw'][-1], use_bias=False)(q_w)
+        # q_w = BatchNormalization()(q_w)
+        q_w = Activation('softmax')(q_w)
+        # q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['text1_maxlen'], ))(q_w)
         print q_w.shape
-        q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['text1_maxlen'], ))(q_w)
+
         z = doc
-        for i in range(len(self.config['hidden_sizes_hist'])):
-            # z = Dense(self.config['hidden_sizes_hist'][i], kernel_initializer=self.initializer_fc)(z)
-            z = Dense(self.config['hidden_sizes_hist'][i])(z)
+        for i in range(len(self.config['hidden_sizes_hist'])-1):
+            z  = Dropout(self.config['dropout_rate'])(z)
+            z = Dense(self.config['hidden_sizes_hist'][i])(z) # kernel_initializer=self.initializer_fc
             z = BatchNormalization()(z)
-            z = Activation('tanh')(z)
+            z = Activation('relu')(z)
+        z = Dropout(self.config['dropout_rate'])(z)
+        z = Dense(self.config['hidden_sizes_hist'][-1])(z) # kernel_initializer=self.initializer_fc
+        z = BatchNormalization()(z)
+        z = Activation('tanh')(z)
         print z.shape
         z = Permute((2, 1))(z)
         print z.shape
