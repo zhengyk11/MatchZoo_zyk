@@ -99,6 +99,8 @@ def train(config, word_dict, ngraphs):
 
     new_ngraphs = {}
     for id, nids in ngraphs.items():
+        if id not in inverse_id_dict:
+            continue
         new_ngraphs[inverse_id_dict[id]] = nids
     config['inputs']['share']['ngraphs'] = new_ngraphs
 
