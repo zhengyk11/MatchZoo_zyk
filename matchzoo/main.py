@@ -34,7 +34,7 @@ def cal_hist(config):
                 hist_feats = read_features(config[k], config['hist_size'])
                 hist_feats_all.update(hist_feats)
         return hist_feats_all
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'starting cal_hist...'
+    # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ''
     data1_maxlen = config['text1_maxlen']
     data2_maxlen = config['text2_maxlen']
     hist_size = config['hist_size']
@@ -44,12 +44,12 @@ def cal_hist(config):
     for key in config:
         if 'relation_file' in key:
             rel_file_cnt += 1
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),'[%d rel files]'%rel_file_cnt,
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),'[%d rel files] Start calculating hist...'%rel_file_cnt,
     cnt = 0
     for key in config:
         if 'relation_file' in key:
             cnt += 1
-            print cnt,
+            print str(cnt)+'...',
             rel_file = config[key]
             rel = read_relation(filename=rel_file, verbose=False)
             hist_feats = {}
@@ -74,7 +74,8 @@ def cal_hist(config):
             for k, v in hist_feats.items():
                 output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, np.reshape(v, [-1])))))
             output.close()
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'cal_hist done!'
+    print ''
+    # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'cal_hist done!'
     return hist_feats_all
 
 
@@ -162,7 +163,7 @@ def train(config, word_dict):
                 else:
                     new_idf_dict[i] = [dataset[d][-1]]
             new_idf_dict[len(word_embed_list)] = [dataset[d][-1]]
-            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'idf feat size: %s' % len(new_idf_dict)
+            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Idf feat size: %s' % len(new_idf_dict)
             dataset['idf_feat'] = convert_embed_2_numpy(new_idf_dict, max_size=len(new_idf_dict))
             # dataset['idf_feat'][-1] = np.array([invalid_idf], dtype=np.float32)# np.float32(np.random.uniform(-0.2, 0.2, [1]))
             config['inputs']['share']['idf_feat'] = dataset['idf_feat']
