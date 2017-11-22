@@ -519,21 +519,37 @@ class Duet_ListGenerator(ListBasicGenerator):
         # add for duet
         self.ngraphs = config['ngraphs']
         self.num_ngraphs = config['num_ngraphs']
-
+        self.new_list_list = self.list_list_transfer()
+        self.num_new_list = len(self.new_list_list)
         self.check_list.extend(['data1', 'data2', 'text1_maxlen', 'text2_maxlen'])
         if not self.check():
             raise TypeError('[Duet_ListGenerator] parameter check wrong.')
         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Duet_ListGenerator] init done'
 
+    def list_list_transfer(self):
+        list_list = self.list_list
+        new_list_list = []
+        for d1, d2_list in list_list:
+            for l, d2 in d2_list:
+                new_list_list.append([d1, d2, l])
+        return new_list_list
+
     def get_batch(self):
-        while self.point < self.num_list:
+        while self.point < self.num_new_list:
             currbatch = []
-            if self.point + self.batch_list <= self.num_list:
-                currbatch = self.list_list[self.point: self.point+self.batch_list]
+            if self.point + self.batch_list <= self.num_new_list:
+                currbatch = self.new_list_list[self.point: self.point+self.batch_list]
                 self.point += self.batch_list
             else:
-                currbatch = self.list_list[self.point:]
-                self.point = self.num_list
+                currbatch = self.new_list_list[self.point:]
+                self.point = self.num_new_list
+
+            new_currbatch = {}
+            for d1, d2, l in currbatch:
+                if d1 not in new_currbatch:
+                    new_currbatch[d1] = []
+                new_currbatch[d1].append([l, d2])
+            currbatch = new_currbatch
 
             bsize = sum([len(pt[1]) for pt in currbatch])
             ID_pairs = []
