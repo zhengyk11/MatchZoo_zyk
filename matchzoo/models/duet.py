@@ -118,6 +118,8 @@ class DUET(BasicModel):
         # dist_input = [embed_q*x for x in ]
         # dist_input = Match(match_type='mul')([embed_q, K.m K.transpose(embed_d)])
         print dist_input.shape
+        dist_input = Flatten()(dist_input)
+        print dist_input.shape
         # duet_distrib = Sequential()
         # duet_distrib.add(Dense(self.config['kernel_count'], activation='tanh'))
         # duet_distrib.add(Dense(self.config['kernel_count'], activation='tanh'))
@@ -126,11 +128,16 @@ class DUET(BasicModel):
         # dist_out = duet_distrib(dist_input)
 
         dist_out = Dense(self.config['kernel_count'], activation='tanh')(dist_input)
+        print dist_out.shape
         dist_out = Dense(self.config['kernel_count'], activation='tanh')(dist_out)
+        print dist_out.shape
         dist_out = Dropout(self.config['dropout_rate'])(dist_out)
+        print dist_out.shape
         dist_out = Dense(1, activation='tanh')(dist_out)
+        print dist_out.shape
 
         out_ = Add()([local_out, dist_out])
+        print out_.shape
         model = Model(inputs=[local_feat, query, doc], outputs=out_)
         return model
         # net_local = [C.slice(features_local, 0, idx, idx + 1) for idx in range(0, num_docs)]
