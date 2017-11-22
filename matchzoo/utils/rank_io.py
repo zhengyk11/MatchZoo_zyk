@@ -5,19 +5,86 @@ import json
 import numpy as np
 import re
 
-# Read Word Dict and Inverse Word Dict
+
 import time
 
+def cal_hist(config):
+    hist_feats_all = {}
+    if 'hist_feats_file' in config:
+        for k in config:
+            if 'hist_feats_file' in k:
+                hist_feats = read_features(config[k], config['hist_size'])
+                hist_feats_all.update(hist_feats)
+        return hist_feats_all
+    # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ''
+    data1_maxlen = config['text1_maxlen']
+    data2_maxlen = config['text2_maxlen']
+    hist_size = config['hist_size']
 
-def read_word_dict(filename):
+    embed = config['embed']
+    rel_file_cnt = 0
+    for key in config:
+        if 'relation_file' in key:
+            rel_file_cnt += 1
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),'[%d rel files] Start calculating hist...'%rel_file_cnt,
+    cnt = 0
+    for key in config:
+        if 'relation_file' in key:
+            cnt += 1
+            print str(cnt)+'...',
+            rel_file = config[key]
+            rel = read_relation(filename=rel_file, verbose=False)
+            hist_feats = {}
+            for label, d1, d2 in rel:
+                if d1 not in config['data1']:
+                    continue
+                if d2 not in config['data2']:
+                    continue
+                mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
+                t1_rep = embed[config['data1'][d1][:data1_maxlen]]
+                t2_rep = embed[config['data2'][d2][:data2_maxlen]]
+                mm = t1_rep.dot(np.transpose(t2_rep))
+                for (i, j), v in np.ndenumerate(mm):
+                    vid = int((v + 1.) / 2. * (hist_size - 1.))
+                    mhist[i][vid] += 1.
+                mhist += 1.
+                mhist = np.log10(mhist)
+                hist_feats[(d1, d2)] = mhist
+
+            hist_feats_all.update(hist_feats)
+            output = open(rel_file.replace('.txt', '')+'_hist_%d.txt'%config['hist_size'], 'w')
+            for k, v in hist_feats.items():
+                output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, np.reshape(v, [-1])))))
+            output.close()
+    print ''
+    # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'cal_hist done!'
+    return hist_feats_all
+
+def read_word_dict_zyk(config):
     word_dict = {}
-    iword_dict = {}
-    for line in open(filename):
-        line = line.strip().split()
-        word_dict[int(line[1])] = line[0]
-        iword_dict[line[0]] = int(line[1])
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tWord dict size: %d' % (filename, len(word_dict))
-    return word_dict, iword_dict
+    ngraphs = {}
+    word_dict_filepath = config['inputs']['share']['word_dict']
+    with open(word_dict_filepath) as f:
+        for line in f:
+            attr = line[:-1].split('\t')
+            w = attr[0].lower()
+            id = attr[1].strip()
+            if len(attr) > 2:
+                ngraphs[w] = map(int, attr[2].split())
+            if w not in word_dict:
+                word_dict[w] = int(id)
+    return word_dict, ngraphs
+
+# Read Word Dict and Inverse Word Dict
+# def read_word_dict(filename):
+#     word_dict = {}
+#     iword_dict = {}
+#     for line in open(filename):
+#         line = line.strip().split()
+#         word_dict[int(line[1])] = line[0]
+#         iword_dict[line[0]] = int(line[1])
+#     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tWord dict size: %d' % (filename, len(word_dict))
+#     return word_dict, iword_dict
 
 
 # Read Embedding File

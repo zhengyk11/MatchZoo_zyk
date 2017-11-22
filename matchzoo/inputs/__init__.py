@@ -7,10 +7,12 @@ from point_generator import PointGenerator
 from pair_generator import PairGenerator
 from pair_generator import DSSM_PairGenerator
 from pair_generator import DRMM_PairGenerator
+from pair_generator import Duet_PairGenerator
 from pair_generator import PairGenerator_Feats
 from list_generator import ListGenerator
 from list_generator import DSSM_ListGenerator
 from list_generator import DRMM_ListGenerator
+from list_generator import Duet_ListGenerator
 from list_generator import ListGenerator_Feats
 
 def serialize(generator):

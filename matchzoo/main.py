@@ -26,59 +26,6 @@ import metrics
 from losses import *
 
 
-def cal_hist(config):
-    hist_feats_all = {}
-    if 'hist_feats_file' in config:
-        for k in config:
-            if 'hist_feats_file' in k:
-                hist_feats = read_features(config[k], config['hist_size'])
-                hist_feats_all.update(hist_feats)
-        return hist_feats_all
-    # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ''
-    data1_maxlen = config['text1_maxlen']
-    data2_maxlen = config['text2_maxlen']
-    hist_size = config['hist_size']
-
-    embed = config['embed']
-    rel_file_cnt = 0
-    for key in config:
-        if 'relation_file' in key:
-            rel_file_cnt += 1
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),'[%d rel files] Start calculating hist...'%rel_file_cnt,
-    cnt = 0
-    for key in config:
-        if 'relation_file' in key:
-            cnt += 1
-            print str(cnt)+'...',
-            rel_file = config[key]
-            rel = read_relation(filename=rel_file, verbose=False)
-            hist_feats = {}
-            for label, d1, d2 in rel:
-                if d1 not in config['data1']:
-                    continue
-                if d2 not in config['data2']:
-                    continue
-                mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
-                t1_rep = embed[config['data1'][d1][:data1_maxlen]]
-                t2_rep = embed[config['data2'][d2][:data2_maxlen]]
-                mm = t1_rep.dot(np.transpose(t2_rep))
-                for (i, j), v in np.ndenumerate(mm):
-                    vid = int((v + 1.) / 2. * (hist_size - 1.))
-                    mhist[i][vid] += 1.
-                mhist += 1.
-                mhist = np.log10(mhist)
-                hist_feats[(d1, d2)] = mhist
-
-            hist_feats_all.update(hist_feats)
-            output = open(rel_file.replace('.txt', '')+'_hist_%d.txt'%config['hist_size'], 'w')
-            for k, v in hist_feats.items():
-                output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, np.reshape(v, [-1])))))
-            output.close()
-    print ''
-    # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'cal_hist done!'
-    return hist_feats_all
-
-
 def load_model(config):
     global_conf = config["global"]
     model_type = global_conf['model_type']
@@ -94,13 +41,14 @@ def load_model(config):
     return mo
 
 
-def train(config, word_dict):
+def train(config, word_dict, ngraphs):
 
     word_embed_list = []
     inverse_id_dict = {}
 
     print(json.dumps(config, indent=2))
     # read basic config
+    config['inputs']['share']['ngraphs'] = ngraphs
     global_conf = config["global"]
     optimizer = global_conf['optimizer']
     weights_file = global_conf['weights_file']
@@ -386,7 +334,7 @@ def predict(config, word_dict):
 
     # collect embedding 
     if 'embed_path' in share_input_conf:
-        embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
+        embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=None)
         # _PAD_ = share_input_conf['fill_word']
         # embed_dict[_PAD_] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
         embed = np.float32(np.random.uniform(-0.2, 0.2, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
@@ -499,16 +447,7 @@ def predict(config, word_dict):
         sys.stdout.flush()
 
 
-def read_word_dict_zyk(config):
-    word_dict = {}
-    word_dict_filepath = config['inputs']['share']['word_dict']
-    with open(word_dict_filepath) as f:
-        for line in f:
-            w, id = line[:-1].split('\t')
-            w = w.lower()
-            if w not in word_dict:
-                word_dict[w] = int(id)
-    return word_dict
+
 
 
 def main(argv):
@@ -526,14 +465,14 @@ def main(argv):
     with open(model_file, 'r') as f:
         config = json.load(f)
 
-    word_dict = read_word_dict_zyk(config)
+    word_dict, ngraphs = read_word_dict_zyk(config)
 
     if args.phase == 'train':
         with tf.Session() as sess:
-            train(config, word_dict)
+            train(config, word_dict, ngraphs)
     elif args.phase == 'predict':
         with tf.Session() as sess:
-            predict(config, word_dict)
+            predict(config, word_dict, ngraphs)
     else:
         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Phase Error.'
     return

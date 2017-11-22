@@ -43,13 +43,13 @@ class ARCII(BasicModel):
         self.config.update(config)
 
     def build(self):
-        def conv2d_work(input_dim):
-            seq = Sequential()
-            assert self.config['num_conv2d_layers'] > 0
-            for i in range(self.config['num_conv2d_layers']):
-                seq.add(Conv2D(self.config['2d_kernel_counts'][i], self.config['2d_kernel_sizes'][i], padding='same', activation='relu'))
-                seq.add(MaxPooling2D(pool_size=(self.config['2d_mpool_sizes'][i][0], self.config['2d_mpool_sizes'][i][1])))
-            return seq
+        # def conv2d_work(input_dim):
+        #     seq = Sequential()
+        #     assert self.config['num_conv2d_layers'] > 0
+        #     for i in range(self.config['num_conv2d_layers']):
+        #         seq.add(Conv2D(self.config['2d_kernel_counts'][i], self.config['2d_kernel_sizes'][i], padding='same', activation='relu'))
+        #         seq.add(MaxPooling2D(pool_size=(self.config['2d_mpool_sizes'][i][0], self.config['2d_mpool_sizes'][i][1])))
+        #     return seq
         query = Input(name='query', shape=(self.config['text1_maxlen'],))
         doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
         #dpool_index = Input(name='dpool_index', shape=[self.config['text1_maxlen'], self.config['text2_maxlen'], 3], dtype='int32')
@@ -67,8 +67,9 @@ class ARCII(BasicModel):
 
         for i in range(self.config['num_conv2d_layers']):
             z = Conv2D(self.config['2d_kernel_counts'][i], self.config['2d_kernel_sizes'][i], padding='same', activation='relu')(z)
+            print z.shape
             z = MaxPooling2D(pool_size=(self.config['2d_mpool_sizes'][i][0], self.config['2d_mpool_sizes'][i][1]))(z)
-
+            print z.shape
         #dpool = DynamicMaxPooling(self.config['dpool_size'][0], self.config['dpool_size'][1])([conv2d, dpool_index])
         #print('[DynamicMaxPooling] dpool:\t%s' % str(dpool.get_shape().as_list()))
 
