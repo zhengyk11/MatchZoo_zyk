@@ -107,11 +107,11 @@ class DUET(BasicModel):
         print embed_d.shape
         embed_d = MaxPool2D((1, pooling_kernel_width_doc), strides=(1,1))(embed_d)
         print embed_d.shape
-        embed_d = Reshape([899, 300, 1])(embed_d)
+        embed_d = Reshape([-1, self.config['kernel_count'], 1])(embed_d)
         print 'reshape', embed_d.shape
         embed_d = Conv2D(self.config['kernel_count'], self.config['dist_doc_kernel_size'], activation='tanh')(embed_d)
         print embed_d.shape
-        embed_d = Reshape([899, -1])(embed_d)
+        embed_d = Reshape([-1, self.config['kernel_count']])(embed_d)
         print embed_d.shape
 
         dist_input = Multiply()([embed_q, embed_d])
@@ -136,7 +136,10 @@ class DUET(BasicModel):
         dist_out = Dense(1, activation='tanh')(dist_out)
         print dist_out.shape
 
+        # local_dist_out = Concatenate(axis=1)([local_out, dist_out])
+        # print local_dist_out.shape
         out_ = Add()([local_out, dist_out])
+        # out_ = Dense(1, activation='tanh')(local_dist_out)
         print out_.shape
         model = Model(inputs=[local_feat, query, doc], outputs=out_)
         return model

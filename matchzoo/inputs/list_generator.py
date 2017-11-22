@@ -515,15 +515,15 @@ class Duet_ListGenerator(ListBasicGenerator):
         # self.data2 = config['data2']
         self.data1_maxlen = config['text1_maxlen']
         self.data2_maxlen = config['text2_maxlen']
-        self.fill_word = config['fill_word']
+        # self.fill_word = config['fill_word']
         # add for duet
         self.ngraphs = config['ngraphs']
         self.num_ngraphs = config['num_ngraphs']
 
         self.check_list.extend(['data1', 'data2', 'text1_maxlen', 'text2_maxlen'])
         if not self.check():
-            raise TypeError('[ListGenerator] parameter check wrong.')
-        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[ListGenerator] init done'
+            raise TypeError('[Duet_ListGenerator] parameter check wrong.')
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Duet_ListGenerator] init done'
 
     def get_batch(self):
         while self.point < self.num_list:
