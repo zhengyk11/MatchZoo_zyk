@@ -663,9 +663,9 @@ class Duet_PairGenerator(PairBasicGenerator):
                     #                     ngraph_X[i * 2 + 1, ngraph_idx, w_idx] += 1
                     #                 else:
                     #                     ngraph_X[i * 2 + idx - 1, ngraph_idx, w_idx] += 1
-                print local_features.shape
-                print ngraph_X1.shape
-                print ngraph_X2.shape
+                # print local_features.shape
+                # print ngraph_X1.shape
+                # print ngraph_X2.shape
                 yield local_features, ngraph_X1, ngraph_X1_len, ngraph_X2, ngraph_X2_len, Y
 
     def get_batch_generator(self):
