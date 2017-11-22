@@ -549,7 +549,7 @@ class Duet_ListGenerator(ListBasicGenerator):
                 if d1 not in new_currbatch:
                     new_currbatch[d1] = []
                 new_currbatch[d1].append([l, d2])
-            currbatch = new_currbatch
+            currbatch = new_currbatch.items()
 
             bsize = sum([len(pt[1]) for pt in currbatch])
             ID_pairs = []
