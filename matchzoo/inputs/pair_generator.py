@@ -560,6 +560,8 @@ class Duet_PairGenerator(PairBasicGenerator):
                     if word not in self.ngraphs:
                         continue
                     for nidx in self.ngraphs[word]:
+                        if nidx >= self.num_ngraphs:
+                            continue
                         if idx == 0:
                             ngraph_X[i * 2, nidx, w_idx] += 1
                             ngraph_X[i * 2 + 1, nidx, w_idx] += 1
@@ -635,12 +637,14 @@ class Duet_PairGenerator(PairBasicGenerator):
                             if word not in self.ngraphs:
                                 continue
                             for nidx in self.ngraphs[word]:
+                                if nidx >= self.num_ngraphs:
+                                    continue
                                 if idx == 0:
                                     ngraph_X[i * 2, nidx, w_idx] += 1
                                     ngraph_X[i * 2 + 1, nidx, w_idx] += 1
                                 else:
                                     ngraph_X[i * 2 + idx - 1, nidx, w_idx] += 1
-
+                yield local_features, ngraph_X1, ngraph_X1_len, ngraph_X2, ngraph_X2_len, Y
                     # for idx, data in enumerate(samples):
                     #     ngraph_X = ngraph_X1 if idx == 0 else ngraph_X2
                     #     max_words = self.data1_maxlen if idx == 0 else self.data2_maxlen
@@ -664,7 +668,7 @@ class Duet_PairGenerator(PairBasicGenerator):
                 # print local_features.shape
                 # print ngraph_X1.shape
                 # print ngraph_X2.shape
-                yield local_features, ngraph_X1, ngraph_X1_len, ngraph_X2, ngraph_X2_len, Y
+
 
     def get_batch_generator(self):
         while True:

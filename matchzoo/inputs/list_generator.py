@@ -574,6 +574,8 @@ class Duet_ListGenerator(ListBasicGenerator):
                             if word not in self.ngraphs:
                                 continue
                             for nidx in self.ngraphs[word]:
+                                if nidx >= self.num_ngraphs:
+                                    continue
                                 # if idx == 0:
                                 ngraph_X[j, nidx, w_idx] += 1
                                 # else:
