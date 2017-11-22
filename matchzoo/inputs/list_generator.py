@@ -573,8 +573,7 @@ class Duet_ListGenerator(ListBasicGenerator):
                         for w_idx, word in enumerate(data[:min(len(data), max_words)]):
                             if word not in self.ngraphs:
                                 continue
-                            ngraph_idxs = self.ngraphs[word]
-                            for nidx in ngraph_idxs:
+                            for nidx in self.ngraphs[word]:
                                 # if idx == 0:
                                 ngraph_X[j, nidx, w_idx] += 1
                                 # else:

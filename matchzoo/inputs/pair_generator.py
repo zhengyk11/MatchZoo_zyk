@@ -559,8 +559,7 @@ class Duet_PairGenerator(PairBasicGenerator):
                 for w_idx, word in enumerate(data[:min(len(data), max_words)]):
                     if word not in self.ngraphs:
                         continue
-                    ngraph_idxs = self.ngraphs[word]
-                    for nidx in ngraph_idxs:
+                    for nidx in self.ngraphs[word]:
                         if idx == 0:
                             ngraph_X[i * 2, nidx, w_idx] += 1
                             ngraph_X[i * 2 + 1, nidx, w_idx] += 1
@@ -635,8 +634,7 @@ class Duet_PairGenerator(PairBasicGenerator):
                         for w_idx, word in enumerate(data[:min(len(data), max_words)]):
                             if word not in self.ngraphs:
                                 continue
-                            ngraph_idxs = self.ngraphs[word]
-                            for nidx in ngraph_idxs:
+                            for nidx in self.ngraphs[word]:
                                 if idx == 0:
                                     ngraph_X[i * 2, nidx, w_idx] += 1
                                     ngraph_X[i * 2 + 1, nidx, w_idx] += 1

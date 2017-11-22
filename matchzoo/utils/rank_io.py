@@ -68,11 +68,11 @@ def read_word_dict_zyk(config):
         for line in f:
             attr = line[:-1].split('\t')
             w = attr[0].lower()
-            id = attr[1].strip()
+            id = int(attr[1].strip())
             if len(attr) > 2:
-                ngraphs[w] = map(int, attr[2].split())
+                ngraphs[id] = map(int, attr[2].split())
             if w not in word_dict:
-                word_dict[w] = int(id)
+                word_dict[w] = id
     return word_dict, ngraphs
 
 # Read Word Dict and Inverse Word Dict

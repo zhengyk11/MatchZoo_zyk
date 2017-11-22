@@ -48,7 +48,7 @@ def train(config, word_dict, ngraphs):
 
     print(json.dumps(config, indent=2))
     # read basic config
-    config['inputs']['share']['ngraphs'] = ngraphs
+
     global_conf = config["global"]
     optimizer = global_conf['optimizer']
     weights_file = global_conf['weights_file']
@@ -97,8 +97,12 @@ def train(config, word_dict, ngraphs):
         inverse_id_dict[j] = i
     inverse_id_dict[-1] = len_word_embed_list
 
+    new_ngraphs = {}
+    for id, nids in ngraphs.items():
+        new_ngraphs[inverse_id_dict[id]] = nids
+    config['inputs']['share']['ngraphs'] = new_ngraphs
+
     new_idf_dict = {}
-    #
     for d in dataset:
         if 'text' in d:
             for tid in dataset[d]:
