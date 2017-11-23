@@ -37,19 +37,30 @@ class DUET_EMBED(BasicModel):
         def mlp_work(input_dim):
             seq = Sequential()
             num_hidden_layers = len(self.config['hidden_sizes'])
-            for i in range(num_hidden_layers):
-                if i == 0:
-                    seq.add(Dropout(self.config['dropout_rate'], input_shape=(input_dim,)))
-                else:
-                    seq.add(Dropout(self.config['dropout_rate']))
-                seq.add(Dense(self.config['hidden_sizes'][i]))
-                seq.add(BatchNormalization())
-                seq.add(Activation(activation='relu'))
-                # if i < num_hidden_layers - 1:
-                #     seq.add(Activation(activation='relu'))
-                # else:
-                #     seq.add(Activation(activation='tanh'))
+            assert num_hidden_layers > 0
+            if num_hidden_layers == 1:
+                seq.add(Dense(self.config['hidden_sizes'][0], input_shape=(input_dim,)))
+            else:
+                seq.add(Dense(self.config['hidden_sizes'][0], activation='relu', input_shape=(input_dim,)))
+                for i in range(num_hidden_layers - 2):
+                    seq.add(Dense(self.config['hidden_sizes'][i+1], activation='relu'))
+                seq.add(Dense(self.config['hidden_sizes'][-1]))
             return seq
+            # seq = Sequential()
+            # num_hidden_layers = len(self.config['hidden_sizes'])
+            # for i in range(num_hidden_layers):
+            #     if i == 0:
+            #         seq.add(Dropout(self.config['dropout_rate'], input_shape=(input_dim,)))
+            #     else:
+            #         seq.add(Dropout(self.config['dropout_rate']))
+            #     seq.add(Dense(self.config['hidden_sizes'][i]))
+            #     seq.add(BatchNormalization())
+            #     seq.add(Activation(activation='relu'))
+            #     # if i < num_hidden_layers - 1:
+            #     #     seq.add(Activation(activation='relu'))
+            #     # else:
+            #     #     seq.add(Activation(activation='tanh'))
+            # return seq
 
         query = Input(name='query', shape=(self.config['text1_maxlen'],))
         doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
@@ -58,16 +69,17 @@ class DUET_EMBED(BasicModel):
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        cross = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
-        cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
+        # cross = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
+        # cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
+        #
+        # conv1 = Conv2D(self.config['kernel_count'], self.config['local_kernel_size'], padding='same',
+        #                activation='relu')(cross_reshape)
+        # pool1 = MaxPooling2D(pool_size=self.config['local_mpool_size'])(conv1)
+        # pool1_flat = Dense(self.config['kernel_count'])(Flatten()(pool1))
+        #
+        # local_mlp = mlp_work(self.config['kernel_count'])
+        # local_out_ = local_mlp(pool1_flat)
 
-        conv1 = Conv2D(self.config['kernel_count'], self.config['local_kernel_size'], padding='same',
-                       activation='relu')(cross_reshape)
-        pool1 = MaxPooling2D(pool_size=self.config['local_mpool_size'])(conv1)
-        pool1_flat = Dense(self.config['kernel_count'])(Flatten()(pool1))
-
-        local_mlp = mlp_work(self.config['kernel_count'])
-        local_out_ = local_mlp(pool1_flat)
 
         conv1d = Convolution1D(self.config['kernel_count'], self.config['kernel_size'], padding='same', activation='relu')
         q_conv = conv1d(q_embed)
@@ -84,11 +96,11 @@ class DUET_EMBED(BasicModel):
 
         dist_out_ = Dot(axes= [1, 1], normalize=True)([rq, rd])
         # merge local and dist scores
-        local_dist_out = Concatenate(axis=1)([local_out_, dist_out_])
-        print local_dist_out.shape
-        # out_ = Add()([local_out, dist_out])
-        out_ = Dense(1, activation='tanh')(local_dist_out)
-        print out_.shape
+        # local_dist_out = Concatenate(axis=1)([local_out_, dist_out_])
+        # print local_dist_out.shape
+        # # out_ = Add()([local_out, dist_out])
+        # out_ = Dense(1, activation='tanh')(local_dist_out)
+        # print out_.shape
 
         model = Model(inputs=[query, doc], outputs=dist_out_)
         return model
