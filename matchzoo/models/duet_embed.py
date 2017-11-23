@@ -80,7 +80,7 @@ class DUET_EMBED(BasicModel):
         hidden_layer = pool1_flat
         for i in range(num_hidden_layers):
             hidden_layer = Dropout(self.config['dropout_rate'])(hidden_layer)
-            hidden_layer = Dense(self.config['hidden_sizes'][i])(hidden_layer)
+            hidden_layer = Dense(self.config['local_hidden_sizes'][i])(hidden_layer)
             hidden_layer = BatchNormalization()(hidden_layer)
             if i < num_hidden_layers - 1:
                 hidden_layer = Activation('relu')(hidden_layer)
