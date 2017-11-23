@@ -243,7 +243,11 @@ def train(config, word_dict, ngraphs):
             #     ) #callbacks=[eval_map])
 
         for tag, generator in eval_gen.items():
-            output = open('../output/%s/%s_%s_output_%s.txt' % (config['net_name'].split('_')[0], config['net_name'], tag, str(i_e+1)), 'w')
+            if config['net_name'].lower().startswith('duet_embed'):
+                output_dir = '_'.join(config['net_name'].split('_')[:2])
+            else:
+                output_dir = config['net_name'].split('_')[0]
+            output = open('../output/%s/%s_%s_output_%s.txt' % (output_dir, config['net_name'], tag, str(i_e+1)), 'w')
             qid_rel_uid = {}
             qid_uid_rel_score = {}
             genfun = generator.get_batch_generator()
