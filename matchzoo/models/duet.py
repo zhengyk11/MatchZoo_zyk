@@ -7,9 +7,9 @@ from keras.layers import *
 from keras.layers import Reshape, Embedding,Merge, Dot, BatchNormalization
 from keras.optimizers import Adam
 from model import BasicModel
-import sys
-sys.path.append('../matchzoo/layers/')
-from Match import *
+# import sys
+# sys.path.append('../matchzoo/layers/')
+# from Match import *
 
 class DUET(BasicModel):
     def __init__(self, config):

@@ -7,9 +7,9 @@ from keras.layers import *
 from keras.layers import Reshape, Embedding,Merge, Dot, BatchNormalization
 from keras.optimizers import Adam
 from model import BasicModel
-import sys
-sys.path.append('../matchzoo/layers/')
-from Match import *
+# import sys
+# sys.path.append('../matchzoo/layers/')
+# from Match import *
 
 class DUET_EMBED(BasicModel):
     def __init__(self, config):
@@ -17,7 +17,7 @@ class DUET_EMBED(BasicModel):
         self.__name = 'DUET_EMBED'
         self.check_list = [ 'text1_maxlen', 'text2_maxlen',
                             'kernel_count', 'local_kernel_size', 'dropout_rate',
-                            'dist_kernel_size', 'pooling_kernel_width_doc', 'num_ngraphs',
+                            'dist_kernel_size', 'pooling_kernel_width_doc',
                             'dist_doc_kernel_size']
         self.embed_trainable = config['train_embed']
         self.setup(config)
@@ -42,20 +42,20 @@ class DUET_EMBED(BasicModel):
         doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
         embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']],
                               trainable=self.embed_trainable)
-        q_embed = embedding(query)
-        d_embed = embedding(doc)
+        embed_q = embedding(query)
+        embed_d = embedding(doc)
 
-        local_feat = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
+        local_feat = Dot(axes=[2, 2], normalize=True)([embed_q, embed_d])
         # local_feat = Input(name='local_feats', shape=(self.config['text1_maxlen'],self.config['text2_maxlen'],))
         # query = Input(name='query', shape=(self.config['num_ngraphs'], self.config['text1_maxlen'],))
         # doc = Input(name='doc', shape=(self.config['num_ngraphs'], self.config['text2_maxlen'],))
 
         print local_feat.shape
-        print q_embed.shape
-        print d_embed.shape
+        print embed_q.shape
+        print embed_d.shape
         # num_hidden_nodes = self.config['kernel_count']
 
-        word_window_size = self.config['dist_kernel_size'][1] #3
+        word_window_size = self.config['dist_kernel_size'][0] #3
         pooling_kernel_width_query = self.config['text1_maxlen'] - word_window_size + 1  # = 8
         pooling_kernel_width_doc = self.config['pooling_kernel_width_doc'] #100
         # num_pooling_windows_doc = ((self.config['text2_maxlen'] - word_window_size + 1) - pooling_kernel_width_doc) + 1  # = 899
@@ -93,10 +93,10 @@ class DUET_EMBED(BasicModel):
         # duet_embed_q.add(Dense(self.config['kernel_count'], activation='tanh'))
 
         # embed_q = duet_embed_q(query)
-        embed_q = Reshape([self.config['num_ngraphs'], self.config['text1_maxlen'], 1])(query)
+        embed_q = Reshape([self.config['text1_maxlen'], self.config['embed_size'], 1])(embed_q)
         embed_q = Conv2D(self.config['kernel_count'], self.config['dist_kernel_size'], activation='tanh')(embed_q)
         print embed_q.shape
-        embed_q = MaxPool2D((1, pooling_kernel_width_query), strides=(1,1))(embed_q)
+        embed_q = MaxPool2D((pooling_kernel_width_query, 1), strides=(1,1))(embed_q)
         print embed_q.shape
         embed_q = Flatten()(embed_q)
         print embed_q.shape
@@ -110,10 +110,10 @@ class DUET_EMBED(BasicModel):
         # duet_embed_d.add(Dense(self.config['kernel_count'], activation='tanh'))
         #
         # embed_d = duet_embed_d(doc)
-        embed_d = Reshape([self.config['num_ngraphs'], self.config['text2_maxlen'], 1])(doc)
+        embed_d = Reshape([self.config['text2_maxlen'], self.config['embed_size'], 1])(embed_d)
         embed_d = Conv2D(self.config['kernel_count'], self.config['dist_kernel_size'], activation='tanh')(embed_d)
         print embed_d.shape
-        embed_d = MaxPool2D((1, pooling_kernel_width_doc), strides=(1,1))(embed_d)
+        embed_d = MaxPool2D((pooling_kernel_width_doc, 1), strides=(1,1))(embed_d)
         print embed_d.shape
         embed_d = Reshape([-1, self.config['kernel_count'], 1])(embed_d)
         print 'reshape', embed_d.shape
@@ -144,12 +144,12 @@ class DUET_EMBED(BasicModel):
         dist_out = Dense(1, activation='tanh')(dist_out)
         print dist_out.shape
 
-        # local_dist_out = Concatenate(axis=1)([local_out, dist_out])
+        local_dist_out = Concatenate(axis=1)([local_out, dist_out])
         # print local_dist_out.shape
-        out_ = Add()([local_out, dist_out])
-        # out_ = Dense(1, activation='tanh')(local_dist_out)
+        # out_ = Add()([local_out, dist_out])
+        out_ = Dense(1, activation='tanh')(local_dist_out)
         print out_.shape
-        model = Model(inputs=[local_feat, query, doc], outputs=out_)
+        model = Model(inputs=[query, doc], outputs=out_)
         return model
         # net_local = [C.slice(features_local, 0, idx, idx + 1) for idx in range(0, num_docs)]
         # net_local = [C.reshape(d, (1, words_per_query, words_per_doc)) for d in net_local]
