@@ -75,11 +75,23 @@ class DUET_EMBED(BasicModel):
         conv1 = Conv2D(self.config['kernel_count'], self.config['local_kernel_size'], padding='same',
                        activation='relu')(cross_reshape)
         pool1 = MaxPooling2D(pool_size=self.config['local_mpool_size'])(conv1)
-        pool1_flat = Dense(self.config['kernel_count'])(Flatten()(pool1))
+        pool1_flat = Flatten()(pool1)
+        num_hidden_layers = len(self.config['hidden_sizes'])
+        hidden_layer = pool1_flat
+        for i in range(num_hidden_layers):
+            hidden_layer = Dropout(self.config['dropout_rate'])(hidden_layer)
+            hidden_layer = Dense(self.config['hidden_sizes'][i])(hidden_layer)
+            hidden_layer = BatchNormalization()(hidden_layer)
+            if i < num_hidden_layers - 1:
+                hidden_layer = Activation('relu')(hidden_layer)
+            else:
+                local_out_ = Activation('tanh')(hidden_layer)
 
-        local_mlp = mlp_work(self.config['kernel_count'])
-        local_out_ = local_mlp(pool1_flat)
-        local_out_ = Dense(1, activation='relu')(local_out_)
+        # pool1_flat = Dense(self.config['kernel_count'])(Flatten()(pool1))
+        #
+        # local_mlp = mlp_work(self.config['kernel_count'])
+        # local_out_ = local_mlp(pool1_flat)
+        # local_out_ = Dense(1, activation='relu')(local_out_)
 
 
 
