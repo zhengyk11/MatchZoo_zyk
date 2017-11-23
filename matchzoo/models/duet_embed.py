@@ -38,8 +38,11 @@ class DUET_EMBED(BasicModel):
             seq = Sequential()
             num_hidden_layers = len(self.config['hidden_sizes'])
             for i in range(num_hidden_layers):
-                seq.add(Dropout(self.config['dropout_rate'], input_shape=(input_dim,)))
-                seq.add(Dense(self.config['hidden_sizes'][0]))
+                if i == 0:
+                    seq.add(Dropout(self.config['dropout_rate'], input_shape=(input_dim,)))
+                else:
+                    seq.add(Dropout(self.config['dropout_rate']))
+                seq.add(Dense(self.config['hidden_sizes'][i]))
                 seq.add(BatchNormalization())
                 seq.add(Activation(activation='relu'))
                 # if i < num_hidden_layers - 1:
@@ -51,7 +54,7 @@ class DUET_EMBED(BasicModel):
         query = Input(name='query', shape=(self.config['text1_maxlen'],))
         doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
         embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']],
-                              trainable=False)# self.embed_trainable)
+                              trainable=self.embed_trainable)
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
@@ -79,7 +82,7 @@ class DUET_EMBED(BasicModel):
         rq = mlp(q_pool_re)
         rd = mlp(d_pool_re)
 
-        dist_out_ = Dot( axes= [1, 1], normalize=True)([rq, rd])
+        dist_out_ = Dot(axes= [1, 1], normalize=True)([rq, rd])
         # merge local and dist scores
         local_dist_out = Concatenate(axis=1)([local_out_, dist_out_])
         print local_dist_out.shape
@@ -87,7 +90,7 @@ class DUET_EMBED(BasicModel):
         out_ = Dense(1, activation='tanh')(local_dist_out)
         print out_.shape
 
-        model = Model(inputs=[query, doc], outputs=out_)
+        model = Model(inputs=[query, doc], outputs=dist_out_)
         return model
 
 
