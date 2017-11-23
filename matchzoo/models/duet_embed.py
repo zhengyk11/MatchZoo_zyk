@@ -69,16 +69,18 @@ class DUET_EMBED(BasicModel):
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        # cross = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
-        # cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
-        #
-        # conv1 = Conv2D(self.config['kernel_count'], self.config['local_kernel_size'], padding='same',
-        #                activation='relu')(cross_reshape)
-        # pool1 = MaxPooling2D(pool_size=self.config['local_mpool_size'])(conv1)
-        # pool1_flat = Dense(self.config['kernel_count'])(Flatten()(pool1))
-        #
-        # local_mlp = mlp_work(self.config['kernel_count'])
-        # local_out_ = local_mlp(pool1_flat)
+        cross = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
+        cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
+
+        conv1 = Conv2D(self.config['kernel_count'], self.config['local_kernel_size'], padding='same',
+                       activation='relu')(cross_reshape)
+        pool1 = MaxPooling2D(pool_size=self.config['local_mpool_size'])(conv1)
+        pool1_flat = Dense(self.config['kernel_count'])(Flatten()(pool1))
+
+        local_mlp = mlp_work(self.config['kernel_count'])
+        local_out_ = local_mlp(pool1_flat)
+        local_out_ = Dense(1, activation='relu')(local_out_)
+
 
 
         conv1d = Convolution1D(self.config['kernel_count'], self.config['kernel_size'], padding='same', activation='relu')
@@ -98,11 +100,11 @@ class DUET_EMBED(BasicModel):
         # merge local and dist scores
         # local_dist_out = Concatenate(axis=1)([local_out_, dist_out_])
         # print local_dist_out.shape
-        # # out_ = Add()([local_out, dist_out])
+        out_ = Add()([local_out_, dist_out_])
         # out_ = Dense(1, activation='tanh')(local_dist_out)
         # print out_.shape
 
-        model = Model(inputs=[query, doc], outputs=dist_out_)
+        model = Model(inputs=[query, doc], outputs=local_out_)
         return model
 
 
