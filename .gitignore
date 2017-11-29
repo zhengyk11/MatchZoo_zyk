@@ -6,3 +6,4 @@ logs/
 graph/
 config/
 .idea/
+runtime_data/
