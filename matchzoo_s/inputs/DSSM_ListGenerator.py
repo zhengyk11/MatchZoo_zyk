@@ -48,7 +48,6 @@ class DSSM_ListGenerator(ListBasicGenerator):
 
             if len(curr_batch) < 1:
                 break
-
             X1 = self.transfer_feat_dense2sparse(X1).toarray()
             X2 = self.transfer_feat_dense2sparse(X2).toarray()
             yield X1, X2, Y, curr_batch

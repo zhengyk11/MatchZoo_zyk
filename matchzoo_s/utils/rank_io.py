@@ -94,8 +94,9 @@ def read_embedding(filename):
         attr = line.split()
         # new_id = word_ids[cnt]
         embed[cnt] = map(float, attr[1:])
+
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
-    return embed
+    return embed, cnt+1, len(embed[1])
 
 # Read old version data
 def read_data_old_version(filename):
@@ -124,28 +125,24 @@ def read_relation(filename, verbose=True):
     return data
 
 # Read varied-length features without id
-def read_features(filename, hist_size, verbose=True):
-    features = {}
-    for line in open(filename):
-        line = re.split('\t| ', line.strip())
-        d1 = line[0]
-        d2 = line[1]
-        features[(d1, d2)] = np.reshape(map(float, line[2:], [hist_size, -1]))
-    if verbose:
-        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tFeature size: %d' % (filename, len(features))
-    return features
+# def read_features(filename, hist_size, verbose=True):
+#     features = {}
+#     for line in open(filename):
+#         line = re.split('\t| ', line.strip())
+#         d1 = line[0]
+#         d2 = line[1]
+#         features[(d1, d2)] = np.reshape(map(float, line[2:], [hist_size, -1]))
+#     if verbose:
+#         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tFeature size: %d' % (filename, len(features))
+#     return features
 
-def read_idf(filename, word_dict):
+def read_idf(filename):
     idfs = {}
     for line in open(filename):
-        attr = line.split('\t')
-        term = attr[0].lower().strip()
-        if len(term) < 1:
-            continue
-        idf = float(line[1])
-        if term not in word_dict:
-            continue
-        idfs[word_dict[term]] = [idf]
+        id, idf = line.split('\t')
+        id = int(id)
+        idf = float(idf)
+        idfs[id] = [idf]
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tIdf feat size: %d' % (filename, len(idfs))
     return idfs
 

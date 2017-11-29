@@ -26,8 +26,7 @@ class DRMM_ListGenerator(ListBasicGenerator):
             for i in range(self.batch_size):
                 line = self.data_handler.readline()
                 if line == '':
-                    self.data_handler.seek(0)
-                    line = self.data_handler.readline()
+                    break
                 qid, query, doc_id, doc, doc_score = line.strip().split('\t')
                 curr_batch.append([qid, doc_id, doc_score])
 
@@ -41,10 +40,11 @@ class DRMM_ListGenerator(ListBasicGenerator):
                 X1[i, :query_len] = query[:query_len]
                 X2[i] = doc_hist
 
+            if len(curr_batch) < 1:
+                break
             yield X1, X2, Y, curr_batch
 
 
     def get_batch_generator(self):
-        while True:
-            X1, X2, Y, curr_batch = self.get_batch()
+        for X1, X2, Y, curr_batch in self.get_batch():
             yield ({'query': X1, 'doc': X2}, Y, curr_batch)
