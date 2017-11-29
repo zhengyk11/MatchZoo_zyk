@@ -8,9 +8,8 @@ class DRMM_PairGenerator(PairBasicGenerator):
         super(DRMM_PairGenerator, self).__init__(config=config)
         self.__name = 'DRMM_PairGenerator'
 
-        self.data1_maxlen = config['text1_maxlen']
-        self.data2_maxlen = config['text2_maxlen']
-        self.hist_size = config['hist_size']
+        self.query_maxlen = config['query_maxlen']
+        self.hist_size    = config['hist_size']
 
         print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[DRMM_PairGenerator] init done'
@@ -18,8 +17,8 @@ class DRMM_PairGenerator(PairBasicGenerator):
 
     def get_batch(self):
         while True:
-            X1 = np.zeros((self.batch_size * 2, self.data1_maxlen), dtype=np.int32)
-            X2 = np.zeros((self.batch_size * 2, self.data1_maxlen, self.hist_size), dtype=np.float32)
+            X1 = np.zeros((self.batch_size * 2, self.query_maxlen), dtype=np.int32)
+            X2 = np.zeros((self.batch_size * 2, self.query_maxlen, self.hist_size), dtype=np.float32)
             Y  = np.zeros((self.batch_size * 2,), dtype=np.int32)
             Y[::2] = 1
 
@@ -34,13 +33,13 @@ class DRMM_PairGenerator(PairBasicGenerator):
                 dp    = map(float, dp.split())
                 dn    = map(float, dn.split())
 
-                dp_hist = np.reshape(dp, (self.data1_maxlen, self.hist_size))
-                dn_hist = np.reshape(dn, (self.data1_maxlen, self.hist_size))
+                dp_hist = np.reshape(dp, (self.query_maxlen, self.hist_size))
+                dn_hist = np.reshape(dn, (self.query_maxlen, self.hist_size))
 
-                d1_len = min(self.data1_maxlen, len(query))
+                query_len = min(self.query_maxlen, len(query))
 
-                X1[i*2,   :d1_len] = query[:d1_len]
-                X1[i*2+1, :d1_len] = query[:d1_len]
+                X1[i*2,   :query_len] = query[:query_len]
+                X1[i*2+1, :query_len] = query[:query_len]
                 X2[i*2]   = dp_hist
                 X2[i*2+1] = dn_hist
 
