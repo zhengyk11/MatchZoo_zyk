@@ -10,6 +10,7 @@ class DSSM_PairGenerator(PairBasicGenerator):
         self.__name = 'DSSM_PairGenerator'
 
         self.feat_size = config['feat_size']
+        self.batch_size = config['batch_size']
 
         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[DSSM_PairGenerator] init done'

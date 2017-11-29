@@ -60,75 +60,47 @@ def cal_hist(config):
     # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'cal_hist done!'
     return hist_feats_all
 
-def read_word_dict_zyk(config):
+
+def read_word_dict_zyk(word_dict_filepath):
     word_dict = {}
-    ngraphs = {}
-    word_dict_filepath = config['inputs']['share']['word_dict']
-    with open(word_dict_filepath) as f:
-        for line in f:
-            attr = line[:-1].split('\t')
-            w = attr[0].lower()
-            id = int(attr[1].strip())
-            if len(attr) > 2:
-                ngraphs[id] = map(int, attr[2].split())
+    with open(word_dict_filepath) as file:
+        cnt = -1
+        for line in file:
+            cnt += 1
+            if cnt == 0:
+                continue
+            attr = line.split(' ', 2)
+            w = attr[0].lower().strip()
+            if len(w) < 1:
+                continue
+            # id = cnt # int(attr[1].strip())
             if w not in word_dict:
-                word_dict[w] = id
-    return word_dict, ngraphs
-
-# Read Word Dict and Inverse Word Dict
-# def read_word_dict(filename):
-#     word_dict = {}
-#     iword_dict = {}
-#     for line in open(filename):
-#         line = line.strip().split()
-#         word_dict[int(line[1])] = line[0]
-#         iword_dict[line[0]] = int(line[1])
-#     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tWord dict size: %d' % (filename, len(word_dict))
-#     return word_dict, iword_dict
+                word_dict[w] = cnt
+    print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tWord dict size: %d' % (word_dict_filepath, cnt+1)
+    return word_dict, cnt+1
 
 
-# Read Embedding File
-# def read_embedding(filename, word_ids):
-#     embed = {}
-#     len_word_ids = len(word_ids)
-#     word_ids = sorted(word_ids.items(), key=lambda x:x[0])
-#     cnt = -1
-#     ids_idx = 0
-#     for line in open(filename):
-#         if cnt == -1:
-#             cnt += 1
-#             continue
-#         line = line.strip().split()
-#         if ids_idx >= len_word_ids:
-#             break
-#         if cnt == word_ids[ids_idx][0]:
-#             embed[word_ids[ids_idx][1]] = map(float, line[1:])
-#             # embed[cnt] = np.
-#             ids_idx += 1
-#         cnt += 1
-#     print '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
-#     return embed
-
-def read_embedding(filename, word_ids, normalize=False):
+def read_embedding(filename):
     embed = {}
-    cnt = -2
-    max_cnt = max(word_ids.keys())
+    word_dict = {}
+    cnt = -1
+    # max_cnt = max(word_ids.keys())
     for line in open(filename):
         cnt += 1
-        if cnt == -1:
+        if cnt == 0:
             continue
-        if cnt > max_cnt:
-            break
-        if cnt in word_ids:
-            line = line.strip().split()
-            new_id = word_ids[cnt]
-            embed[new_id] = map(float, line[1:])
-            if normalize:
-                x = np.array(embed[new_id], dtype=np.float32)
-                embed[new_id] = (x / np.linalg.norm(x)).tolist()
+        # if cnt > max_cnt:
+        #     break
+        # if cnt in word_ids:
+        attr = line.split()
+        term = attr[0].strip().lower()
+        if term not in word_dict:
+            word_dict[term] = cnt
+        # new_id = word_ids[cnt]
+        embed[cnt] = map(float, attr[1:])
 
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
-    return embed
+    return embed, cnt+1, len(embed[1]), word_dict
 
 # Read old version data
 def read_data_old_version(filename):
@@ -153,91 +125,57 @@ def read_relation(filename, verbose=True):
         line = re.split('\t| ', line.strip())
         data.append( (float(line[2]), line[0], line[1]) )
     if verbose:
-        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tInstance size: %s' % (filename, len(data))
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tInstance size: %d' % (filename, len(data))
     return data
 
 # Read varied-length features without id
-def read_features(filename, hist_size, verbose=True):
-    features = {}
-    for line in open(filename):
-        line = re.split('\t| ', line.strip())
-        d1 = line[0]
-        d2 = line[1]
-        features[(d1, d2)] = np.reshape(map(float, line[2:], [hist_size, -1]))
-    if verbose:
-        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tFeature size: %s' % (filename, len(features))
-    return features
-
-# def read_idf(filename, word_dict = None):
-#     data = {}
-#     data[-1] = []
+# def read_features(filename, hist_size, verbose=True):
+#     features = {}
 #     for line in open(filename):
-#         line = re.split('\t', line[:-1])
-#         term = line[0]
-#         idf = float(line[1])
-#         if word_dict == None:
-#             print "error!"
-#             exit(0)
-#         if term not in word_dict or word_dict[term] == -1:
-#             data[-1].append(idf)
-#         else:
-#             data[word_dict[term]] = idf
-#     data[-1] = sum(data[-1])/len(data[-1])
-#     # print '[%s]\n\tidf feat size: %s' % (filename, len(data))
-#     return data
+#         line = re.split('\t| ', line.strip())
+#         d1 = line[0]
+#         d2 = line[1]
+#         features[(d1, d2)] = np.reshape(map(float, line[2:], [hist_size, -1]))
+#     if verbose:
+#         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tFeature size: %d' % (filename, len(features))
+#     return features
 
-def read_idf(filename, word_dict = None):
-    data = {}
-    data[-1] = 0
+def read_idf(filename):
+    idfs = {}
     for line in open(filename):
-        line = re.split('\t', line[:-1])
-        term = line[0].lower().strip()
-        idf = float(line[1])
-        if word_dict == None:
-            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "error!"
-            exit(0)
-        if term not in word_dict or word_dict[term] == -1:
+        id, idf = line.split('\t')
+        id = int(id)
+        idf = float(idf)
+        idfs[id] = [idf]
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tIdf feat size: %d' % (filename, len(idfs))
+    return idfs
+
+def convert_term2id(text, word_dict):
+    new_text = []
+    for term in text:
+        term = term.strip().lower()
+        if len(term) < 1:
+            new_text.append(0)
             continue
-            # data[-1].append(idf)
-        # else:
-        data[word_dict[term]] = idf
-    data[-1] = sorted(data.values())[len(data)/2] # median
-    # print '[%s]\n\tidf feat size: %s' % (filename, len(data))
-    return data
-
-# Read Data Dict
-def read_data(filename, word_dict = None):
-    data = {}
-    data_word = []
-    for line in open(filename):
-        line = re.split('\t| ', line.strip())
-        tid = line[0]
-        # data = line[1].split()
-        if word_dict == None:
-            data[tid] = map(int, line[1:])
+        if term in word_dict:
+            new_text.append(word_dict[term])
         else:
-            data[tid] = []
-            for w in line[1:]:
-                w = w.lower()
-                if w not in word_dict or word_dict[w] == -1:
-                    word_dict[w] = -1
-                    data[tid].append(-1)
-                else:
-                    data_word.append(word_dict[w])
-                    data[tid].append(word_dict[w])
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tData size: %s' % (filename, len(data))
-    return data, sorted(list(set(data_word)))
+            new_text.append(0)
+    assert len(new_text) == len(text)
+    return new_text
+
+
 
 # Convert Embedding Dict 2 numpy array
-def convert_embed_2_numpy(embed_dict, max_size=0, embed=None, normalize=False):
+def convert_embed_2_numpy(name, embed_dict, max_size=-1, embed=None, normalize=False):
     feat_size = len(embed_dict[embed_dict.keys()[0]])
     if embed is None:
-        embed = np.zeros( (max_size, feat_size), dtype = np.float32 )
+        embed = np.zeros( (max_size, feat_size), dtype = np.float32)
     for k in embed_dict:
         embed[k] = np.array(embed_dict[k], dtype=np.float32)
     if normalize:
         for i in range(len(embed)):
             embed[i] = embed[i]/np.linalg.norm(embed[i])
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Generate numpy embed:', embed.shape
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Generate numpy %s:'%name, embed.shape
     return embed
 
