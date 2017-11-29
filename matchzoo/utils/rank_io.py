@@ -89,8 +89,8 @@ def read_embedding(filename):
         cnt += 1
         if cnt == 0:
             continue
-        # if cnt > max_cnt:
-        #     break
+        if cnt > 1000:
+            break
         # if cnt in word_ids:
         attr = line.split()
         term = attr[0].strip().lower()

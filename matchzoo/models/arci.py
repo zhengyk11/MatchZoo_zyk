@@ -13,7 +13,7 @@ class ARCI(BasicModel):
     def __init__(self, config):
         super(ARCI, self).__init__(config)
         self.__name = 'ARCI'
-        self.check_list = [ 'text1_maxlen', 'text2_maxlen',
+        self.check_list = [ 'query_maxlen', 'doc_maxlen',
                    'embed', 'embed_size', 'train_embed',  'vocab_size',
                    'kernel_size', 'kernel_count', 'dropout_rate',
                    'q_pool_size', 'd_pool_size', 'hidden_sizes']
@@ -36,8 +36,8 @@ class ARCI(BasicModel):
         self.config.update(config)
 
     def build(self):
-        query = Input(name='query', shape=(self.config['text1_maxlen'],))
-        doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
+        query = Input(name='query', shape=(self.config['query_maxlen'],))
+        doc = Input(name='doc', shape=(self.config['doc_maxlen'],))
         #dpool_index = Input(name='dpool_index', shape=[self.config['text1_maxlen'], self.config['text2_maxlen'], 3], dtype='int32')
 
         embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = self.embed_trainable)

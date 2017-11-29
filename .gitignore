@@ -4,6 +4,6 @@ logs/
 *.pyc
 *.weights
 graph/
-config/
+config*/
 .idea/
 runtime_data/

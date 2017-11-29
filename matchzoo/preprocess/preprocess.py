@@ -1,13 +1,36 @@
 import json
 import os
+
+# config = """
+# {
+#     "qrel_1":"../../data/fulltext/real_train/real_train_qrel/real_train_qrel_HL.txt",
+#     "qrel_2": "../../data/fulltext/real_train/real_train_qrel/real_train_qrel_solrex.txt",
+#     "doc_1": "../../data/fulltext/real_train/real_train_fulltext_seg_filter.txt",
+#     "doc_2":"../../data/fulltext/real_train/real_train_fulltext_seg_filter_solrex.txt",
+#     "query":"../../data/fulltext/real_train/real_train_qid_seg.txt",
+#     "output": "../../runtime_data/fulltext/real_train_HL_solrex"
+# }
+# """
+
 config = """
 {
-    "qrel":"../../data/fulltext/real_train/real_train_qrel/real_train_qrel.txt",
-    "doc":"../../data/fulltext/real_train/real_train_fulltext_seg_filter.txt",
-    "query":"../../data/fulltext/real_train/real_train_qid_seg.txt",
-    "output_dir": "../../runtime_data/fulltext/real_train"
+    "qrel_1": "../../data/fulltext/real_valid_test/real_valid_qrel/real_valid_qrel_HL.txt",
+    "qrel_2": "../../data/fulltext/real_valid_test/real_valid_qrel/real_valid_qrel_solrex.txt",
+    "doc_1":  "../../data/fulltext/real_valid_test/real_valid_test_fulltext_seg_filter.txt",
+    "doc_2":  "../../data/fulltext/real_valid_test/real_valid_test_fulltext_seg_filter_solrex.txt",
+    "query":  "../../data/fulltext/real_valid_test/real_valid_test_qid_seg.txt",
+    "output": "../../runtime_data/fulltext/real_test_HL_solrex"
 }
 """
+
+# config = """
+# {
+#     "qrel":"../../data/fulltext/real_train/real_train_qrel/real_train_qrel.txt",
+#     "doc":"../../data/fulltext/real_train/real_train_fulltext_seg_filter.txt",
+#     "query":"../../data/fulltext/real_train/real_train_qid_seg.txt",
+#     "output": "../../runtime_data/fulltext/real_train"
+# }
+# """
 
 uid_qid_label = {}
 qid_query = {}
@@ -15,8 +38,8 @@ qids = {}
 uids = {}
 config = json.loads(config)
 
-if not os._exists(config['output_dir']):
-    os.mkdir(config['output_dir'])
+if not os.path.exists(config['output']):
+    os.mkdir(config['output'])
 
 for k in config:
     if k.startswith('qrel'):
@@ -50,9 +73,9 @@ for k in config:
                 continue
             for qid in uid_qid_label[uid]:
                 if qid not in qids:
-                    with open(config['output_dir']+'/'+qid+'.txt', 'w') as output:
+                    with open(config['output']+'/'+qid+'.txt', 'w') as output:
                         output.write(qid + '\t' + qid_query[qid] + '\t' + uid + '\t' + doc + '\t' + uid_qid_label[uid][qid] + '\n')
                     qids[qid] = 0
                 else:
-                    with open(config['output_dir']+'/'+qid+'.txt', 'a') as output:
+                    with open(config['output']+'/'+qid+'.txt', 'a') as output:
                         output.write(qid + '\t' + qid_query[qid] + '\t' + uid + '\t' + doc + '\t' +uid_qid_label[uid][qid]+ '\n')

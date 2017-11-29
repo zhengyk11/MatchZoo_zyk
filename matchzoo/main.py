@@ -116,7 +116,7 @@ def train(config):
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Model] Model Compile Done.\n'
 
     for i_e in range(global_conf['num_epochs']):
-        model.save_weights(weights_file)
+        # model.save_weights(weights_file)
         for tag, generator in train_gen.items():
             genfun = generator.get_batch_generator()
             num_batch_cnt = 0
@@ -144,7 +144,8 @@ def train(config):
 
             for input_data, y_true, curr_batch in genfun:
                 # curr_list = generator.get_currbatch()
-                y_pred = model.predict(input_data, batch_size=len(y_true)).tolist()
+                y_pred = model.predict(input_data, batch_size=len(y_true))
+                y_pred = np.reshape(y_pred, (len(y_pred),))
                 # output the predict scores
                 # cnt = 0
                 for (q, d, label), score in zip(curr_batch, y_pred):
@@ -161,7 +162,7 @@ def train(config):
                     qid_uid_rel_score[q]['label'].append(label)
                     qid_uid_rel_score[q]['score'].append(score)
             output.close()
-
+            generator.reset()
             # calculate the metrices
             for k, eval_func in eval_metrics.items():
                 for qid in qid_uid_rel_score:
@@ -187,7 +188,7 @@ def main(argv):
     config.gpu_options.allow_growth=True
     with tf.Session(config=config) as sess:
         KTF.set_session(sess)
-        with open(args.model_file, 'r') as f:
+        with open(args.model_file) as f:
             config = json.load(f)
 
         if args.phase == 'train':

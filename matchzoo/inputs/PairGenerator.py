@@ -110,5 +110,5 @@ class PairGenerator():
 
     def get_batch_generator(self):
         while True:
-            X1, X2, Y = self.get_batch()
+            X1, X2, Y = self.get_batch().next()
             yield ({'query': X1, 'doc': X2}, Y)
