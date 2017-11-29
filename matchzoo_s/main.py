@@ -41,14 +41,10 @@ def load_model(config):
     return mo
 
 
-def train(config, word_dict, ngraphs):
-
-    word_embed_list = []
-    inverse_id_dict = {}
-
+def train(config):
     print(json.dumps(config, indent=2))
-    # read basic config
 
+    # read basic config
     global_conf = config["global"]
     optimizer = global_conf['optimizer']
     weights_file = global_conf['weights_file']
@@ -58,92 +54,31 @@ def train(config, word_dict, ngraphs):
     input_conf = config['inputs']
     share_input_conf = input_conf['share']
 
-    # collect dataset identification
-    # global word_embed_list
-    dataset = {}
-    # invalid_idf = 0.
-    for tag in input_conf['share']:
-        # if tag != 'share' and input_conf[tag]['phase'] == 'PREDICT':
-        #     continue
-        if 'text1_corpus' in tag:
-            datapath = input_conf['share'][tag]
-            # if datapath not in dataset:
-            data, data_word = read_data(datapath, word_dict=word_dict)
-            word_embed_list += data_word
-            if 'text1_corpus' not in dataset:
-                dataset['text1_corpus'] = data
-            else:
-                dataset['text1_corpus'].update(data)
-        if 'text2_corpus' in tag:
-            datapath = input_conf['share'][tag]
-            # if datapath not in dataset:
-            data, data_word = read_data(datapath, word_dict=word_dict)
-            word_embed_list += data_word
-            if 'text2_corpus' not in dataset:
-                dataset['text2_corpus'] = data
-            else:
-                dataset['text2_corpus'].update(data)
-        if 'idf_feat' in tag:
-            datapath = input_conf['share'][tag]
-            data = read_idf(datapath, word_dict=word_dict)
-            # invalid_idf = data[-1]
-            if 'idf_feat' not in dataset:
-                dataset['idf_feat'] = data
-
-    word_embed_list = sorted(list(set(word_embed_list)))
-    len_word_embed_list = len(word_embed_list)
-    # global inverse_id_dict
-    for i, j in enumerate(word_embed_list):
-        inverse_id_dict[j] = i
-    inverse_id_dict[-1] = len_word_embed_list
-
-    new_ngraphs = {}
-    for id, nids in ngraphs.items():
-        if id not in inverse_id_dict:
-            continue
-        new_ngraphs[inverse_id_dict[id]] = nids
-    config['inputs']['share']['ngraphs'] = new_ngraphs
-
-    new_idf_dict = {}
-    for d in dataset:
-        if 'text' in d:
-            for tid in dataset[d]:
-                for i, j in enumerate(dataset[d][tid]):
-                    dataset[d][tid][i] = inverse_id_dict[j]
-        elif 'idf' in d and 'drmm' in config['model']['model_py'].lower():
-            for i, j in enumerate(word_embed_list):
-                if j in dataset[d]:
-                    new_idf_dict[i] = [dataset[d][j]]
-                else:
-                    new_idf_dict[i] = [dataset[d][-1]]
-            new_idf_dict[len(word_embed_list)] = [dataset[d][-1]]
-            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Idf feat size: %s' % len(new_idf_dict)
-            dataset['idf_feat'] = convert_embed_2_numpy(new_idf_dict, max_size=len(new_idf_dict))
-            # dataset['idf_feat'][-1] = np.array([invalid_idf], dtype=np.float32)# np.float32(np.random.uniform(-0.2, 0.2, [1]))
-            config['inputs']['share']['idf_feat'] = dataset['idf_feat']
-    inverse_id_dict.pop(-1)
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Dataset] %s Dataset Load Done.' % len(dataset)
-    ##
+    word_dict, vocab_size = read_word_dict_zyk(config['inputs']['share']['word_dict'])
+    share_input_conf['feat_size'] = vocab_size
+    share_input_conf['vocab_size'] = vocab_size
+    share_input_conf['fill_word'] = 0
 
     # collect embedding
-
-    share_input_conf['fill_word'] = len_word_embed_list
-    share_input_conf['vocab_size'] = len_word_embed_list + 1
-    share_input_conf['feat_size'] = len_word_embed_list + 1
-    config['inputs']['share']['feat_size'] = len_word_embed_list + 1 # can delete, the same effect as last code
     if 'embed_path' in share_input_conf and 'embed_size' in share_input_conf:
-        embed_dict = read_embedding(filename=share_input_conf['embed_path'], word_ids=inverse_id_dict)
-        # embed_dict[share_input_conf['fill_word']] = np.zeros((share_input_conf['embed_size'], ), dtype=np.float32)
+        embed_dict = read_embedding(share_input_conf['embed_path'])
         embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         if 'drmm' in config['model']['model_py'].lower():
-            share_input_conf['embed'] = convert_embed_2_numpy(embed_dict=embed_dict, embed=embed, normalize=True)
+            share_input_conf['embed'] = convert_embed_2_numpy('embed', embed_dict=embed_dict, embed=embed, normalize=True)
         else:
-            share_input_conf['embed'] = convert_embed_2_numpy(embed_dict=embed_dict, embed=embed)
+            share_input_conf['embed'] = convert_embed_2_numpy('embed', embed_dict=embed_dict, embed=embed, normalize=False)
+
     elif 'embed_size' in share_input_conf:
         embed = np.float32(np.random.uniform(-4, 4, [share_input_conf['vocab_size'], share_input_conf['embed_size']]))
         share_input_conf['embed'] = embed
+
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Embedding] Embedding Load Done.'
 
+    if 'idf_feat' in input_conf['share']:
+        datapath = input_conf['share']['idf_feat']
+        idf_dict = read_idf(datapath, word_dict)
+        idf = np.float32(np.random.uniform(1, 5, [share_input_conf['vocab_size'], 1]))
+        config['inputs']['share']['idf_feat'] = convert_embed_2_numpy('idf', embed_dict=idf_dict, embed=idf, normalize=False)
 
 
     # list all input tags and construct tags config
@@ -162,21 +97,6 @@ def train(config, word_dict, ngraphs):
             input_eval_conf[tag].update(input_conf[tag])
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Input] Process Input Tags. %s in TRAIN, %s in EVAL.' % (input_train_conf.keys(), input_eval_conf.keys())
 
-    # collect dataset identification
-    # dataset = {}
-    # for tag in input_conf:
-    #     if tag != 'share' and input_conf[tag]['phase'] == 'PREDICT':
-    #         continue
-    #     if 'text1_corpus' in input_conf[tag]:
-    #         datapath = input_conf[tag]['text1_corpus']
-    #         if datapath not in dataset:
-    #             dataset[datapath], _ = read_data(datapath)
-    #     if 'text2_corpus' in input_conf[tag]:
-    #         datapath = input_conf[tag]['text2_corpus']
-    #         if datapath not in dataset:
-    #             dataset[datapath], _ = read_data(datapath)
-    # print '[Dataset] %s Dataset Load Done.' % len(dataset)
-
     # initial data generator
     train_gen = OrderedDict()
     eval_gen = OrderedDict()
@@ -184,23 +104,21 @@ def train(config, word_dict, ngraphs):
 
     for tag, conf in input_train_conf.items():
         # print conf
-        conf['data1'] = dataset['text1_corpus']
-        conf['data2'] = dataset['text2_corpus']
+        # conf['data1'] = dataset['text1_corpus']
+        # conf['data2'] = dataset['text2_corpus']
         if 'drmm' in config['model']['model_py'].lower():
             conf['hist_feats'] = cal_hist(conf)
-        # if 'idf_feat' in dataset:
-        #     config['idf_feat'] = dataset['idf_feat']
+
         generator = inputs.get(conf['input_type'])
         train_gen[tag] = generator( config = conf )
 
     for tag, conf in input_eval_conf.items():
         # print conf
-        conf['data1'] = dataset['text1_corpus']
-        conf['data2'] = dataset['text2_corpus']
+        # conf['data1'] = dataset['text1_corpus']
+        # conf['data2'] = dataset['text2_corpus']
         if 'drmm' in config['model']['model_py'].lower():
             conf['hist_feats'] = cal_hist(conf)
-        # if 'idf_feat' in dataset:
-        #     config['idf_feat'] = dataset['idf_feat']
+
         generator = inputs.get(conf['input_type'])
         eval_gen[tag] = generator( config = conf )  
 
@@ -304,7 +222,7 @@ def train(config, word_dict, ngraphs):
             sys.stdout.flush()
 
 
-    # model.save_weights(weights_file)
+    model.save_weights(weights_file)
 
 def cal_eval_loss(qid_rel_uid, tag, conf, train_loss):
     # print qid_rel_uid
@@ -335,9 +253,9 @@ def cal_eval_loss(qid_rel_uid, tag, conf, train_loss):
     return res
     # return {'%s_hinge'%tag:hinge_loss, '%s_entropy'%tag:crossentropy_loss}
 
-def predict(config, word_dict):
+def predict(config):
     ######## Read input config ########
-
+    word_dict, ngraphs = read_word_dict_zyk(config)
     print(json.dumps(config, indent=2))
     input_conf = config['inputs']
     share_input_conf = input_conf['share']
@@ -457,9 +375,6 @@ def predict(config, word_dict):
         sys.stdout.flush()
 
 
-
-
-
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', default='')
@@ -467,25 +382,22 @@ def main(argv):
     parser.add_argument('--model_file', default='./models/matchzoo.model', help='Model_file: MatchZoo model file for the chosen model.')
     args = parser.parse_args()
     model_file = args.model_file
+
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device
     config = tf.ConfigProto()
     config.gpu_options.allow_growth=True
-    sess = tf.Session(config=config)
-    KTF.set_session(sess)
-    with open(model_file, 'r') as f:
-        config = json.load(f)
+    with tf.Session(config=config) as sess:
+        KTF.set_session(sess)
+        with open(model_file, 'r') as f:
+            config = json.load(f)
 
-    word_dict, ngraphs = read_word_dict_zyk(config)
-
-    if args.phase == 'train':
-        with tf.Session() as sess:
-            train(config, word_dict, ngraphs)
-    elif args.phase == 'predict':
-        with tf.Session() as sess:
-            predict(config, word_dict, ngraphs)
-    else:
-        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Phase Error.'
-    return
+        if args.phase == 'train':
+            train(config)
+        elif args.phase == 'predict':
+            predict(config)
+        else:
+            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'Phase Error.'
+            return
 
 
 if __name__ == '__main__':
