@@ -7,9 +7,9 @@ from DSSM_PairGenerator import DSSM_PairGenerator
 from DRMM_PairGenerator import DRMM_PairGenerator
 # from Duet_PairGenerator import Duet_PairGenerator
 
-from list_generator import ListGenerator
-from list_generator import DSSM_ListGenerator
-from list_generator import DRMM_ListGenerator
+from ListGenerator import ListGenerator
+from DSSM_ListGenerator import DSSM_ListGenerator
+from DRMM_ListGenerator import DRMM_ListGenerator
 # from list_generator import Duet_ListGenerator
 
 
