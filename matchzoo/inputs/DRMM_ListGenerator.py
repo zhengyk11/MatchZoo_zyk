@@ -1,36 +1,64 @@
+import os
 import time
 import numpy as np
-from ListBasicGenerator import ListBasicGenerator
+# from ListBasicGenerator import ListBasicGenerator
+from matchzoo import convert_term2id
 
 
-class DRMM_ListGenerator(ListBasicGenerator):
+class DRMM_ListGenerator(): # ListBasicGenerator):
     def __init__(self, config):
-        super(DRMM_ListGenerator, self).__init__(config=config)
+        # super(DRMM_ListGenerator, self).__init__(config=config)
         self.__name = 'DRMM_ListGenerator'
 
         self.query_maxlen = config['query_maxlen']
-        self.hist_size    = config['hist_size']
+        self.hist_size = config['hist_size']
+        self.batch_size = config['batch_size']
+        self.data_path = config['data_path']
+        self.word_dict = config['word_dict']
+        self.qfile_list = self.get_qfile_list()
+        self.data_handler = open(self.qfile_list[0])# self.get_data_handler()
+        self.qfile_idx = 0
 
         print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[DRMM_ListGenerator] init done'
 
+    def reset(self):
+        self.data_handler.close()
+        self.data_handler = open(self.qfile_list[0])
+        self.qfile_idx = 0
+
+    def get_qfile_list(self):
+        qfile_list = []
+        for dirpath, dirnames, filenames in os.walk(self.data_path):
+            for fn in filenames:
+                if fn.endswith('.txt'):
+                    qfile_list.append(os.path.join(dirpath, fn))
+        return qfile_list
 
     def get_batch(self):
         while True:
             X1 = np.zeros((self.batch_size, self.query_maxlen), dtype=np.int32)
             X2 = np.zeros((self.batch_size, self.query_maxlen, self.hist_size), dtype=np.float32)
-            Y  = np.zeros((self.batch_size,), dtype=np.int32)
+            Y = np.zeros((self.batch_size,), dtype=np.int32)
             Y[::2] = 1
 
             curr_batch = []
             for i in range(self.batch_size):
                 line = self.data_handler.readline()
                 if line == '':
-                    break
-                qid, query, doc_id, doc, doc_score = line.strip().split('\t')
-                curr_batch.append([qid, doc_id, doc_score])
+                    if self.qfile_idx == len(self.qfile_list) - 1:
+                        break
+                    else:
+                        self.qfile_idx += 1
+                        self.data_handler = open(self.qfile_list[self.qfile_idx])
+                        line = self.data_handler.readline()
+                qid, query, doc_id, doc, label = line.strip().split('\t')
+                qid = qid.strip()
+                doc_id = doc_id.strip()
+                label = float(label)
+                curr_batch.append([qid, doc_id, label])
 
-                query = map(int, query.split())
+                query = convert_term2id(query.strip().split(), self.word_dict)
                 doc    = map(float, doc.split())
 
                 doc_hist = np.reshape(doc, (self.query_maxlen, self.hist_size))

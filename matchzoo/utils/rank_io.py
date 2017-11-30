@@ -8,57 +8,57 @@ import re
 
 import time
 
-def cal_hist(config):
-    hist_feats_all = {}
-    if 'hist_feats_file' in config:
-        for k in config:
-            if 'hist_feats_file' in k:
-                hist_feats = read_features(config[k], config['hist_size'])
-                hist_feats_all.update(hist_feats)
-        return hist_feats_all
-    # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ''
-    data1_maxlen = config['text1_maxlen']
-    data2_maxlen = config['text2_maxlen']
-    hist_size = config['hist_size']
-
-    embed = config['embed']
-    rel_file_cnt = 0
-    for key in config:
-        if 'relation_file' in key:
-            rel_file_cnt += 1
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),'[%d rel files] Start calculating hist...'%rel_file_cnt,
-    cnt = 0
-    for key in config:
-        if 'relation_file' in key:
-            cnt += 1
-            print str(cnt)+'...',
-            rel_file = config[key]
-            rel = read_relation(filename=rel_file, verbose=False)
-            hist_feats = {}
-            for label, d1, d2 in rel:
-                if d1 not in config['data1']:
-                    continue
-                if d2 not in config['data2']:
-                    continue
-                mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
-                t1_rep = embed[config['data1'][d1][:data1_maxlen]]
-                t2_rep = embed[config['data2'][d2][:data2_maxlen]]
-                mm = t1_rep.dot(np.transpose(t2_rep))
-                for (i, j), v in np.ndenumerate(mm):
-                    vid = int((v + 1.) / 2. * (hist_size - 1.))
-                    mhist[i][vid] += 1.
-                mhist += 1.
-                mhist = np.log10(mhist)
-                hist_feats[(d1, d2)] = mhist
-
-            hist_feats_all.update(hist_feats)
-            output = open(rel_file.replace('.txt', '')+'_hist_%d.txt'%config['hist_size'], 'w')
-            for k, v in hist_feats.items():
-                output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, np.reshape(v, [-1])))))
-            output.close()
-    print ''
-    # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'cal_hist done!'
-    return hist_feats_all
+# def cal_hist(config):
+#     hist_feats_all = {}
+#     if 'hist_feats_file' in config:
+#         for k in config:
+#             if 'hist_feats_file' in k:
+#                 hist_feats = read_features(config[k], config['hist_size'])
+#                 hist_feats_all.update(hist_feats)
+#         return hist_feats_all
+#     # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ''
+#     data1_maxlen = config['text1_maxlen']
+#     data2_maxlen = config['text2_maxlen']
+#     hist_size = config['hist_size']
+#
+#     embed = config['embed']
+#     rel_file_cnt = 0
+#     for key in config:
+#         if 'relation_file' in key:
+#             rel_file_cnt += 1
+#     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),'[%d rel files] Start calculating hist...'%rel_file_cnt,
+#     cnt = 0
+#     for key in config:
+#         if 'relation_file' in key:
+#             cnt += 1
+#             print str(cnt)+'...',
+#             rel_file = config[key]
+#             rel = read_relation(filename=rel_file, verbose=False)
+#             hist_feats = {}
+#             for label, d1, d2 in rel:
+#                 if d1 not in config['data1']:
+#                     continue
+#                 if d2 not in config['data2']:
+#                     continue
+#                 mhist = np.zeros((data1_maxlen, hist_size), dtype=np.float32)
+#                 t1_rep = embed[config['data1'][d1][:data1_maxlen]]
+#                 t2_rep = embed[config['data2'][d2][:data2_maxlen]]
+#                 mm = t1_rep.dot(np.transpose(t2_rep))
+#                 for (i, j), v in np.ndenumerate(mm):
+#                     vid = int((v + 1.) / 2. * (hist_size - 1.))
+#                     mhist[i][vid] += 1.
+#                 mhist += 1.
+#                 mhist = np.log10(mhist)
+#                 hist_feats[(d1, d2)] = mhist
+#
+#             hist_feats_all.update(hist_feats)
+#             output = open(rel_file.replace('.txt', '')+'_hist_%d.txt'%config['hist_size'], 'w')
+#             for k, v in hist_feats.items():
+#                 output.write('%s\t%s\t%s\n'%(k[0], k[1], ' '.join(map(str, np.reshape(v, [-1])))))
+#             output.close()
+#     print ''
+#     # print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'cal_hist done!'
+#     return hist_feats_all
 
 
 def read_word_dict_zyk(word_dict_filepath):
@@ -94,6 +94,8 @@ def read_embedding(filename):
         # if cnt in word_ids:
         attr = line.split()
         term = attr[0].strip().lower()
+        if len(term) < 1:
+            continue
         if term not in word_dict:
             word_dict[term] = cnt
         # new_id = word_ids[cnt]
@@ -103,30 +105,30 @@ def read_embedding(filename):
     return embed, cnt+1, len(embed[1]), word_dict
 
 # Read old version data
-def read_data_old_version(filename):
-    data = []
-    for idx, line in enumerate(open(filename)):
-        line = line.strip().split()
-        len1 = int(line[1])
-        len2 = int(line[2])
-        data.append([map(int, line[3:3+len1]), map(int, line[3+len1:])])
-        assert len2 == len(data[idx][1])
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tInstance size: %d' % (filename, len(data))
-    return data
+# def read_data_old_version(filename):
+#     data = []
+#     for idx, line in enumerate(open(filename)):
+#         line = line.strip().split()
+#         len1 = int(line[1])
+#         len2 = int(line[2])
+#         data.append([map(int, line[3:3+len1]), map(int, line[3+len1:])])
+#         assert len2 == len(data[idx][1])
+#     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tInstance size: %d' % (filename, len(data))
+#     return data
 
 # Read Relation Data
-def read_relation(filename, verbose=True):
-    # print 'reading relation file', filename
-    data = []
-    # cnt = 0
-    for line in open(filename):
-        # cnt += 1
-        # print cnt
-        line = re.split('\t| ', line.strip())
-        data.append( (float(line[2]), line[0], line[1]) )
-    if verbose:
-        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tInstance size: %d' % (filename, len(data))
-    return data
+# def read_relation(filename, verbose=True):
+#     # print 'reading relation file', filename
+#     data = []
+#     # cnt = 0
+#     for line in open(filename):
+#         # cnt += 1
+#         # print cnt
+#         line = re.split('\t| ', line.strip())
+#         data.append( (float(line[2]), line[0], line[1]) )
+#     if verbose:
+#         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tInstance size: %d' % (filename, len(data))
+#     return data
 
 # Read varied-length features without id
 # def read_features(filename, hist_size, verbose=True):
@@ -140,13 +142,19 @@ def read_relation(filename, verbose=True):
 #         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tFeature size: %d' % (filename, len(features))
 #     return features
 
-def read_idf(filename):
+def read_idf(filename, word_dict):
     idfs = {}
     for line in open(filename):
-        id, idf = line.split('\t')
-        id = int(id)
+        term, idf = line.split('\t')
+        term = term.strip().lower()
+        if len(term) < 1:
+            continue
+        if term not in word_dict:
+            continue
         idf = float(idf)
-        idfs[id] = [idf]
+        id = word_dict[term]
+        if term not in idfs:
+            idfs[id] = [idf]
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tIdf feat size: %d' % (filename, len(idfs))
     return idfs
 
@@ -163,8 +171,6 @@ def convert_term2id(text, word_dict):
             new_text.append(0)
     assert len(new_text) == len(text)
     return new_text
-
-
 
 # Convert Embedding Dict 2 numpy array
 def convert_embed_2_numpy(name, embed_dict, max_size=-1, embed=None, normalize=False):

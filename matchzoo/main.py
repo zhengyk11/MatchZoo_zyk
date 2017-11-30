@@ -65,7 +65,7 @@ def train(config):
 
     if 'idf_feat' in share_input_conf:
         datapath = share_input_conf['idf_feat']
-        idf_dict = read_idf(datapath)
+        idf_dict = read_idf(datapath, word_dict)
         idf = np.float32(np.random.uniform(1, 5, [vocab_size, 1]))
         config['inputs']['share']['idf_feat'] = convert_embed_2_numpy('idf', embed_dict=idf_dict, embed=idf, normalize=False)
 

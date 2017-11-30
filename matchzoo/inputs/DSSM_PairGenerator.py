@@ -90,6 +90,8 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
     def get_batch(self):
         while True:
             qid_query, uid_doc, qid_label_uid, pair_list = self.make_pair()
+            print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+            print 'Pair Instance Count:', len(pair_list)
             for _i in range(self.batch_per_iter):
                 sample_pair_list = random.sample(pair_list, self.batch_size)
                 X1, X2 = [], []
@@ -112,8 +114,7 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                 yield X1, X2, Y
 
     def get_batch_generator(self):
-        while True:
-            X1, X2, Y = self.get_batch().next()
+        for X1, X2, Y in self.get_batch():
             yield ({'query': X1, 'doc': X2}, Y)
 
     def transfer_feat_dense2sparse(self, dense_feat):
