@@ -15,12 +15,15 @@ class PairGenerator():
         self.batch_size = config['batch_size']
         self.data_path = config['data_path']
         self.word_dict = config['word_dict']
+
         self.rel_gap = 0.
         if 'rel_gap' in config:
             self.rel_gap = config['rel_gap']
+
         self.high_label = 0.
         if 'high_label' in config:
             self.high_label = config['high_label']
+
         self.batch_per_iter = config['batch_per_iter']
         self.query_per_iter = config['query_per_iter']
         self.qfile_list = self.get_qfile_list()
