@@ -4,7 +4,7 @@ import time
 import numpy as np
 import scipy.sparse as sp
 
-from matchzoo import convert_term2id
+from utils import convert_term2id
 
 
 class Duet_PairGenerator():

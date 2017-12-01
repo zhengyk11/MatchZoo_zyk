@@ -3,7 +3,7 @@ import time
 import random
 import numpy as np
 
-from matchzoo import convert_term2id
+from utils import convert_term2id
 
 
 class DRMM_PairGenerator():

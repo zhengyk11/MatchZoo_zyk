@@ -2,7 +2,7 @@ import os
 import time
 import numpy as np
 # from ListBasicGenerator import ListBasicGenerator
-from matchzoo import convert_term2id
+from utils import convert_term2id
 
 
 class DRMM_ListGenerator(): # ListBasicGenerator):

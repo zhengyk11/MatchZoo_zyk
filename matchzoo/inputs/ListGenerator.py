@@ -1,7 +1,7 @@
 import os
 import time
 import numpy as np
-import scipy.sparse as sp
+
 from utils import convert_term2id
 
 class ListGenerator():
