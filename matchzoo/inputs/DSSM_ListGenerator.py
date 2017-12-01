@@ -19,7 +19,7 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
         self.doc_maxlen   = config['doc_maxlen']
         self.batch_size = config['batch_size']
         self.data_path = config['data_path']
-        self.word_dict = config['word_dict']
+        # self.word_dict = config['word_dict']
         self.qfile_list = self.get_qfile_list()
         self.data_handler = open(self.qfile_list[0])# self.get_data_handler()
         self.qfile_idx = 0

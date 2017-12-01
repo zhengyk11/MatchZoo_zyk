@@ -17,7 +17,7 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
         self.doc_maxlen   = config['doc_maxlen']
         self.batch_size = config['batch_size']
         self.data_path = config['data_path']
-        self.word_dict = config['word_dict']
+        # self.word_dict = config['word_dict']
         self.feat_size = config['ngraph_size'] # config['feat_size']
         self.ngraph_size = config['ngraph_size']
         self.ngraph = config['ngraph']
