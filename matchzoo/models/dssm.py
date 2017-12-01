@@ -11,7 +11,7 @@ class DSSM(BasicModel):
     def __init__(self, config):
         super(DSSM, self).__init__(config)
         self.__name = 'DSSM'
-        self.check_list = ['feat_size', 'hidden_sizes']
+        self.check_list = ['ngraph_size', 'hidden_sizes']
         self.setup(config)
         if not self.check():
             raise TypeError('[DSSM] parameter check wrong')
@@ -25,8 +25,8 @@ class DSSM(BasicModel):
         self.config.update(config)
 
     def build(self):
-        query = Input(name='query', shape=(self.config['feat_size'],))
-        doc = Input(name='doc', shape=(self.config['feat_size'],))
+        query = Input(name='query', shape=(self.config['ngraph_size'],))
+        doc = Input(name='doc', shape=(self.config['ngraph_size'],))
 
         def mlp_work(input_dim):
             seq = Sequential()
@@ -39,7 +39,7 @@ class DSSM(BasicModel):
                     seq.add(Activation(activation='relu'))
             return seq
 
-        mlp = mlp_work(self.config['feat_size'])
+        mlp = mlp_work(self.config['ngraph_size'])
         rq = mlp(query)
         rd = mlp(doc)
         out_ = Dot(axes=[1, 1], normalize=True)([rq, rd])
