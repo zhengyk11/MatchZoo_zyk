@@ -58,17 +58,27 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     qid, query, uid, doc, label = line.split('\t')
                     qid = qid.strip()
                     uid = uid.strip()
-                    query = query.strip().decode('utf-8', 'ignore')
-                    query = ' '.join([w for w in query]).encode('utf-8', 'ignore')
-                    query = convert_term2id(query.strip().split(), self.ngraph)
-                    doc = doc.strip().decode('utf-8', 'ignore')
-                    doc = ' '.join([w for w in doc]).encode('utf-8', 'ignore')
-                    doc = convert_term2id(doc.strip().split(), self.ngraph)
-                    # query = convert_term2id(query.strip().split(), self.word_dict)
-                    # doc = convert_term2id(doc.strip().split(), self.word_dict)
+
+                    query = query.strip().split()
+                    query_hash = [[] for tt in self.query_maxlen]
+                    for q_i, query_term in enumerate(query):
+                        query_term = query_term.strip().decode('utf-8', 'ignore')
+                        query_term = ' '.join([w for w in query_term]).encode('utf-8', 'ignore').strip().split()
+                        query_term_id = convert_term2id(query_term, self.ngraph)
+                        query_hash[q_i] = query_term_id
+                    query_hash = self.transfer_feat_dense2sparse(query_hash, self.ngraph_size)
+                    doc = doc.strip().split()
+                    doc_hash = [[] for tt in self.doc_maxlen]
+                    for d_i, doc_term in enumerate(doc):
+                        doc_term = doc_term.strip().decode('utf-8', 'ignore')
+                        doc_term = ' '.join([w for w in doc_term]).encode('utf-8', 'ignore').strip().split()
+                        doc_term_id = convert_term2id(doc_term, self.ngraph)
+                        doc_hash[d_i] = doc_term_id
+                    doc_hash = self.transfer_feat_dense2sparse(doc_hash, self.ngraph_size)
+
                     label = float(label)
-                    qid_query[qid] = query
-                    uid_doc[uid] = doc
+                    qid_query[qid] = query_hash
+                    uid_doc[uid] = doc_hash
                     if qid not in qid_label_uid:
                         qid_label_uid[qid] = {}
                     if label not in qid_label_uid[qid]:
@@ -117,8 +127,10 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     X2.append(dp)
                     X2.append(dn)
 
-                X1 = self.transfer_feat_dense2sparse(X1, self.feat_size).toarray()
-                X2 = self.transfer_feat_dense2sparse(X2, self.feat_size).toarray()
+                X1 = np.array(X1, dtype=np.float32)
+                X2 = np.array(X2, dtype=np.float32)
+                # X1 = self.transfer_feat_dense2sparse(X1, self.feat_size).toarray()
+                # X2 = self.transfer_feat_dense2sparse(X2, self.feat_size).toarray()
                 yield X1, X2, Y
 
     def get_batch_generator(self):

@@ -65,29 +65,48 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
                 label = float(label)
                 curr_batch.append([qid, doc_id, label])
 
-                query = query.strip().decode('utf-8', 'ignore')
-                query = ' '.join([w for w in query]).encode('utf-8', 'ignore')
-                query = convert_term2id(query.strip().split(), self.ngraph)
-                doc = doc.strip().decode('utf-8', 'ignore')
-                doc = ' '.join([w for w in doc]).encode('utf-8', 'ignore')
-                doc = convert_term2id(doc.strip().split(), self.ngraph)
+                query = query.strip().split()
+                query_hash = [[] for tt in self.query_maxlen]
+                for q_i, query_term in enumerate(query):
+                    query_term = query_term.strip().decode('utf-8', 'ignore')
+                    query_term = ' '.join([w for w in query_term]).encode('utf-8', 'ignore').strip().split()
+                    query_term_id = convert_term2id(query_term, self.ngraph)
+                    query_hash[q_i] = query_term_id
+                query_hash = self.transfer_feat_dense2sparse(query_hash, self.ngraph_size)
+                doc = doc.strip().split()
+                doc_hash = [[] for tt in self.doc_maxlen]
+                for d_i, doc_term in enumerate(doc):
+                    doc_term = doc_term.strip().decode('utf-8', 'ignore')
+                    doc_term = ' '.join([w for w in doc_term]).encode('utf-8', 'ignore').strip().split()
+                    doc_term_id = convert_term2id(doc_term, self.ngraph)
+                    doc_hash[d_i] = doc_term_id
+                doc_hash = self.transfer_feat_dense2sparse(doc_hash, self.ngraph_size)
+
+                # query = query.strip().decode('utf-8', 'ignore')
+                # query = ' '.join([w for w in query]).encode('utf-8', 'ignore')
+                # query = convert_term2id(query.strip().split(), self.ngraph)
+                # doc = doc.strip().decode('utf-8', 'ignore')
+                # doc = ' '.join([w for w in doc]).encode('utf-8', 'ignore')
+                # doc = convert_term2id(doc.strip().split(), self.ngraph)
                 # query = convert_term2id(query.strip().split(), self.word_dict)
                 # doc = convert_term2id(doc.strip().split(), self.word_dict)
 
-                X1.append(query)
-                X2.append(doc)
+                X1.append(query_hash)
+                X2.append(doc_hash)
 
             if len(curr_batch) < 1:
                 break
-            X1 = self.transfer_feat_dense2sparse(X1).toarray()
-            X2 = self.transfer_feat_dense2sparse(X2).toarray()
+            X1 = np.array(X1, dtype=np.float32)
+            X2 = np.array(X2, dtype=np.float32)
+            # X1 = self.transfer_feat_dense2sparse(X1).toarray()
+            # X2 = self.transfer_feat_dense2sparse(X2).toarray()
             yield X1, X2, Y, curr_batch
 
     def get_batch_generator(self):
         for X1, X2, Y, curr_batch in self.get_batch():
             yield ({'query': X1, 'doc': X2}, Y, curr_batch)
 
-    def transfer_feat_dense2sparse(self, dense_feat):
+    def transfer_feat_dense2sparse(self, dense_feat, feat_size):
         data = []
         indices = []
         indptr = [0]
@@ -96,4 +115,4 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
                 indices.append(val)
                 data.append(1)
             indptr.append(indptr[-1] + len(feat))
-        return sp.csr_matrix((data, indices, indptr), shape=(len(dense_feat), self.feat_size), dtype="float32")
+        return sp.csr_matrix((data, indices, indptr), shape=(len(dense_feat), feat_size), dtype="float32")
