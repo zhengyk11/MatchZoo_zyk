@@ -66,7 +66,7 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
                 curr_batch.append([qid, doc_id, label])
 
                 query = query.strip().split()
-                query_hash = [[] for tt in self.query_maxlen]
+                query_hash = [[] for tt in range(self.query_maxlen)]
                 for q_i, query_term in enumerate(query):
                     query_term = query_term.strip().decode('utf-8', 'ignore')
                     query_term = ' '.join([w for w in query_term]).encode('utf-8', 'ignore').strip().split()
@@ -74,7 +74,7 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
                     query_hash[q_i] = query_term_id
                 query_hash = self.transfer_feat_dense2sparse(query_hash, self.ngraph_size)
                 doc = doc.strip().split()
-                doc_hash = [[] for tt in self.doc_maxlen]
+                doc_hash = [[] for tt in range(self.doc_maxlen)]
                 for d_i, doc_term in enumerate(doc):
                     doc_term = doc_term.strip().decode('utf-8', 'ignore')
                     doc_term = ' '.join([w for w in doc_term]).encode('utf-8', 'ignore').strip().split()
