@@ -163,8 +163,8 @@ def read_ngraph(filename):
     cnt = -1
     for line in open(filename):
         cnt += 1
-        # if cnt > 5000:
-        #     break
+        if cnt > 3500:
+            break
         term= line
         term = term.strip().lower()
         if len(term) < 1:

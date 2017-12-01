@@ -52,7 +52,7 @@ def train(config):
     assert 'embed_path' in share_input_conf
     embed_dict, vocab_size, embed_size, word_dict = read_embedding(share_input_conf['embed_path'])
     share_input_conf['word_dict'] = word_dict
-    share_input_conf['feat_size'] = vocab_size
+    # share_input_conf['feat_size'] = vocab_size
     share_input_conf['vocab_size'] = vocab_size
     share_input_conf['embed_size'] = embed_size
     embed = np.float32(np.random.uniform(-4, 4, [vocab_size, embed_size]))
@@ -72,17 +72,17 @@ def train(config):
     if 'ngraph' in share_input_conf:
         datapath = share_input_conf['ngraph']
         ngraph, ngraph_size = read_ngraph(datapath)
-        new_ngraph = {}
-        new_ngraph[0] = []
-        for term in word_dict:
-            new_ngraph[word_dict[term]] = []
-            sharp_term = '#' + term + '#'
-            for i in range(len(sharp_term)):
-                for j in range(i+1, len(sharp_term)+1):
-                    part_term = sharp_term[i:j]
-                    if part_term in ngraph:
-                        new_ngraph[word_dict[term]].append(ngraph[part_term])
-        config['inputs']['share']['ngraph'] = new_ngraph
+        # new_ngraph = {}
+        # new_ngraph[0] = []
+        # for term in word_dict:
+        #     new_ngraph[word_dict[term]] = []
+        #     sharp_term = '#' + term + '#'
+        #     for i in range(len(sharp_term)):
+        #         for j in range(i+1, len(sharp_term)+1):
+        #             part_term = sharp_term[i:j]
+        #             if part_term in ngraph:
+        #                 new_ngraph[word_dict[term]].append(ngraph[part_term])
+        config['inputs']['share']['ngraph'] = ngraph # new_ngraph
         config['inputs']['share']['ngraph_size'] = ngraph_size
 
 

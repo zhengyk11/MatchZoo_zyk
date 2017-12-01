@@ -12,7 +12,9 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
         # super(DSSM_ListGenerator, self).__init__(config=config)
         self.__name = 'DSSM_ListGenerator'
 
-        self.feat_size = config['feat_size']
+        self.feat_size = config['ngraph_size'] # config['feat_size']
+        self.ngraph_size = config['ngraph_size']
+        self.ngraph = config['ngraph']
         self.query_maxlen = config['query_maxlen']
         self.doc_maxlen   = config['doc_maxlen']
         self.batch_size = config['batch_size']
@@ -63,8 +65,14 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
                 label = float(label)
                 curr_batch.append([qid, doc_id, label])
 
-                query = convert_term2id(query.strip().split(), self.word_dict)
-                doc = convert_term2id(doc.strip().split(), self.word_dict)
+                query = query.strip().decode('utf-8', 'ignore')
+                query = ' '.join([w for w in query]).encode('utf-8', 'ignore')
+                query = convert_term2id(query.strip().split(), self.ngraph)
+                doc = doc.strip().decode('utf-8', 'ignore')
+                doc = ' '.join([w for w in doc]).encode('utf-8', 'ignore')
+                doc = convert_term2id(doc.strip().split(), self.ngraph)
+                # query = convert_term2id(query.strip().split(), self.word_dict)
+                # doc = convert_term2id(doc.strip().split(), self.word_dict)
 
                 X1.append(query)
                 X2.append(doc)

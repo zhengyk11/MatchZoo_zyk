@@ -18,7 +18,9 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
         self.batch_size = config['batch_size']
         self.data_path = config['data_path']
         self.word_dict = config['word_dict']
-        self.feat_size = config['feat_size']
+        self.feat_size = config['ngraph_size'] # config['feat_size']
+        self.ngraph_size = config['ngraph_size']
+        self.ngraph = config['ngraph']
 
         self.rel_gap = 0.
         if 'rel_gap' in config:
@@ -56,8 +58,14 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     qid, query, uid, doc, label = line.split('\t')
                     qid = qid.strip()
                     uid = uid.strip()
-                    query = convert_term2id(query.strip().split(), self.word_dict)
-                    doc = convert_term2id(doc.strip().split(), self.word_dict)
+                    query = query.strip().decode('utf-8', 'ignore')
+                    query = ' '.join([w for w in query]).encode('utf-8', 'ignore')
+                    query = convert_term2id(query.strip().split(), self.ngraph)
+                    doc = doc.strip().decode('utf-8', 'ignore')
+                    doc = ' '.join([w for w in doc]).encode('utf-8', 'ignore')
+                    doc = convert_term2id(doc.strip().split(), self.ngraph)
+                    # query = convert_term2id(query.strip().split(), self.word_dict)
+                    # doc = convert_term2id(doc.strip().split(), self.word_dict)
                     label = float(label)
                     qid_query[qid] = query
                     uid_doc[uid] = doc
