@@ -49,19 +49,19 @@ def train(config):
     share_input_conf = input_conf['share']
 
     # collect embedding
-    assert 'embed_path' in share_input_conf
-    embed_dict, vocab_size, embed_size, word_dict = read_embedding(share_input_conf['embed_path'])
-    share_input_conf['word_dict'] = word_dict
-    # share_input_conf['feat_size'] = vocab_size
-    share_input_conf['vocab_size'] = vocab_size
-    share_input_conf['embed_size'] = embed_size
-    embed = np.float32(np.random.uniform(-4, 4, [vocab_size, embed_size]))
-    embed_normalize = False
-    if 'drmm' in config['model']['model_py'].lower():
-        embed_normalize = True
-    share_input_conf['embed'] = convert_embed_2_numpy('embed', embed_dict=embed_dict, embed=embed,
-                                                      normalize=embed_normalize)
-    print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Embedding] Embedding Load Done.'
+    if 'embed_path' in share_input_conf:
+        embed_dict, vocab_size, embed_size, word_dict = read_embedding(share_input_conf['embed_path'])
+        share_input_conf['word_dict'] = word_dict
+        # share_input_conf['feat_size'] = vocab_size
+        share_input_conf['vocab_size'] = vocab_size
+        share_input_conf['embed_size'] = embed_size
+        embed = np.float32(np.random.uniform(-4, 4, [vocab_size, embed_size]))
+        embed_normalize = False
+        if 'drmm' in config['model']['model_py'].lower():
+            embed_normalize = True
+        share_input_conf['embed'] = convert_embed_2_numpy('embed', embed_dict=embed_dict, embed=embed,
+                                                          normalize=embed_normalize)
+        print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Embedding] Embedding Load Done.'
 
     if 'idf_feat' in share_input_conf:
         datapath = share_input_conf['idf_feat']
