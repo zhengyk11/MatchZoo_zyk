@@ -5,11 +5,11 @@ import time
 import json
 import argparse
 import random
-random.seed(49999)
+# random.seed(49999)
 import numpy as np
-np.random.seed(49999)
+# np.random.seed(49999)
 import tensorflow as tf
-tf.set_random_seed(49999)
+# tf.set_random_seed(49999)
 from collections import OrderedDict
 from keras.models import Model
 import keras.backend.tensorflow_backend as KTF
