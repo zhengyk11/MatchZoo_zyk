@@ -20,7 +20,7 @@ config = """
     "doc_1":  "../../data/fulltext/real_valid_test/real_valid_test_fulltext_seg_filter.txt",
     "doc_2":  "../../data/fulltext/real_valid_test/real_valid_test_fulltext_seg_filter_solrex.txt",
     "query":  "../../data/fulltext/real_valid_test/real_valid_test_qid_seg.txt",
-    "output": "../../runtime_data/fulltext/real_test_HL_solrex"
+    "output": "../../runtime_data/fulltext/real_valid_HL_solrex"
 }
 """
 
