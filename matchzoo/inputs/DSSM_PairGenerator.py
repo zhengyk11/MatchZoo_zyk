@@ -109,15 +109,15 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     X2.append(dp)
                     X2.append(dn)
 
-                X1 = self.transfer_feat_dense2sparse(X1).toarray()
-                X2 = self.transfer_feat_dense2sparse(X2).toarray()
+                X1 = self.transfer_feat_dense2sparse(X1, self.feat_size).toarray()
+                X2 = self.transfer_feat_dense2sparse(X2, self.feat_size).toarray()
                 yield X1, X2, Y
 
     def get_batch_generator(self):
         for X1, X2, Y in self.get_batch():
             yield ({'query': X1, 'doc': X2}, Y)
 
-    def transfer_feat_dense2sparse(self, dense_feat):
+    def transfer_feat_dense2sparse(self, dense_feat, feat_size):
         data = []
         indices = []
         indptr = [0]
@@ -126,4 +126,4 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                 indices.append(val)
                 data.append(1)
             indptr.append(indptr[-1] + len(feat))
-        return sp.csr_matrix((data, indices, indptr), shape=(len(dense_feat), self.feat_size), dtype="float32")
+        return sp.csr_matrix((data, indices, indptr), shape=(len(dense_feat), feat_size), dtype="float32")

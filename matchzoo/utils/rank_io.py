@@ -158,6 +158,24 @@ def read_idf(filename, word_dict):
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tIdf feat size: %d' % (filename, len(idfs))
     return idfs
 
+def read_ngraph(filename):
+    ngraph = {}
+    cnt = -1
+    for line in open(filename):
+        cnt += 1
+        # if cnt > 5000:
+        #     break
+        term= line
+        term = term.strip().lower()
+        if len(term) < 1:
+            continue
+        ngraph[term] = cnt
+
+    print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+    print '[%s]\n\tngraphs feat size: %d' % (filename, len(ngraph))
+    return ngraph, cnt+1
+
+
 def convert_term2id(text, word_dict):
     new_text = []
     for term in text:

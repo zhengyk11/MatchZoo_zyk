@@ -15,11 +15,11 @@ class DUET(BasicModel):
     def __init__(self, config):
         super(DUET, self).__init__(config)
         self.__name = 'DUET'
-        self.check_list = [ 'text1_maxlen', 'text2_maxlen',
+        self.check_list = [ 'query_maxlen', 'doc_maxlen',
                             'kernel_count', 'local_kernel_size', 'dropout_rate',
-                            'dist_kernel_size', 'pooling_kernel_width_doc', 'num_ngraphs',
-                            'dist_doc_kernel_size']
-        # self.embed_trainable = config['train_embed']
+                            'dist_kernel_size', 'pooling_kernel_width_doc',
+                            'ngraph_size', 'dist_doc_kernel_size']
+
         self.setup(config)
         if not self.check():
             raise TypeError('[DUET] parameter check wrong')
@@ -29,41 +29,35 @@ class DUET(BasicModel):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
 
-        # self.set_default('kernel_count', 32)
-        # self.set_default('kernel_size', 3)
-        # self.set_default('q_pool_size', 2)
-        # self.set_default('d_pool_size', 2)
-        # self.set_default('dropout_rate', 0)
-        # self.set_default('hidden_sizes', [300, 128])
         self.config.update(config)
 
     def build(self):
-        local_feat = Input(name='local_feats', shape=(self.config['text1_maxlen'],self.config['text2_maxlen'],))
-        query = Input(name='query', shape=(self.config['num_ngraphs'], self.config['text1_maxlen'],))
-        doc = Input(name='doc', shape=(self.config['num_ngraphs'], self.config['text2_maxlen'],))
+        local_feat = Input(name='Local_feat', shape=(self.config['query_maxlen'], self.config['doc_maxlen'],))
+        query = Input(name='Dist_feat_query', shape=(self.config['query_maxlen'], self.config['ngraph_size'],))
+        doc = Input(name='Dist_feat_doc', shape=(self.config['doc_maxlen'], self.config['ngraph_size'],))
 
         print local_feat.shape
         print query.shape
         print doc.shape
         # num_hidden_nodes = self.config['kernel_count']
 
-        word_window_size = self.config['dist_kernel_size'][1] #3
-        pooling_kernel_width_query = self.config['text1_maxlen'] - word_window_size + 1  # = 8
+        word_window_size = self.config['dist_kernel_size'][0] #3
+        pooling_kernel_width_query = self.config['query_maxlen'] - word_window_size + 1  # = 8
         pooling_kernel_width_doc = self.config['pooling_kernel_width_doc'] #100
-        # num_pooling_windows_doc = ((self.config['text2_maxlen'] - word_window_size + 1) - pooling_kernel_width_doc) + 1  # = 899
+        # num_pooling_windows_doc = ((self.config['doc_maxlen'] - word_window_size + 1) - pooling_kernel_width_doc) + 1  # = 899
         print word_window_size, pooling_kernel_width_query, pooling_kernel_width_doc
 
         # duet_local = Sequential()
         # duet_local.add(Conv2D(self.config['kernel_count'], self.config['local_kernel_size'], activation='tanh',
-        #                       input_shape=(self.config['text1_maxlen'], self.config['text2_maxlen'])))
+        #                       input_shape=(self.config['query_maxlen'], self.config['doc_maxlen'])))
         # duet_local.add(Dense(self.config['kernel_count'], activation='tanh'))
         # duet_local.add(Dense(self.config['kernel_count'], activation='tanh'))
         # duet_local.add(Dropout(self.config['dropout_rate']))
         # duet_local.add(Dense(1, activation='tanh'))
         # local_out = duet_local(local_feat)
-        local_out = Reshape([self.config['text1_maxlen'], self.config['text2_maxlen'], 1])(local_feat)
+        local_out = Reshape([self.config['query_maxlen'], self.config['doc_maxlen'], 1])(local_feat)
         local_out = Conv2D(self.config['kernel_count'], self.config['local_kernel_size'], activation='tanh')(local_out)
-        # , input_shape=(self.config['text1_maxlen'], self.config['text2_maxlen']))(local_feat)
+        # , input_shape=(self.config['query_maxlen'], self.config['doc_maxlen']))(local_feat)
         print local_out.shape
         local_out = Flatten()(local_out)
         print local_out.shape
@@ -80,15 +74,15 @@ class DUET(BasicModel):
 
         # duet_embed_q = Sequential()
         # duet_embed_q.add(Conv2D(self.config['kernel_count'], self.config['dist_kernel_size'], activation='tanh')
-                               #, input_shape=(self.config['num_ngraphs'], self.config['text1_maxlen'])))
+                               #, input_shape=(self.config['ngraph_size'], self.config['query_maxlen'])))
         # duet_embed_q.add(MaxPool2D((1, pooling_kernel_width_query)))
         # duet_embed_q.add(Dense(self.config['kernel_count'], activation='tanh'))
 
         # embed_q = duet_embed_q(query)
-        embed_q = Reshape([self.config['num_ngraphs'], self.config['text1_maxlen'], 1])(query)
+        embed_q = Reshape([self.config['query_maxlen'], self.config['ngraph_size'], 1])(query)
         embed_q = Conv2D(self.config['kernel_count'], self.config['dist_kernel_size'], activation='tanh')(embed_q)
         print embed_q.shape
-        embed_q = MaxPool2D((1, pooling_kernel_width_query), strides=(1,1))(embed_q)
+        embed_q = MaxPool2D((pooling_kernel_width_query, 1), strides=(1,1))(embed_q)
         print embed_q.shape
         embed_q = Flatten()(embed_q)
         print embed_q.shape
@@ -97,15 +91,15 @@ class DUET(BasicModel):
 
         # duet_embed_d = Sequential()
         # duet_embed_d.add(Conv2D(self.config['kernel_count'], self.config['dist_kernel_size'], activation='tanh')
-        #                        #, input_shape=(self.config['num_ngraphs'], self.config['text2_maxlen'])))
+        #                        #, input_shape=(self.config['ngraph_size'], self.config['doc_maxlen'])))
         # duet_embed_d.add(MaxPool2D((1, pooling_kernel_width_doc)))
         # duet_embed_d.add(Dense(self.config['kernel_count'], activation='tanh'))
         #
         # embed_d = duet_embed_d(doc)
-        embed_d = Reshape([self.config['num_ngraphs'], self.config['text2_maxlen'], 1])(doc)
+        embed_d = Reshape([self.config['doc_maxlen'], self.config['ngraph_size'], 1])(doc)
         embed_d = Conv2D(self.config['kernel_count'], self.config['dist_kernel_size'], activation='tanh')(embed_d)
         print embed_d.shape
-        embed_d = MaxPool2D((1, pooling_kernel_width_doc), strides=(1,1))(embed_d)
+        embed_d = MaxPool2D((pooling_kernel_width_doc, 1), strides=(1,1))(embed_d)
         print embed_d.shape
         embed_d = Reshape([-1, self.config['kernel_count'], 1])(embed_d)
         print 'reshape', embed_d.shape
@@ -149,14 +143,14 @@ class DUET(BasicModel):
         # net_local = [C.reshape(d, (1, 1)) for d in net_local]
         # net_local = C.splice(net_local)
         #
-        # net_distrib_q = C.reshape(features_distrib_query, (num_ngraphs, words_per_query, 1))
+        # net_distrib_q = C.reshape(features_distrib_query, (ngraph_size, words_per_query, 1))
         # net_distrib_q = duet_embed_q(net_distrib_q)
         # net_distrib_q = [net_distrib_q for idx in range(0, num_pooling_windows_doc)]
         # net_distrib_q = C.splice(net_distrib_q)
         # net_distrib_q = C.reshape(net_distrib_q, (num_hidden_nodes * num_pooling_windows_doc, 1))
         #
         # net_distrib_d = [C.slice(features_distrib_docs, 0, idx, idx + 1) for idx in range(0, num_docs)]
-        # net_distrib_d = [C.reshape(d, (num_ngraphs, words_per_doc, 1)) for d in net_distrib_d]
+        # net_distrib_d = [C.reshape(d, (ngraph_size, words_per_doc, 1)) for d in net_distrib_d]
         # net_distrib_d = [duet_embed_d(d) for d in net_distrib_d]
         # net_distrib_d = [C.reshape(d, (num_hidden_nodes * num_pooling_windows_doc, 1)) for d in net_distrib_d]
         #

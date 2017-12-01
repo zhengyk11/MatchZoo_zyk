@@ -69,6 +69,22 @@ def train(config):
         idf = np.float32(np.random.uniform(1, 5, [vocab_size, 1]))
         config['inputs']['share']['idf_feat'] = convert_embed_2_numpy('idf', embed_dict=idf_dict, embed=idf, normalize=False)
 
+    if 'ngraph' in share_input_conf:
+        datapath = share_input_conf['ngraph']
+        ngraph, ngraph_size = read_ngraph(datapath)
+        new_ngraph = {}
+        new_ngraph[0] = []
+        for term in word_dict:
+            new_ngraph[word_dict[term]] = []
+            sharp_term = '#' + term + '#'
+            for i in range(len(sharp_term)):
+                for j in range(i+1, len(sharp_term)+1):
+                    part_term = sharp_term[i:j]
+                    if part_term in ngraph:
+                        new_ngraph[word_dict[term]].append(ngraph[part_term])
+        config['inputs']['share']['ngraph'] = new_ngraph
+        config['inputs']['share']['ngraph_size'] = ngraph_size
+
 
     # list all input tags and construct tags config
     input_train_conf = OrderedDict()
