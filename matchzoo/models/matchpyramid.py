@@ -19,7 +19,7 @@ class MatchPyramid(BasicModel):
     def __init__(self, config):
         super(MatchPyramid, self).__init__(config)
         self.__name = 'MatchPyramid'
-        self.check_list = [ 'text1_maxlen', 'text2_maxlen',
+        self.check_list = [ 'query_maxlen', 'doc_maxlen',
                             'embed', 'embed_size', 'vocab_size',
                             'kernel_size', 'kernel_count',
                             'dpool_size', 'dropout_rate', 'hidden_sizes']
@@ -27,21 +27,18 @@ class MatchPyramid(BasicModel):
         self.setup(config)
         if not self.check():
             raise TypeError('[MatchPyramid] parameter check wrong')
-        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[MatchPyramid] init done'
+        print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        print '[MatchPyramid] init done'
 
     def setup(self, config):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
 
-        # self.set_default('kernel_count', 32)
-        # self.set_default('kernel_size', [3, 3])
-        # self.set_default('dpool_size', [3, 10])
-        # self.set_default('dropout_rate', 0)
         self.config.update(config)
 
     def build(self):
-        query = Input(name='query', shape=(self.config['text1_maxlen'],))
-        doc = Input(name='doc', shape=(self.config['text2_maxlen'],))
+        query = Input(name='query', shape=(self.config['query_maxlen'],))
+        doc = Input(name='doc', shape=(self.config['doc_maxlen'],))
 
         embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']],
                               trainable=self.embed_trainable)
@@ -49,7 +46,7 @@ class MatchPyramid(BasicModel):
         d_embed = embedding(doc)
 
         cross = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
-        cross_reshape = Reshape((self.config['text1_maxlen'], self.config['text2_maxlen'], 1))(cross)
+        cross_reshape = Reshape((self.config['query_maxlen'], self.config['doc_maxlen'], 1))(cross)
 
         conv1 = Conv2D(self.config['kernel_count'], self.config['kernel_size'], padding='same', activation='relu')(cross_reshape)
         pool1 = MaxPooling2D(pool_size=(self.config['dpool_size'][0], self.config['dpool_size'][1]))(conv1)
