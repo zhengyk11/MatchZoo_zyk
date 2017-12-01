@@ -59,7 +59,7 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     qid = qid.strip()
                     uid = uid.strip()
 
-                    query = query.strip().split()
+                    query = query.strip().split()[:min(len(query), self.query_maxlen)]
                     query_hash = [[] for tt in range(self.query_maxlen)]
                     for q_i, query_term in enumerate(query):
                         query_term = query_term.strip().decode('utf-8', 'ignore')
@@ -67,7 +67,7 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                         query_term_id = convert_term2id(query_term, self.ngraph)
                         query_hash[q_i] = query_term_id
                     query_hash = self.transfer_feat_dense2sparse(query_hash, self.ngraph_size)
-                    doc = doc.strip().split()
+                    doc = doc.strip().split()[:min(len(doc), self.doc_maxlen)]
                     doc_hash = [[] for tt in range(self.doc_maxlen)]
                     for d_i, doc_term in enumerate(doc):
                         doc_term = doc_term.strip().decode('utf-8', 'ignore')
