@@ -59,27 +59,12 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     qid = qid.strip()
                     uid = uid.strip()
 
-                    query = query.strip().split()[:min(len(query), self.query_maxlen)]
-                    query_hash = [[] for tt in range(self.query_maxlen)]
-                    for q_i, query_term in enumerate(query):
-                        query_term = query_term.strip().decode('utf-8', 'ignore')
-                        query_term = ' '.join([w for w in query_term]).encode('utf-8', 'ignore').strip().split()
-                        query_term_id = convert_term2id(query_term, self.ngraph)
-                        query_hash[q_i] = query_term_id
-                    query_hash = self.transfer_feat_dense2sparse(query_hash, self.ngraph_size).toarray()
-
-                    doc = doc.strip().split()[:min(len(doc), self.doc_maxlen)]
-                    doc_hash = [[] for tt in range(self.doc_maxlen)]
-                    for d_i, doc_term in enumerate(doc):
-                        doc_term = doc_term.strip().decode('utf-8', 'ignore')
-                        doc_term = ' '.join([w for w in doc_term]).encode('utf-8', 'ignore').strip().split()
-                        doc_term_id = convert_term2id(doc_term, self.ngraph)
-                        doc_hash[d_i] = doc_term_id
-                    doc_hash = self.transfer_feat_dense2sparse(doc_hash, self.ngraph_size).toarray()
+                    query = query.strip()
+                    doc = doc.strip()
 
                     label = float(label)
-                    qid_query[qid] = query_hash
-                    uid_doc[uid] = doc_hash
+                    qid_query[qid] = query
+                    uid_doc[uid] = doc
                     if qid not in qid_label_uid:
                         qid_label_uid[qid] = {}
                     if label not in qid_label_uid[qid]:
@@ -123,10 +108,34 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     dp = uid_doc[dp_id]
                     dn = uid_doc[dn_id]
 
-                    X1.append(query)
-                    X1.append(query)
-                    X2.append(dp)
-                    X2.append(dn)
+                    query_len = min(self.query_maxlen, len(query))
+                    # dp_len = min(self.doc_maxlen, len(dp))
+                    # dn_len = min(self.doc_maxlen, len(dn))
+
+                    query = query.strip().split()[:query_len]
+                    query_hash = [[] for tt in range(self.query_maxlen)]
+                    for q_i, query_term in enumerate(query):
+                        query_term = query_term.strip().decode('utf-8', 'ignore')
+                        query_term = ' '.join([w for w in query_term]).encode('utf-8', 'ignore').strip().split()
+                        query_term_id = convert_term2id(query_term, self.ngraph)
+                        query_hash[q_i] = query_term_id
+                    query_hash = self.transfer_feat_dense2sparse(query_hash, self.ngraph_size).toarray()
+                    for doc in [dp, dn]:
+                        doc_len = min(self.doc_maxlen, len(doc))
+                        doc = doc.strip().split()[:doc_len]
+                        doc_hash = [[] for tt in range(self.doc_maxlen)]
+                        for d_i, doc_term in enumerate(doc):
+                            doc_term = doc_term.strip().decode('utf-8', 'ignore')
+                            doc_term = ' '.join([w for w in doc_term]).encode('utf-8', 'ignore').strip().split()
+                            doc_term_id = convert_term2id(doc_term, self.ngraph)
+                            doc_hash[d_i] = doc_term_id
+                        doc_hash = self.transfer_feat_dense2sparse(doc_hash, self.ngraph_size).toarray()
+                        X2.append(doc_hash)
+
+                    X1.append(query_hash)
+                    X1.append(query_hash)
+                    # X2.append(dp_hash)
+                    # X2.append(dn_hash)
 
                 X1 = np.array(X1, dtype=np.float32)
                 X2 = np.array(X2, dtype=np.float32)
