@@ -65,41 +65,24 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
                 label = float(label)
                 curr_batch.append([qid, doc_id, label])
 
-                query = query.strip().split()[:min(len(query), self.query_maxlen)]
-                query_hash = [[] for tt in range(self.query_maxlen)]
-                for q_i, query_term in enumerate(query):
-                    query_term = query_term.strip().decode('utf-8', 'ignore')
-                    query_term = ' '.join([w for w in query_term]).encode('utf-8', 'ignore').strip().split()
-                    query_term_id = convert_term2id(query_term, self.ngraph)
-                    query_hash[q_i] = query_term_id
-                query_hash = self.transfer_feat_dense2sparse(query_hash, self.ngraph_size).toarray()
-                doc = doc.strip().split()[:min(len(doc), self.doc_maxlen)]
-                doc_hash = [[] for tt in range(self.doc_maxlen)]
-                for d_i, doc_term in enumerate(doc):
-                    doc_term = doc_term.strip().decode('utf-8', 'ignore')
-                    doc_term = ' '.join([w for w in doc_term]).encode('utf-8', 'ignore').strip().split()
-                    doc_term_id = convert_term2id(doc_term, self.ngraph)
-                    doc_hash[d_i] = doc_term_id
-                doc_hash = self.transfer_feat_dense2sparse(doc_hash, self.ngraph_size).toarray()
+                query = query.strip().split()
+                query_len = min(len(query), self.query_maxlen)
+                query = query[:query_len]
+                query = convert_term2id(query, self.ngraph)
 
-                # query = query.strip().decode('utf-8', 'ignore')
-                # query = ' '.join([w for w in query]).encode('utf-8', 'ignore')
-                # query = convert_term2id(query.strip().split(), self.ngraph)
-                # doc = doc.strip().decode('utf-8', 'ignore')
-                # doc = ' '.join([w for w in doc]).encode('utf-8', 'ignore')
-                # doc = convert_term2id(doc.strip().split(), self.ngraph)
-                # query = convert_term2id(query.strip().split(), self.word_dict)
-                # doc = convert_term2id(doc.strip().split(), self.word_dict)
+                doc = doc.strip().split()
+                doc_len = min(len(doc), self.doc_maxlen)
+                doc = doc[:doc_len]
+                doc = convert_term2id(doc, self.ngraph)
 
-                X1.append(query_hash)
-                X2.append(doc_hash)
+                X1.append(query)
+                X2.append(doc)
 
             if len(curr_batch) < 1:
                 break
-            X1 = np.array(X1, dtype=np.float32)
-            X2 = np.array(X2, dtype=np.float32)
-            # X1 = self.transfer_feat_dense2sparse(X1).toarray()
-            # X2 = self.transfer_feat_dense2sparse(X2).toarray()
+
+            X1 = self.transfer_feat_dense2sparse(X1, self.ngraph_size).toarray()
+            X2 = self.transfer_feat_dense2sparse(X2, self.ngraph_size).toarray()
             yield X1, X2, Y, curr_batch
 
     def get_batch_generator(self):

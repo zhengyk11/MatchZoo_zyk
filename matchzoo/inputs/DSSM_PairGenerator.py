@@ -18,7 +18,7 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
         self.batch_size = config['batch_size']
         self.data_path = config['data_path']
         # self.word_dict = config['word_dict']
-        self.feat_size = config['ngraph_size'] # config['feat_size']
+        # self.feat_size = config['ngraph_size'] # config['feat_size']
         self.ngraph_size = config['ngraph_size']
         self.ngraph = config['ngraph']
 
@@ -59,8 +59,8 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     qid = qid.strip()
                     uid = uid.strip()
 
-                    query = query.strip()
-                    doc = doc.strip()
+                    query = query.strip().split()
+                    doc = doc.strip().split()
 
                     label = float(label)
                     qid_query[qid] = query
@@ -109,38 +109,23 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     dn = uid_doc[dn_id]
 
                     query_len = min(self.query_maxlen, len(query))
-                    # dp_len = min(self.doc_maxlen, len(dp))
-                    # dn_len = min(self.doc_maxlen, len(dn))
+                    dp_len = min(self.doc_maxlen, len(dp))
+                    dn_len = min(self.doc_maxlen, len(dn))
 
-                    query = query.strip().split()[:query_len]
-                    query_hash = [[] for tt in range(self.query_maxlen)]
-                    for q_i, query_term in enumerate(query):
-                        query_term = query_term.strip().decode('utf-8', 'ignore')
-                        query_term = ' '.join([w for w in query_term]).encode('utf-8', 'ignore').strip().split()
-                        query_term_id = convert_term2id(query_term, self.ngraph)
-                        query_hash[q_i] = query_term_id
-                    query_hash = self.transfer_feat_dense2sparse(query_hash, self.ngraph_size).toarray()
-                    for doc in [dp, dn]:
-                        doc_len = min(self.doc_maxlen, len(doc))
-                        doc = doc.strip().split()[:doc_len]
-                        doc_hash = [[] for tt in range(self.doc_maxlen)]
-                        for d_i, doc_term in enumerate(doc):
-                            doc_term = doc_term.strip().decode('utf-8', 'ignore')
-                            doc_term = ' '.join([w for w in doc_term]).encode('utf-8', 'ignore').strip().split()
-                            doc_term_id = convert_term2id(doc_term, self.ngraph)
-                            doc_hash[d_i] = doc_term_id
-                        doc_hash = self.transfer_feat_dense2sparse(doc_hash, self.ngraph_size).toarray()
-                        X2.append(doc_hash)
+                    query = query[:query_len]
+                    query = convert_term2id(query, self.ngraph)
+                    dp = dp[:dp_len]
+                    dp = convert_term2id(dp, self.ngraph)
+                    dn = dn[:dn_len]
+                    dn = convert_term2id(dn, self.ngraph)
 
-                    X1.append(query_hash)
-                    X1.append(query_hash)
-                    # X2.append(dp_hash)
-                    # X2.append(dn_hash)
+                    X1.append(query)
+                    X1.append(query)
+                    X2.append(dp)
+                    X2.append(dn)
 
-                X1 = np.array(X1, dtype=np.float32)
-                X2 = np.array(X2, dtype=np.float32)
-                # X1 = self.transfer_feat_dense2sparse(X1, self.feat_size).toarray()
-                # X2 = self.transfer_feat_dense2sparse(X2, self.feat_size).toarray()
+                X1 = self.transfer_feat_dense2sparse(X1, self.ngraph_size).toarray()
+                X2 = self.transfer_feat_dense2sparse(X2, self.ngraph_size).toarray()
                 yield X1, X2, Y
 
     def get_batch_generator(self):

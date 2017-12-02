@@ -162,11 +162,9 @@ def read_idf(filename, word_dict):
 
 def read_ngraph(filename):
     ngraph = {}
-    cnt = -1
+    cnt = 0
     for line in open(filename):
         cnt += 1
-        if cnt > 2000:
-            break
         term= line
         term = term.strip().lower()
         if len(term) < 1:
