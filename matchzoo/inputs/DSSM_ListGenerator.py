@@ -45,8 +45,9 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
                 if fn.endswith('.txt'):
                     qfile_list.append(os.path.join(dirpath, fn))
         # print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[%s]'% self.data_path
-        print '\tQfiles size: %d'%len(qfile_list)
+        print '\tqfiles size: %d'%len(qfile_list)
         return qfile_list
 
     def get_all_batch(self):
@@ -54,7 +55,7 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
         for X1, X2, Y, curr_batch in self.get_batch():
             data.append([X1, X2, Y, curr_batch])
         print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-        print '[DRMM-ListGenerator] Read all batch done!'
+        print '[DSSM_ListGenerator] Read all batch done!'
         return data
 
     def get_batch(self):

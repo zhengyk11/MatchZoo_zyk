@@ -43,8 +43,9 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
             for fn in filenames:
                 if fn.endswith('.txt'):
                     qfile_list.append(os.path.join(dirpath, fn))
+        print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[%s]'% self.data_path
-        print '\tQfiles size: %d'%len(qfile_list)
+        print '\tqfiles size: %d'%len(qfile_list)
         return qfile_list
 
     def get_data(self):
