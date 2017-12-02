@@ -16,6 +16,8 @@ class ListGenerator():
         self.qfile_list = self.get_qfile_list()
         self.data_handler = open(self.qfile_list[0])# self.get_data_handler()
         self.qfile_idx = 0
+        self.data = self.get_all_batch()
+        self.reset()
 
         print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[ListGenerator] init done'
@@ -34,7 +36,19 @@ class ListGenerator():
             for fn in filenames:
                 if fn.endswith('.txt'):
                     qfile_list.append(os.path.join(dirpath, fn))
+
+        print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        print '[%s]'% self.data_path
+        print '\tqfiles size: %d'%len(qfile_list)
         return qfile_list
+
+    def get_all_batch(self):
+        data = []
+        for X1, X2, Y, curr_batch in self.get_batch():
+            data.append([X1, X2, Y, curr_batch])
+        print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        print '[ListGenerator] Read all batch done!'
+        return data
 
     def get_batch(self):
         while True:
@@ -62,9 +76,6 @@ class ListGenerator():
                 query = convert_term2id(query.strip().split(), self.word_dict)
                 doc = convert_term2id(doc.strip().split(), self.word_dict)
 
-                # query = map(int, query.split())
-                # doc   = map(int, doc.split())
-
                 query_len = min(self.query_maxlen, len(query))
                 doc_len   = min(self.doc_maxlen,   len(doc))
 
@@ -76,5 +87,5 @@ class ListGenerator():
             yield X1, X2, Y, curr_batch
 
     def get_batch_generator(self):
-        for X1, X2, Y, curr_batch in self.get_batch():
+        for X1, X2, Y, curr_batch in self.get_all_batch():
             yield ({'query': X1, 'doc': X2}, Y, curr_batch)

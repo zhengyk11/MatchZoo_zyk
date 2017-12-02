@@ -9,3 +9,4 @@ from .utility import import_class
 from .utility import import_object
 from .rank_io import convert_term2id
 from .rank_io import read_ngraph
+from .rank_io import convert_term2ngraph_id

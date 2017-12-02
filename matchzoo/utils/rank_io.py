@@ -177,6 +177,26 @@ def read_ngraph(filename):
     print '[%s]\n\tngraphs feat size: %d' % (filename, len(ngraph))
     return ngraph, cnt+1
 
+def convert_term2ngraph_id(text, ngraph):
+    new_text = []
+    for term in text:
+        term = term.decode('utf-8', 'ignore').strip().lower()
+        for i in range(len(term)):
+            for j in range(i+1, len(term)+1):
+                gram = term[i:j].decode('utf-8', 'ignore')
+                if gram in ngraph:
+                    new_text.append(ngraph[gram])
+
+        # term = term.strip().lower()
+        # if len(term) < 1:
+        #     new_text.append(0)
+        #     continue
+        # if term in ngraph:
+        #     new_text.append(ngraph[term])
+        # else:
+        #     new_text.append(0)
+    # assert len(new_text) == len(text)
+    return new_text
 
 def convert_term2id(text, word_dict):
     new_text = []
