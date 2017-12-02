@@ -25,8 +25,8 @@ class DSSM(BasicModel):
         self.config.update(config)
 
     def build(self):
-        query = Input(name='query', shape=(self.config['query_maxlen'], self.config['ngraph_size'],))
-        doc = Input(name='doc', shape=(self.config['doc_maxlen'], self.config['ngraph_size'],))
+        query = Input(name='query', shape=(self.config['ngraph_size'],))
+        doc = Input(name='doc', shape=(self.config['ngraph_size'],))
 
         def mlp_work(input_dim):
             seq = Sequential()
@@ -39,13 +39,13 @@ class DSSM(BasicModel):
                     seq.add(Activation(activation='relu'))
             return seq
 
-        query_flat = Flatten()(query)
-        doc_flat = Flatten()(doc)
+        # query_flat = Flatten()(query)
+        # doc_flat = Flatten()(doc)
 
-        mlp_query = mlp_work(self.config['query_maxlen'] * self.config['ngraph_size'])
-        mlp_doc = mlp_work(self.config['doc_maxlen'] * self.config['ngraph_size'])
-        rq = mlp_query(query_flat)
-        rd = mlp_doc(doc_flat)
+        mlp = mlp_work(self.config['ngraph_size'])
+
+        rq = mlp(query)
+        rd = mlp(doc)
         out_ = Dot(axes=[1, 1], normalize=True)([rq, rd])
 
         model = Model(inputs=[query, doc], outputs=[out_])
