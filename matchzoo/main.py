@@ -178,7 +178,7 @@ def train(config):
                     qid_uid_rel_score[q]['label'].append(label)
                     qid_uid_rel_score[q]['score'].append(score)
             output.close()
-            generator.reset()
+            # generator.reset()
             # calculate the metrices
             for k, eval_func in eval_metrics.items():
                 for qid in qid_uid_rel_score:
