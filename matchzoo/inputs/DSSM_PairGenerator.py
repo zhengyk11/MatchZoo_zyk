@@ -4,7 +4,8 @@ import random
 import numpy as np
 import scipy.sparse as sp
 
-from utils import convert_term2ngraph_id
+# from utils import convert_term2ngraph_id
+from utils import convert_term2id
 # from PairBasicGenerator import PairBasicGenerator
 
 
@@ -116,11 +117,11 @@ class DSSM_PairGenerator(): # PairBasicGenerator):
                     dn_len = min(self.doc_maxlen, len(dn))
 
                     query = query[:query_len]
-                    query = convert_term2ngraph_id(query, self.ngraph)
+                    query = convert_term2id(query, self.ngraph)
                     dp = dp[:dp_len]
-                    dp = convert_term2ngraph_id(dp, self.ngraph)
+                    dp = convert_term2id(dp, self.ngraph)
                     dn = dn[:dn_len]
-                    dn = convert_term2ngraph_id(dn, self.ngraph)
+                    dn = convert_term2id(dn, self.ngraph)
 
                     X1.append(query)
                     X1.append(query)

@@ -4,8 +4,8 @@ import numpy as np
 import scipy.sparse as sp
 # from ListBasicGenerator import ListBasicGenerator
 
-from utils import convert_term2ngraph_id
-
+# from utils import convert_term2ngraph_id
+from utils import convert_term2id
 
 class DSSM_ListGenerator(): #  ListBasicGenerator):
     def __init__(self, config):
@@ -83,13 +83,13 @@ class DSSM_ListGenerator(): #  ListBasicGenerator):
                 query = query.strip().split()
                 query_len = min(len(query), self.query_maxlen)
                 query = query[:query_len]
-                query = convert_term2ngraph_id(query, self.ngraph)
+                query = convert_term2id(query, self.ngraph)
                 # query = convert_term2id(query, self.ngraph)
 
                 doc = doc.strip().split()
                 doc_len = min(len(doc), self.doc_maxlen)
                 doc = doc[:doc_len]
-                doc = convert_term2ngraph_id(doc, self.ngraph)
+                doc = convert_term2id(doc, self.ngraph)
 
                 X1.append(query)
                 X2.append(doc)
