@@ -83,28 +83,26 @@ def read_word_dict_zyk(word_dict_filepath):
 def read_embedding(filename):
     embed = {}
     word_dict = {}
+    idf_dict = {}
     cnt = -1
     # max_cnt = max(word_ids.keys())
     for line in open(filename):
         cnt += 1
         if cnt == 0:
             continue
-        # if cnt > 1000:
-        #     break
-        # if cnt in word_ids:
         attr = line.strip().split()
-        if len(attr) != 51:
-            continue
-        term = attr[0].strip().lower()
-        if len(term) < 1:
-            continue
-        if term not in word_dict:
-            word_dict[term] = cnt
-        # new_id = word_ids[cnt]
-        embed[cnt] = map(float, attr[1:])
+        if len(attr) != 52:
+            print 'embed file error!'
+            exit()
+        term = attr[0].strip()
+        word_dict[term] = cnt
+        idf_dict[cnt] = [float(attr[1])]
+        embed[cnt] = map(float, attr[2:])
+        # if cnt == 1000:
+        #     break
 
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
-    return embed, cnt+1, len(embed[1]), word_dict
+    return embed, cnt+1, len(embed[1]), word_dict, idf_dict
 
 # Read old version data
 # def read_data_old_version(filename):
@@ -160,22 +158,22 @@ def read_idf(filename, word_dict):
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[%s]\n\tIdf feat size: %d' % (filename, len(idfs))
     return idfs
 
-def read_ngraph(filename):
-    ngraph = {}
-    cnt = 0
-    for line in open(filename):
-        cnt += 1
-        if cnt > 399999:
-            break
-        term= line
-        term = term.strip().lower()
-        if len(term) < 1:
-            continue
-        ngraph[term] = cnt
-
-    print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-    print '[%s]\n\tngraphs feat size: %d' % (filename, len(ngraph))
-    return ngraph, cnt+1
+# def read_ngraph(filename):
+#     ngraph = {}
+#     cnt = 0
+#     for line in open(filename):
+#         cnt += 1
+#         if cnt > 399999:
+#             break
+#         term= line
+#         term = term.strip().lower()
+#         if len(term) < 1:
+#             continue
+#         ngraph[term] = cnt
+#
+#     print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+#     print '[%s]\n\tngraphs feat size: %d' % (filename, len(ngraph))
+#     return ngraph, cnt+1
 
 def convert_term2ngraph_id(text, ngraph):
     new_text = []

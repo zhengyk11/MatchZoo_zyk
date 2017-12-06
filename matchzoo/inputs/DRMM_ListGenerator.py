@@ -88,5 +88,5 @@ class DRMM_ListGenerator(): # ListBasicGenerator):
 
 
     def get_batch_generator(self):
-        for X1, X2, Y, curr_batch in self.get_all_batch():
+        for X1, X2, Y, curr_batch in self.data:
             yield ({'query': X1, 'doc': X2}, Y, curr_batch)
