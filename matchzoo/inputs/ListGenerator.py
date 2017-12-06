@@ -22,12 +22,12 @@ class ListGenerator():
         print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[ListGenerator] init done'
 
-    def __del__(self):
-        self.data_handler.close()
+    # def __del__(self):
+    #     self.data_handler.close()
 
     def reset(self):
         self.data_handler.close()
-        self.data_handler = open(self.qfile_list[0])
+        # self.data_handler = open(self.qfile_list[0])
         self.qfile_idx = 0
 
     def get_qfile_list(self):

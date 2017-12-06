@@ -27,7 +27,7 @@ class Duet_ListGenerator():
 
     def reset(self):
         self.data_handler.close()
-        self.data_handler = open(self.qfile_list[0])
+        # self.data_handler = open(self.qfile_list[0])
         self.qfile_idx = 0
 
     def get_qfile_list(self):
