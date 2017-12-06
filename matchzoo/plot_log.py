@@ -88,7 +88,7 @@ def plot_log_file(path):
 
     plt.xlabel('Iteration')
     plt.ylabel('Loss')
-    plt.legend(loc=1)
+    plt.legend(loc='best')
     plt.title(net_name)
     plt.savefig(path[:-4].replace('/logs/', '/graph/')+'_loss.pdf')
     plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_loss.png')
@@ -108,7 +108,7 @@ def plot_log_file(path):
 
         plt.xlabel('Iteration')
         plt.ylabel('Metrics')
-        plt.legend(loc=1)
+        plt.legend(loc='best')
         plt.title(net_name)
         plt.savefig(path[:-4].replace('/logs/', '/graph/')+'_metrics.pdf')
         plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.png')
