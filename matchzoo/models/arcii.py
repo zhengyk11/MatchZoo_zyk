@@ -68,7 +68,7 @@ class ARCII(BasicModel):
         else:
             hidden_res = pool1_flat_drop
             for i in range(num_hidden_layers - 1):
-                hidden_res = Dense(self.config['hidden_sizes'][i], activation='relu')(hidden_res)
+                hidden_res = Activation('relu')(BatchNormalization()(Dense(self.config['hidden_sizes'][i])(hidden_res)))
             out_ = Dense(self.config['hidden_sizes'][-1], activation='tanh')(hidden_res)
 
         model = Model(inputs=[query, doc], outputs=out_)
