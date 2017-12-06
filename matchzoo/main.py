@@ -4,6 +4,7 @@ import sys
 import time
 import json
 import argparse
+import gc
 import random
 # random.seed(49999)
 import numpy as np
@@ -189,11 +190,15 @@ def train(config):
                     res[k] += eval_func(y_true=qid_uid_rel_score[qid]['label'], y_pred=qid_uid_rel_score[qid]['score'])
                 res[k] /= len(qid_uid_rel_score)
 
+
+
             # calculate the eval_loss
             eval_loss = cal_eval_loss(qid_rel_uid, tag, input_eval_conf[tag], config['losses'])
             eval_res_list = eval_loss.items() + res.items()
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list])+'\n'
+            del qid_uid_rel_score, qid_rel_uid, eval_loss, res, eval_res_list
+            gc.collect()
 
 
 def main(argv):
