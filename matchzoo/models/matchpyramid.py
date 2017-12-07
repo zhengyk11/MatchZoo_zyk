@@ -52,10 +52,12 @@ class MatchPyramid(BasicModel):
         pool1 = MaxPooling2D(pool_size=(self.config['dpool_size'][0], self.config['dpool_size'][1]))(conv1)
         pool1_flat = Flatten()(pool1)
 
+        pool1_flat_dropout = Dropout(self.config['dropout_rate'])(pool1_flat)
+
         num_hidden_layers = len(self.config['hidden_sizes'])
-        hidden_layer = pool1_flat
+        hidden_layer = pool1_flat_dropout
         for i in range(num_hidden_layers):
-            hidden_layer = Dropout(self.config['dropout_rate'])(hidden_layer)
+            # hidden_layer =
             hidden_layer = Dense(self.config['hidden_sizes'][i])(hidden_layer)
             hidden_layer = BatchNormalization()(hidden_layer)
             if i < num_hidden_layers - 1:
