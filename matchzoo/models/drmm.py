@@ -49,12 +49,13 @@ class DRMM(BasicModel):
         #     q_w = BatchNormalization()(q_w)
         #     q_w = Activation('relu')(q_w)
         # q_w = Dropout(self.config['dropout_rate'])(q_w)
-        # q_w = Dense(self.config['hidden_sizes_qw'][-1])(q_w)
+        q_w = Dense(1, use_bias=False)(q_embed)
         # q_w = BatchNormalization()(q_w)
-        q_w = Reshape((self.config['query_maxlen'],))(q_embed)
+        q_w = Reshape((self.config['query_maxlen'],))(q_w)
         # q_w = Activation('tanh')(q_w)
         print q_w.shape
-        q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['query_maxlen'], ))(q_w)
+        q_w = Activation('softmax')(q_w)
+        # q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['query_maxlen'], ))(q_w)
         print q_w.shape
 
         z = doc
