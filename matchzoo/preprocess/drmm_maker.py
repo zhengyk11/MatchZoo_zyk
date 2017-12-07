@@ -8,6 +8,7 @@ import numpy as np
 
 def cal_hist(query_embed, doc_embed, config):
     hist = np.zeros([config['query_maxlen'], config['hist_size']], dtype=np.int32)
+    hist[:] = 1
     mm = np.zeros([config['query_maxlen'], config['doc_maxlen']], dtype=np.float32)
     for i in range(config['query_maxlen']):
         for j in range(config['doc_maxlen']):
@@ -24,8 +25,8 @@ def main():
     {
         "query_maxlen": 10,
         "doc_maxlen": 1000,
-        "hist_size": 60,
-        "embed_path": "../../data/support/embed_query_50.txt",
+        "hist_size": 200,
+        "embed_path": "../../data/support/embed_query_100w_50.txt",
         "input": "../../runtime_data/fulltext/real_train_HL_solrex",
         "output": "../../runtime_data/fulltext/real_train_HL_solrex_drmm"
     }
@@ -33,8 +34,8 @@ def main():
 
     config = json.loads(config)
 
-    embed_dict, vocab_size, embed_size, word_dict = read_embedding(config['embed_path'])
-    embed = np.float32(np.random.uniform(-4, 4, [vocab_size, embed_size]))
+    embed_dict, vocab_size, embed_size, word_dict, idf_dict = read_embedding(config['embed_path'])
+    embed = np.float32(np.random.uniform(-9, 9, [vocab_size, embed_size]))
     embed_dict = convert_embed_2_numpy('embed', embed_dict=embed_dict, embed=embed, normalize=True)
 
     if not os.path.exists(config['output']):
