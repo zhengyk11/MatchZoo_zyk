@@ -36,11 +36,15 @@ class DRMM(BasicModel):
         query = Input(name='query', shape=(self.config['query_maxlen'],))
         doc = Input(name='doc', shape=(self.config['query_maxlen'], self.config['hist_size']))
 
-        query_mask = Masking(mask_value=-1)(query)
-        doc_mask = Masking(mask_value=0.)(doc)
+        # query_reshape = Reshape(self.config['query_maxlen'],)(query)
+        # print query_reshape.shape
+        # query_mask = Masking(mask_value=-1)(query_reshape)
+        # print query_mask.shape
+
+        # doc_mask = Masking(mask_value=0., input_shape=(self.config['query_maxlen'], self.config['hist_size']))(doc)
 
         embedding = Embedding(self.config['vocab_size'], 1, weights=[self.config['idf_feat']], trainable=self.embed_trainable)
-        q_embed = embedding(query_mask)
+        q_embed = embedding(query)
         print q_embed.shape
 
 
@@ -60,7 +64,7 @@ class DRMM(BasicModel):
         # q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['query_maxlen'], ))(q_w)
         print q_w.shape
 
-        z = doc_mask
+        z = doc
         print z.shape
         # z = Dropout(self.config['dropout_rate'])(z)
         for i in range(len(self.config['hidden_sizes_hist'])):
