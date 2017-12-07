@@ -16,6 +16,10 @@ class DRMM_PairGenerator():
         self.data_path = config['data_path']
         self.word_dict = config['word_dict']
 
+        self.log_option = False
+        if 'log_opiton' in config:
+            self.log_option = config['log_opiton']
+
         self.rel_gap = 0.
         if 'rel_gap' in config:
             self.rel_gap = config['rel_gap']
@@ -105,6 +109,10 @@ class DRMM_PairGenerator():
 
                     dp_hist = np.reshape(dp, (self.query_maxlen, self.hist_size))
                     dn_hist = np.reshape(dn, (self.query_maxlen, self.hist_size))
+
+                    if self.log_option:
+                        dp_hist = np.log10(dp_hist)
+                        dn_hist = np.log10(dn_hist)
 
                     query_len = min(self.query_maxlen, len(query))
 

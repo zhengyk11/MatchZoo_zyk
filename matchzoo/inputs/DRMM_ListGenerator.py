@@ -15,6 +15,11 @@ class DRMM_ListGenerator(): # ListBasicGenerator):
         self.batch_size = config['batch_size']
         self.data_path = config['data_path']
         self.word_dict = config['word_dict']
+
+        self.log_option = False
+        if 'log_opiton' in config:
+            self.log_option = config['log_opiton']
+
         self.qfile_list = self.get_qfile_list()
         self.data_handler = open(self.qfile_list[0])# self.get_data_handler()
         self.qfile_idx = 0
@@ -76,6 +81,9 @@ class DRMM_ListGenerator(): # ListBasicGenerator):
                 doc    = map(float, doc.split())
 
                 doc_hist = np.reshape(doc, (self.query_maxlen, self.hist_size))
+
+                if self.log_option:
+                    doc_hist = np.log10(doc_hist)
 
                 query_len = min(self.query_maxlen, len(query))
 
