@@ -39,11 +39,13 @@ class MatchPyramid(BasicModel):
     def build(self):
         query = Input(name='query', shape=(self.config['query_maxlen'],))
         doc = Input(name='doc', shape=(self.config['doc_maxlen'],))
+        query_mask = Masking(mask_value=-1)(query)
+        doc_mask = Masking(mask_value=-1)(doc)
 
         embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']],
                               trainable=self.embed_trainable)
-        q_embed = embedding(query)
-        d_embed = embedding(doc)
+        q_embed = embedding(query_mask)
+        d_embed = embedding(doc_mask)
 
         cross = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
         cross_reshape = Reshape((self.config['query_maxlen'], self.config['doc_maxlen'], 1))(cross)

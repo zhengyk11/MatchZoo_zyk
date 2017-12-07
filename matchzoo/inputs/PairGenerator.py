@@ -94,6 +94,8 @@ class PairGenerator():
                 X1 = np.zeros((self.batch_size * 2, self.query_maxlen), dtype=np.int32)
                 X2 = np.zeros((self.batch_size * 2, self.doc_maxlen), dtype=np.int32)
                 Y = np.zeros((self.batch_size * 2,), dtype=np.int32)
+                X1[:] = -1
+                X2[:] = -1
                 Y[::2] = 1
 
                 for i in range(self.batch_size):

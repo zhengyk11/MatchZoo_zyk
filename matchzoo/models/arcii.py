@@ -42,10 +42,13 @@ class ARCII(BasicModel):
         query = Input(name='query', shape=(self.config['query_maxlen'],))
         doc = Input(name='doc', shape=(self.config['doc_maxlen'],))
 
+        query_mask = Masking(mask_value=-1)(query)
+        doc_mask = Masking(mask_value=-1)(doc)
+
         embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']],
                               trainable = self.embed_trainable)
-        q_embed = embedding(query)
-        d_embed = embedding(doc)
+        q_embed = embedding(query_mask)
+        d_embed = embedding(doc_mask)
 
         q_conv1 = Conv1D(self.config['1d_kernel_count'], self.config['1d_kernel_size'], padding='same') (q_embed)
         d_conv1 = Conv1D(self.config['1d_kernel_count'], self.config['1d_kernel_size'], padding='same') (d_embed)

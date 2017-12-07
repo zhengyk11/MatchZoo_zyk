@@ -55,6 +55,8 @@ class ListGenerator():
             X1 = np.zeros((self.batch_size, self.query_maxlen), dtype=np.int32)
             X2 = np.zeros((self.batch_size, self.doc_maxlen),   dtype=np.int32)
             Y = np.zeros((self.batch_size,), dtype=np.int32)
+            X1[:] = -1
+            X2[:] = -1
             Y[::2] = 1
 
             curr_batch = []
