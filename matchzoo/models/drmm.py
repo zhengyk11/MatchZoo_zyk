@@ -79,7 +79,7 @@ class DRMM(BasicModel):
 
 
         out_ = Dot(axes= [1, 1])([z, q_w])
-        out_ = Dense(1, 'tanh')(out_)
+        out_ = Dense(1, activation='tanh')(out_)
         # print out_.shape
 
         model = Model(inputs=[query, doc], outputs=[out_])
