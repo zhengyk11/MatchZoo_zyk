@@ -2,7 +2,10 @@
 
 import json
 import os
-from matchzoo import read_embedding, convert_term2id, convert_embed_2_numpy
+import sys
+sys.path.append('../')
+
+from utils import read_embedding, convert_term2id, convert_embed_2_numpy
 import numpy as np
 
 
