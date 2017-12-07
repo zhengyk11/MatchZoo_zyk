@@ -62,15 +62,15 @@ class DRMM(BasicModel):
         # z = Dropout(self.config['dropout_rate'])(z)
         for i in range(len(self.config['hidden_sizes_hist'])):
             z = Dense(self.config['hidden_sizes_hist'][i])(z) # kernel_initializer=self.initializer_fc
-            # z = BatchNormalization()(z)
+            z = BatchNormalization()(z)
             z = Activation('relu')(z)
         # z = Dropout(self.config['dropout_rate'])(z)
         # z = Dense(self.config['hidden_sizes_hist'][-1])(z) # kernel_initializer=self.initializer_fc
         # z = BatchNormalization()(z)
         # z = Activation('tanh')(z)
         print z.shape
-        z = Permute((2, 1))(z)
-        print z.shape
+        # z = Permute((2, 1))(z)
+        # print z.shape
         z = Reshape((self.config['query_maxlen'],))(z)
         # z = Dropout(self.config['dropout_rate'])(z)
         # print z.shape
