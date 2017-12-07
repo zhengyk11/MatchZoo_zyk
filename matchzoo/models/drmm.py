@@ -6,7 +6,7 @@ import time
 from keras.models import Sequential, Model
 from keras.layers import Input, Embedding, Dense, Lambda, Activation, Permute, BatchNormalization, Dropout, Masking
 from keras.layers import Reshape, Dot
-from keras.activations import softmax
+from keras.activations import softmax, tanh
 from model import BasicModel
 
 class DRMM(BasicModel):
@@ -64,7 +64,7 @@ class DRMM(BasicModel):
             z = Dropout(self.config['dropout_rate'])(z)
             z = Dense(self.config['hidden_sizes_hist'][i])(z) # kernel_initializer=self.initializer_fc
             z = BatchNormalization()(z)
-            z = Activation('relu')(z)
+            z = Activation('tanh')(z)
         # z = Dropout(self.config['dropout_rate'])(z)
         # z = Dense(self.config['hidden_sizes_hist'][-1])(z) # kernel_initializer=self.initializer_fc
         # z = BatchNormalization()(z)
