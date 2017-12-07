@@ -224,6 +224,7 @@ def main(argv):
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print'Phase Error.'
             return
+    print 'done'
 
 
 if __name__ == '__main__':
