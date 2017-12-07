@@ -35,30 +35,29 @@ class DRMM(BasicModel):
     def build(self):
         query = Input(name='query', shape=(self.config['query_maxlen'],))
         doc = Input(name='doc', shape=(self.config['query_maxlen'], self.config['hist_size']))
+
         query_mask = Masking(mask_value=-1)(query)
         embedding = Embedding(self.config['vocab_size'], 1, weights=[self.config['idf_feat']], trainable=self.embed_trainable)
         q_embed = embedding(query_mask)
-        # print q_embed.shape
-        # q_w = Dense(1, kernel_initializer=self.initializer_gate, use_bias=False)(q_embed)
-        # q_w = Dense(1, use_bias=False)(q_embed)
-        q_w = Dense(1)(q_embed)
+        print q_embed.shape
+
 
         # q_w = q_embed
+        # q_w = Dropout(self.config['dropout_rate'])(q_w)
         # for i in range(len(self.config['hidden_sizes_qw']) - 1):
-        #     # q_w = Dropout(self.config['dropout_rate'])(q_w)
         #     q_w = Dense(self.config['hidden_sizes_qw'][i])(q_w)
-        #     # q_w = BatchNormalization()(q_w)
+        #     q_w = BatchNormalization()(q_w)
         #     q_w = Activation('relu')(q_w)
         # q_w = Dropout(self.config['dropout_rate'])(q_w)
         # q_w = Dense(self.config['hidden_sizes_qw'][-1])(q_w)
         # q_w = BatchNormalization()(q_w)
-        # q_w = Activation('tanh')(q_w)
+        q_w = Activation('tanh')(q_embed)
         # q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['query_maxlen'], ))(q_w)
         # print q_w.shape
 
         z = doc
+        print z.shape
         for i in range(len(self.config['hidden_sizes_hist'])-1):
-            # z  = Dropout(self.config['dropout_rate'])(z)
             z = Dense(self.config['hidden_sizes_hist'][i])(z) # kernel_initializer=self.initializer_fc
             z = BatchNormalization()(z)
             z = Activation('relu')(z)
@@ -66,13 +65,15 @@ class DRMM(BasicModel):
         z = Dense(self.config['hidden_sizes_hist'][-1])(z) # kernel_initializer=self.initializer_fc
         # z = BatchNormalization()(z)
         z = Activation('tanh')(z)
-        # print z.shape
+        print z.shape
         z = Permute((2, 1))(z)
-        # print z.shape
+        print z.shape
         z = Reshape((self.config['query_maxlen'],))(z)
+        z = Dropout(self.config['dropout_rate'])(z)
         # print z.shape
         q_w = Reshape((self.config['query_maxlen'],))(q_w)
-        # print q_w.shape
+        q_w = Dropout(self.config['dropout_rate'])(q_w)
+        print q_w.shape
 
         out_ = Dot(axes= [1, 1])([z, q_w])
         # print out_.shape
