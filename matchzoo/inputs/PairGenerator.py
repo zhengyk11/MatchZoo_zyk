@@ -40,7 +40,6 @@ class PairGenerator():
         return qfile_list
 
     def get_data(self):
-        # while True:
         uid_doc = {}
         qid_query = {}
         qid_label_uid = {}
@@ -94,8 +93,6 @@ class PairGenerator():
                 X1 = np.zeros((self.batch_size * 2, self.query_maxlen), dtype=np.int32)
                 X2 = np.zeros((self.batch_size * 2, self.doc_maxlen), dtype=np.int32)
                 Y = np.zeros((self.batch_size * 2,), dtype=np.int32)
-                # X1[:] = -1
-                # X2[:] = -1
                 Y[::2] = 1
 
                 for i in range(self.batch_size):
@@ -116,9 +113,5 @@ class PairGenerator():
                 yield X1, X2, Y
 
     def get_batch_generator(self):
-        while True:
-        # for X1, X2, Y in self.get_batch():
-            X1 = np.zeros((self.batch_size * 2, self.query_maxlen), dtype=np.int32)
-            X2 = np.zeros((self.batch_size * 2, self.doc_maxlen), dtype=np.int32)
-            Y = np.zeros((self.batch_size * 2,), dtype=np.int32)
+        for X1, X2, Y in self.get_batch():
             yield ({'query': X1, 'doc': X2}, Y)
