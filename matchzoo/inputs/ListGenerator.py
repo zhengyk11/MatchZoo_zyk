@@ -50,6 +50,8 @@ class ListGenerator():
                     for huid in self.qid_rel_uid[qid][hr]:
                         for luid in self.qid_rel_uid[qid][lr]:
                             all_pairs[(qid, huid, luid)] = [hr, lr]
+        print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        print '[ListGenerator] Pair Instance Count:', len(all_pairs)
         return all_pairs
 
     def get_qfile_list(self):
