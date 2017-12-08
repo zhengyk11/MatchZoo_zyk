@@ -21,21 +21,6 @@ import metrics
 from losses import *
 
 
-def load_model(config):
-    global_conf = config["global"]
-    model_type = global_conf['model_type']
-    if model_type == 'JSON':
-        mo = Model.from_config(config['model'])
-    elif model_type == 'PY':
-        model_config = config['model']
-        model_config.update(config['inputs']['share'])
-        sys.path.insert(0, model_config['model_path'])
-
-        model = import_object(model_config['model_py'], model_config)
-        mo = model.build()
-    return mo
-
-
 def train(config):
     print(json.dumps(config, indent=2))
 
@@ -50,46 +35,20 @@ def train(config):
     share_input_conf = input_conf['share']
 
     # collect embedding
-    if 'embed_path' in share_input_conf:
-        embed_dict, vocab_size, embed_size, word_dict, idf_dict = read_embedding(share_input_conf['embed_path'])
-        share_input_conf['word_dict'] = word_dict
-        # share_input_conf['feat_size'] = vocab_size
-        share_input_conf['vocab_size'] = vocab_size
-        share_input_conf['embed_size'] = embed_size
-        embed = np.float32(np.random.uniform(-4, 4, [vocab_size, embed_size]))
-        embed_normalize = False
-        if 'drmm' in config['model']['model_py'].lower():
-            embed_normalize = True
-        share_input_conf['embed'] = convert_embed_2_numpy('embed', embed_dict=embed_dict, embed=embed,
-                                                          normalize=embed_normalize)
-
-        idf = np.float32(np.random.uniform(3, 9, [vocab_size, 1]))
-        share_input_conf['idf_feat'] = convert_embed_2_numpy('idf', embed_dict=idf_dict, embed=idf, normalize=False)
-
-        print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Embedding] Embedding Load Done.'
-
-    # if 'idf_feat' in share_input_conf:
-    #     datapath = share_input_conf['idf_feat']
-    #     idf_dict = read_idf(datapath, word_dict)
-    #     idf = np.float32(np.random.uniform(1, 5, [vocab_size, 1]))
-    #     config['inputs']['share']['idf_feat'] = convert_embed_2_numpy('idf', embed_dict=idf_dict, embed=idf, normalize=False)
-
-    # if 'ngraph' in share_input_conf:
-    #     datapath = share_input_conf['ngraph']
-    #     ngraph, ngraph_size = read_ngraph(datapath)
-    #     # new_ngraph = {}
-    #     # new_ngraph[0] = []
-    #     # for term in word_dict:
-    #     #     new_ngraph[word_dict[term]] = []
-    #     #     sharp_term = '#' + term + '#'
-    #     #     for i in range(len(sharp_term)):
-    #     #         for j in range(i+1, len(sharp_term)+1):
-    #     #             part_term = sharp_term[i:j]
-    #     #             if part_term in ngraph:
-    #     #                 new_ngraph[word_dict[term]].append(ngraph[part_term])
-    #     config['inputs']['share']['ngraph'] = ngraph # new_ngraph
-    #     config['inputs']['share']['ngraph_size'] = ngraph_size
-
+    assert 'embed_path' in share_input_conf
+    embed_dict, vocab_size, embed_size, word_dict, idf_dict = read_embedding(share_input_conf['embed_path'])
+    share_input_conf['word_dict'] = word_dict
+    # share_input_conf['feat_size'] = vocab_size
+    share_input_conf['vocab_size'] = vocab_size
+    share_input_conf['embed_size'] = embed_size
+    embed = np.float32(np.random.uniform(-4, 4, [vocab_size, embed_size]))
+    embed_normalize = False
+    if 'drmm' in config['model']['model_py'].lower():
+        embed_normalize = True
+    share_input_conf['embed'] = convert_embed_2_numpy('embed', embed_dict=embed_dict, embed=embed, normalize=embed_normalize)
+    idf = np.float32(np.random.uniform(3, 9, [vocab_size, 1]))
+    share_input_conf['idf_feat'] = convert_embed_2_numpy('idf', embed_dict=idf_dict, embed=idf, normalize=False)
+    print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Embedding] Embedding Load Done.'
 
     # list all input tags and construct tags config
     input_train_conf = OrderedDict()
@@ -105,7 +64,8 @@ def train(config):
             input_eval_conf[tag] = {}
             input_eval_conf[tag].update(share_input_conf)
             input_eval_conf[tag].update(input_conf[tag])
-    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Input] Process Input Tags. %s in TRAIN, %s in EVAL.' % (input_train_conf.keys(), input_eval_conf.keys())
+    print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+    print '[Input] Process Input Tags. %s in TRAIN, %s in EVAL.' % (input_train_conf.keys(), input_eval_conf.keys())
 
     # initial data generator
     train_gen = OrderedDict()
@@ -113,11 +73,11 @@ def train(config):
 
     for tag, conf in input_train_conf.items():
         generator = inputs.get(conf['input_type'])
-        train_gen[tag] = generator( config = conf )
+        train_gen[tag] = generator(config=conf)
 
     for tag, conf in input_eval_conf.items():
         generator = inputs.get(conf['input_type'])
-        eval_gen[tag] = generator( config = conf )
+        eval_gen[tag] = generator(config=conf)
 
     ######### Load Model #########
     model = load_model(config)
@@ -195,8 +155,8 @@ def train(config):
                                                                      qid_uid_score[qid][dn_id]]
                 all_pairs_rel_score[(qid, dp_id, dn_id)]['rel'] = all_pairs[(qid, dp_id, dn_id)]
 
-            eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
-            eval_res_list = eval_loss.items() + res.items()
+            # eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
+            eval_res_list = res.items() # eval_loss.items() + res.items()
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list])
         print ''
@@ -205,15 +165,19 @@ def train(config):
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', default='')
-    parser.add_argument('--phase', default='train') # , help='Phase: Can be train or predict, the default value is train.')
-    parser.add_argument('--model_file') # , default='./models/matchzoo.model', help='Model_file: MatchZoo model file for the chosen model.')
+    parser.add_argument('--phase', default='train')
+    parser.add_argument('--model_file', default='')
     args = parser.parse_args()
+
+    if args.model_file == '':
+        exit(0)
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device
     config = tf.ConfigProto()
     config.gpu_options.allow_growth=True
     with tf.Session(config=config) as sess:
         KTF.set_session(sess)
+
         with open(args.model_file) as f:
             config = json.load(f)
 
