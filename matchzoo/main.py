@@ -197,8 +197,13 @@ def train(config):
             eval_res_list = eval_loss.items() + res.items()
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list])
-            del qid_uid_rel_score, qid_rel_uid, eval_loss, res, eval_res_list
-            gc.collect()
+            # del qid_uid_rel_score, qid_rel_uid, eval_loss, res, eval_res_list
+            # gc.collect()
+        from guppy import hpy
+        hxx = hpy()
+        heap = hxx.heap()
+        print ''
+        print heap
         print ''
 
 
