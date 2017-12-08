@@ -28,9 +28,9 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
             crossentropy_loss_list['y_pred'].append([dp_score, dn_score])
 
         exp_y_pred = np.exp(crossentropy_loss_list['y_pred'])
-        softmax_y_pred = np.log(exp_y_pred / np.sum(exp_y_pred))
+        softmax_y_pred = np.log(exp_y_pred / np.sum(exp_y_pred, axis=1))
         sum_pred_true = np.sum(crossentropy_loss_list['y_true'] * softmax_y_pred, axis=1)
-        crossentropy_loss = -1. * np.mean(sum_pred_true, axis=1)
+        crossentropy_loss = -1. * np.mean(sum_pred_true)
         res['%s_cross_entropy_loss' % tag] = crossentropy_loss
 
     if 'rank_hinge_loss' in train_loss:
