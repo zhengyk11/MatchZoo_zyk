@@ -28,6 +28,7 @@ class ListGenerator():
 
         self.data, self.qid_rel_uid = self.get_all_batch()
         self.all_pairs = self.make_pairs()
+        self.data_handler.close()
 
         print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[ListGenerator] init done'
@@ -93,7 +94,6 @@ class ListGenerator():
 
                 if line == '':
                     if qfile_idx == len(self.qfile_list) - 1:
-                        self.data_handler.close()
                         break
                     else:
                         qfile_idx += 1
