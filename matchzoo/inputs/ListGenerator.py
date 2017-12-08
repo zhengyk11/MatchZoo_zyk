@@ -13,22 +13,43 @@ class ListGenerator():
         self.batch_size = config['batch_size']
         self.data_path = config['data_path']
         self.word_dict = config['word_dict']
+
+        self.rel_gap = 0.
+        if 'rel_gap' in config:
+            self.rel_gap = config['rel_gap']
+
+        self.high_label = 0.
+        if 'high_label' in config:
+            self.high_label = config['high_label']
+
         self.qfile_list = self.get_qfile_list()
-        self.data_handler = open(self.qfile_list[0])# self.get_data_handler()
-        self.qfile_idx = 0
-        self.data = self.get_all_batch()
-        self.reset()
+        assert len(self.qfile_list) > 0
+        self.data_handler = open(self.qfile_list[0])
+
+        self.data, self.qid_rel_uid = self.get_all_batch()
+        self.all_pairs = self.make_pairs()
 
         print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[ListGenerator] init done'
 
-    # def __del__(self):
-    #     self.data_handler.close()
+    def get_all_pairs(self):
+        return self.all_pairs
 
-    def reset(self):
-        self.data_handler.close()
-        # self.data_handler = open(self.qfile_list[0])
-        self.qfile_idx = 0
+    def make_pairs(self):
+        all_pairs = {}
+        for qid in self.qid_rel_uid:
+            for hr in self.qid_rel_uid[qid]:
+                for lr in self.qid_rel_uid[qid]:
+                    if hr <= lr:
+                        continue
+                    if hr - lr <= self.rel_gap:
+                        continue
+                    if hr < self.high_label:
+                        continue
+                    for huid in self.qid_rel_uid[qid][hr]:
+                        for luid in self.qid_rel_uid[qid][lr]:
+                            all_pairs[(qid, huid, luid)] = [hr, lr]
+        return all_pairs
 
     def get_qfile_list(self):
         qfile_list = []
@@ -44,36 +65,47 @@ class ListGenerator():
 
     def get_all_batch(self):
         data = []
+        qid_rel_uid = {}
         for X1, X2, Y, curr_batch in self.get_batch():
             data.append([X1, X2, Y, curr_batch])
+            for qid, uid, rel in curr_batch:
+                if qid not in qid_rel_uid:
+                    qid_rel_uid[qid] = {}
+                if rel not in qid_rel_uid[qid]:
+                    qid_rel_uid[qid][rel] = []
+                qid_rel_uid[qid][rel].append(uid)
+
         print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         print '[ListGenerator] Read all batch done!'
-        return data
+        return data, qid_rel_uid
 
     def get_batch(self):
+        qfile_idx = 0
         while True:
             X1 = np.zeros((self.batch_size, self.query_maxlen), dtype=np.int32)
             X2 = np.zeros((self.batch_size, self.doc_maxlen),   dtype=np.int32)
             Y = np.zeros((self.batch_size,), dtype=np.int32)
-            # X1[:] = -1
-            # X2[:] = -1
             Y[::2] = 1
 
             curr_batch = []
             for i in range(self.batch_size):
                 line = self.data_handler.readline()
+
                 if line == '':
-                    if self.qfile_idx == len(self.qfile_list) - 1:
+                    if qfile_idx == len(self.qfile_list) - 1:
+                        self.data_handler.close()
                         break
                     else:
-                        self.qfile_idx += 1
+                        qfile_idx += 1
                         self.data_handler.close()
-                        self.data_handler = open(self.qfile_list[self.qfile_idx])
+                        self.data_handler = open(self.qfile_list[qfile_idx])
                         line = self.data_handler.readline()
+
                 qid, query, doc_id, doc, label = line.strip().split('\t')
                 qid = qid.strip()
                 doc_id = doc_id.strip()
                 label = float(label)
+
                 curr_batch.append([qid, doc_id, label])
 
                 query = convert_term2id(query.strip().split(), self.word_dict)

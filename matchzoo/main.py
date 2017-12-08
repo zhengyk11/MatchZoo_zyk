@@ -151,60 +151,54 @@ def train(config):
                     break
 
         for tag, generator in eval_gen.items():
+            # open the output file
             if config['net_name'].lower().startswith('duet_embed'):
                 output_dir = '_'.join(config['net_name'].split('_')[:2])
             else:
                 output_dir = config['net_name'].split('_')[0]
             output = open('../output/%s/%s_%s_output_%s.txt' % (output_dir, config['net_name'], tag, str(i_e+1)), 'w')
-            qid_rel_uid = {}
+
             qid_uid_rel_score = {}
+            qid_uid_score = {}
             genfun = generator.get_batch_generator()
 
-            res = dict([[k,0.] for k in eval_metrics.keys()])
-            # num_valid = 0
-
             for input_data, y_true, curr_batch in genfun:
-                # curr_list = generator.get_currbatch()
                 y_pred = model.predict(input_data, batch_size=len(y_true))
-                y_pred = np.reshape(y_pred, (len(y_pred),))
+                y_pred_reshape = np.reshape(y_pred, (len(y_pred),))
                 # output the predict scores
-                # cnt = 0
-                for (q, d, label), score in zip(curr_batch, y_pred):
+                for (q, d, label), score in zip(curr_batch, y_pred_reshape):
                     output.write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
-                    if q not in qid_rel_uid:
-                        qid_rel_uid[q] = {}
+                    if q not in qid_uid_score:
+                        qid_uid_score[q] = {}
+                    qid_uid_score[q][d] = score
+
                     if q not in qid_uid_rel_score:
                         qid_uid_rel_score[q] = dict(label=list(), score=list())
-                    # for d in d_list:
-                    if label not in qid_rel_uid[q]:
-                        qid_rel_uid[q][label] = {}
-
-                    qid_rel_uid[q][label][d] = score
                     qid_uid_rel_score[q]['label'].append(label)
                     qid_uid_rel_score[q]['score'].append(score)
+
             output.close()
-            # generator.reset()
+
             # calculate the metrices
+            res = dict([[k, 0.] for k in eval_metrics.keys()])
             for k, eval_func in eval_metrics.items():
                 for qid in qid_uid_rel_score:
                     res[k] += eval_func(y_true=qid_uid_rel_score[qid]['label'], y_pred=qid_uid_rel_score[qid]['score'])
                 res[k] /= len(qid_uid_rel_score)
 
-
-
             # calculate the eval_loss
-            eval_loss = cal_eval_loss(qid_rel_uid, tag, input_eval_conf[tag], config['losses'])
+            all_pairs = generator.get_all_pairs()
+            all_pairs_rel_score = {}
+            for qid, dp_id, dn_id in all_pairs:
+                all_pairs_rel_score[(qid, dp_id, dn_id)] = {}
+                all_pairs_rel_score[(qid, dp_id, dn_id)]['score'] = [qid_uid_score[qid][dp_id],
+                                                                     qid_uid_score[qid][dn_id]]
+                all_pairs_rel_score[(qid, dp_id, dn_id)]['rel'] = all_pairs[(qid, dp_id, dn_id)]
+
+            eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
             eval_res_list = eval_loss.items() + res.items()
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list])
-            # del qid_uid_rel_score, qid_rel_uid, eval_loss, res, eval_res_list
-            # gc.collect()
-        from guppy import hpy
-        hxx = hpy()
-        heap = hxx.heap()
-        print ''
-        print heap
-        print ''
 
 
 def main(argv):
