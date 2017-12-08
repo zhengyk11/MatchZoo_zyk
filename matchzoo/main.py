@@ -199,6 +199,7 @@ def train(config):
             eval_res_list = eval_loss.items() + res.items()
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list])
+        print ''
 
 
 def main(argv):
