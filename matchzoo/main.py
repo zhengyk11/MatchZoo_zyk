@@ -196,9 +196,10 @@ def train(config):
             eval_loss = cal_eval_loss(qid_rel_uid, tag, input_eval_conf[tag], config['losses'])
             eval_res_list = eval_loss.items() + res.items()
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-            print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list])+'\n'
+            print '[Eval] @ epoch: %d,' %(i_e+1), ', '.join(['%s: %.5f'%(k,v) for k, v in eval_res_list])
             del qid_uid_rel_score, qid_rel_uid, eval_loss, res, eval_res_list
             gc.collect()
+        print ''
 
 
 def main(argv):

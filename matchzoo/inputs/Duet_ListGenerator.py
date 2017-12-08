@@ -53,6 +53,7 @@ class Duet_ListGenerator():
                         break
                     else:
                         self.qfile_idx += 1
+                        self.data_handler.close()
                         self.data_handler = open(self.qfile_list[self.qfile_idx])
                         line = self.data_handler.readline()
 

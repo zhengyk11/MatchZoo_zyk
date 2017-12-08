@@ -116,5 +116,9 @@ class PairGenerator():
                 yield X1, X2, Y
 
     def get_batch_generator(self):
-        for X1, X2, Y in self.get_batch():
+        while True:
+        # for X1, X2, Y in self.get_batch():
+            X1 = np.zeros((self.batch_size * 2, self.query_maxlen), dtype=np.int32)
+            X2 = np.zeros((self.batch_size * 2, self.doc_maxlen), dtype=np.int32)
+            Y = np.zeros((self.batch_size * 2,), dtype=np.int32)
             yield ({'query': X1, 'doc': X2}, Y)
