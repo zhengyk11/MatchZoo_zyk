@@ -45,6 +45,7 @@ def plot_log_file(path):
                     if attr[i] not in eval_epochs[eval_id]:
                         eval_epochs[eval_id][attr[i]] = []
                     eval_epochs[eval_id][attr[i]].append(float(attr[i + 1]))
+            eval_cnt += 1
         else:
             continue
 
@@ -64,7 +65,7 @@ def plot_log_file(path):
     if 'iter' not in train_iters:
         return
 
-    colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue', 'lightpeach', 'orange', 'lightblue', 'blue']
+    colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue', 'pink', 'red', 'lightblue', 'blue']
     idx = 0
     r = 10
     stride = 10
