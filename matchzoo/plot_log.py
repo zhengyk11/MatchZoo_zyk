@@ -91,10 +91,10 @@ def plot_log_file(path):
                 plt.plot(x, y, color=colors[idx], linewidth=0.5)
                 idx += 1
                 new_y, new_x = fun(x, y, 20, 10)
-                plt.plot(new_x, new_y, label=k+'_eval_id', color=colors[idx], linewidth=1)
+                plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx], linewidth=1)
                 idx += 1
 
-    plt.xlabel('Iteration')
+    plt.xlabel('#Iteration')
     plt.ylabel('Loss')
     plt.legend(loc='best')
     plt.title(net_name)
@@ -109,19 +109,19 @@ def plot_log_file(path):
                 if 'ndcg@10' == k.lower():  # or 'map' in k:#  or 'map' in k:
                     y = eval_epochs[eval_id][k]
                     # print colors[idx]
-                    plt.plot(x, y, color=colors[-2], linewidth=0.5)
+                    plt.plot(x, y, color=colors[idx], linewidth=0.5)
                     idx += 1
                     new_y, new_x = fun(x, y, 20, 10)
-                    plt.plot(new_x, new_y, label=k+'_eval_id', color=colors[-1], linewidth=1)
+                    plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx], linewidth=1)
                     idx += 1
 
-        plt.xlabel('Iteration')
-        plt.ylabel('Metrics')
-        plt.legend(loc='best')
-        plt.title(net_name)
-        plt.savefig(path[:-4].replace('/logs/', '/graph/')+'_metrics.pdf')
-        plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.png')
-        plt.close()
+    plt.xlabel('#Iteration')
+    plt.ylabel('Metrics')
+    plt.legend(loc='best')
+    plt.title(net_name)
+    plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.pdf')
+    plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.png')
+    plt.close()
 
     f.close()
 
