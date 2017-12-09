@@ -20,7 +20,8 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
             dp_rel, dn_rel = all_pairs_rel_score[(qid, dp_id, dn_id)]['rel']
             dp_score, dn_score = all_pairs_rel_score[(qid, dp_id, dn_id)]['score']
 
-            dp_prob = dp_rel/(dp_rel + dn_rel)
+            # dp_prob = np.exp(dp_rel)/np.sum(np.exp(dp_rel, dn_rel))
+            dp_prob = dp_rel / (dp_rel + dn_rel)
             dn_prob = 1. - dp_prob
 
             # crossentropy_loss_list['y_true'].append([1., 0.])
