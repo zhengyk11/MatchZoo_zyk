@@ -112,8 +112,8 @@ def train(config):
 
         for tag, generator in eval_gen.items():
             # open the output file
-            # output_dir = config['net_name'].split('_')[0]
-            # output = open('../output/%s/%s_%s_output_%s.txt' % (output_dir, config['net_name'], tag, str(i_e+1)), 'w')
+            output_dir = config['net_name'].split('_')[0]
+            output = open('../output/%s/%s_%s_output_%s.txt' % (output_dir, config['net_name'], tag, str(i_e+1)), 'w')
 
             qid_uid_rel_score = {}
             qid_uid_score = {}
@@ -124,7 +124,8 @@ def train(config):
                 y_pred_reshape = np.reshape(y_pred, (len(y_pred),))
                 # output the predict scores
                 for (q, d, label), score in zip(curr_batch, y_pred_reshape):
-                    # output.write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
+                    output.write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
+
                     if q not in qid_uid_score:
                         qid_uid_score[q] = {}
                     qid_uid_score[q][d] = score
@@ -134,7 +135,7 @@ def train(config):
                     qid_uid_rel_score[q]['label'].append(label)
                     qid_uid_rel_score[q]['score'].append(score)
 
-            # output.close()
+            output.close()
 
             # calculate the metrices
             res = dict([[k, 0.] for k in eval_metrics.keys()])
