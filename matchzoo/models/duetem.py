@@ -100,7 +100,7 @@ class DUETEM(BasicModel):
         print 13, q_conv.shape
         q_conv = Reshape([-1, self.config['kernel_count'], 1])(q_conv)
         print 14, q_conv.shape
-        q_pool = MaxPooling2D([self.config['query_size'] - self.config['dist_kernel_size']+1, 1], strides=(1,1))(q_conv)
+        q_pool = MaxPooling2D([self.config['query_maxlen'] - self.config['dist_kernel_size']+1, 1], strides=(1,1))(q_conv)
         print 15, q_pool.shape
         q_pool = Reshape([-1,])(q_pool)
         print 16, q_pool.shape
