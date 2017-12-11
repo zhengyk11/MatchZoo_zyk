@@ -6,11 +6,13 @@ from PairGenerator import PairGenerator
 from DSSM_PairGenerator import DSSM_PairGenerator
 from DRMM_PairGenerator import DRMM_PairGenerator
 from Duet_PairGenerator import Duet_PairGenerator
+from Duetem_PairGenerator import Duetem_PairGenerator
 
 from ListGenerator import ListGenerator
 from DSSM_ListGenerator import DSSM_ListGenerator
 from DRMM_ListGenerator import DRMM_ListGenerator
 from Duet_ListGenerator import Duet_ListGenerator
+from Duetem_ListGenerator import Duetem_ListGenerator
 
 
 def serialize(generator):
