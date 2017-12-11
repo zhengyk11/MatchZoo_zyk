@@ -44,7 +44,6 @@ class DRMM_PairGenerator():
         return qfile_list
 
     def get_data(self):
-        # while True:
         uid_doc = {}
         qid_query = {}
         qid_label_uid = {}
@@ -99,8 +98,7 @@ class DRMM_PairGenerator():
                 X1 = np.zeros((self.batch_size * 2, self.query_maxlen), dtype=np.int32)
                 X2 = np.zeros((self.batch_size * 2, self.query_maxlen, self.hist_size), dtype=np.float32)
                 Y  = np.zeros((self.batch_size * 2,), dtype=np.int32)
-                # X1[:] = -1
-                # X2[:] = 0
+
                 Y[::2] = 1
 
 
