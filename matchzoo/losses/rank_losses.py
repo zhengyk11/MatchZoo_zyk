@@ -21,13 +21,14 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
             dp_score, dn_score = all_pairs_rel_score[(qid, dp_id, dn_id)]['score']
 
             # dp_prob = np.exp(dp_rel)/np.sum(np.exp(dp_rel, dn_rel))
-            dp_prob = dp_rel / (dp_rel + dn_rel)
-            dn_prob = 1. - dp_prob
+            # dp_prob = dp_rel / (dp_rel + dn_rel)
+            # dn_prob = 1. - dp_prob
 
-            # crossentropy_loss_list['y_true'].append([1., 0.])
-            crossentropy_loss_list['y_true'].append([dp_prob, dn_prob])
+            crossentropy_loss_list['y_true'].append([1., 0.])
+            # crossentropy_loss_list['y_true'].append([dp_prob, dn_prob])
             crossentropy_loss_list['y_pred'].append([dp_score, dn_score])
 
+        # cross entropy loss with softmax
         exp_y_pred = np.exp(crossentropy_loss_list['y_pred'])
         sum_exp_y_pred = np.sum(exp_y_pred, axis=1)[:,None]
         softmax_y_pred = np.log(exp_y_pred / sum_exp_y_pred)
