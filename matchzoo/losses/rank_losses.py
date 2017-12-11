@@ -21,12 +21,18 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
             dp_score, dn_score = all_pairs_rel_score[(qid, dp_id, dn_id)]['score']
 
             # dp_prob = np.exp(dp_rel)/np.sum(np.exp(dp_rel, dn_rel))
-            # dp_prob = dp_rel / (dp_rel + dn_rel)
+            # # dp_prob = dp_rel / (dp_rel + dn_rel)
             # dn_prob = 1. - dp_prob
 
-            crossentropy_loss_list['y_true'].append([1., 0.])
-            # crossentropy_loss_list['y_true'].append([dp_prob, dn_prob])
+            # crossentropy_loss_list['y_true'].append([1., 0.])
+            crossentropy_loss_list['y_true'].append([dp_rel, dn_rel])
             crossentropy_loss_list['y_pred'].append([dp_score, dn_score])
+
+        # softmax label
+        # crossentropy_loss_list['y_true'][:] = 0
+        # crossentropy_loss_list['y_true'][::2] = 1
+        crossentropy_loss_list['y_true'] = np.exp(crossentropy_loss_list['y_true'])
+        crossentropy_loss_list['y_true'] /= np.sum(crossentropy_loss_list['y_true'], axis=1)[:,None]
 
         # cross entropy loss with softmax
         exp_y_pred = np.exp(crossentropy_loss_list['y_pred'])
@@ -45,14 +51,21 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
 
     return res
 
-def cross_entropy_loss(target, output):
-    target = tf.reshape(target, [-1,2])
-    output = tf.reshape(output, [-1,2])
-    return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=target, logits=output))
+def cross_entropy_loss(y_true, y_pred):
+    y_true = K.reshape(y_true, [-1, 2])
+    y_pred = K.reshape(y_pred, [-1, 2])
+    return K.mean(K.categorical_crossentropy(target=y_true, output=y_pred, from_logits=True))
+    # return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred))
 
 def rank_hinge_loss(y_true, y_pred):
-    y_pos = Lambda(lambda a: a[::2, :], output_shape= (1,))(y_pred)
-    y_neg = Lambda(lambda a: a[1::2, :], output_shape= (1,))(y_pred)
+    # y_pred softmax
+    y_pred = K.reshape(y_pred, [-1, 2])
+    y_pred = K.softmax(y_pred)
+    y_pos = y_pred[:, 0]
+    y_neg = y_pred[:, 1]
+
+    # y_pos = Lambda(lambda a: a[::2, :], output_shape= (1,))(y_pred)
+    # y_neg = Lambda(lambda a: a[1::2, :], output_shape= (1,))(y_pred)
     loss = K.maximum(0., 1. + y_neg - y_pos)
     return K.mean(loss)
 

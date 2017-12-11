@@ -84,7 +84,7 @@ class DRMM_PairGenerator():
                         continue
                     for dp in qid_label_uid[qid][hl]:
                         for dn in qid_label_uid[qid][ll]:
-                            pair_list.append([qid, dp, dn])
+                            pair_list.append([qid, dp, hl, dn, ll])
 
         return qid_query, uid_doc, qid_label_uid, pair_list
 
@@ -97,13 +97,12 @@ class DRMM_PairGenerator():
                 sample_pair_list = random.sample(pair_list, self.batch_size)
                 X1 = np.zeros((self.batch_size * 2, self.query_maxlen), dtype=np.int32)
                 X2 = np.zeros((self.batch_size * 2, self.query_maxlen, self.hist_size), dtype=np.float32)
-                Y  = np.zeros((self.batch_size * 2,), dtype=np.int32)
-
-                Y[::2] = 1
+                Y  = np.zeros((self.batch_size * 2,), dtype=np.float32)
+                # Y[::2] = 1
 
 
                 for i in range(self.batch_size):
-                    qid, dp_id, dn_id = sample_pair_list[i]
+                    qid, dp_id, dp_label, dn_id, dn_label = sample_pair_list[i]
                     query = qid_query[qid]
                     dp = uid_doc[dp_id]
                     dn = uid_doc[dn_id]
@@ -121,7 +120,14 @@ class DRMM_PairGenerator():
                     X1[i * 2 + 1, :query_len] = query[:query_len]
                     X2[i * 2] = dp_hist
                     X2[i * 2 + 1] = dn_hist
+                    Y[i * 2]     = dp_label
+                    Y[i * 2 + 1] = dn_label
 
+                Y = np.reshape(np.exp(Y), [-1, 2])
+                Y /= np.sum(Y, axis=1)[:,None]
+                Y = np.reshape(Y, [-1])
+                # Y[:] = 0
+                # Y[::2] = 1
                 yield X1, X2, Y
 
     def get_batch_generator(self):
