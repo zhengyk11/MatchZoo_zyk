@@ -122,7 +122,7 @@ def train(config):
                     break
 
         for tag, generator in eval_gen.items():
-            
+            output_list[output_dict[tag]].write("EPOCH %s\n"%(str(i_e))) 
             qid_uid_rel_score = {}
             qid_uid_score = {}
             genfun = generator.get_batch_generator()
@@ -143,6 +143,7 @@ def train(config):
                     qid_uid_rel_score[q]['label'].append(label)
                     qid_uid_rel_score[q]['score'].append(score)
 
+            output_list[output_dict[tag]].write("\n") 
             # calculate the metrices
             res = dict([[k, 0.] for k in eval_metrics.keys()])
             for k, eval_func in eval_metrics.items():
