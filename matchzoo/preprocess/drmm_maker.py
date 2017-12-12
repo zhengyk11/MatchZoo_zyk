@@ -34,7 +34,7 @@ def main():
         "output": "../../runtime_data/fulltext/bm25_train_drmm"
     }
 	"""
-    typenum = int(sys.argv[0])
+    typenum = int(sys.argv[1])
     thread = 40
     config = json.loads(config)
 
