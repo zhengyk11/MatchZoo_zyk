@@ -6,6 +6,7 @@ import json
 import argparse
 import gc
 import random
+import bz2
 # random.seed(49999)
 import numpy as np
 # np.random.seed(49999)
@@ -95,7 +96,17 @@ def train(config):
             eval_metrics[mobj] = metrics.get(mobj)
     model.compile(optimizer=optimizer, loss=loss)
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Model] Model Compile Done.\n'
-
+    
+    output_list = []
+    output_dict = {}
+    output_cnt = 0
+    # open the output file
+    output_dir = config['net_name'].split('_')[0]
+    for tag, generator in eval_gen.items():
+        output_list.append(bz2.BZ2File('../output/%s/%s_%s_output.bz2' % (output_dir, config['net_name'], tag), 'w'))
+        output_dict[tag] = output_cnt
+        output_cnt = output_cnt + 1
+            
     for i_e in range(global_conf['num_epochs']):
         model.save_weights(weights_file)
         for tag, generator in train_gen.items():
@@ -111,10 +122,7 @@ def train(config):
                     break
 
         for tag, generator in eval_gen.items():
-            # open the output file
-            output_dir = config['net_name'].split('_')[0]
-            output = open('../output/%s/%s_%s_output_%s.txt' % (output_dir, config['net_name'], tag, str(i_e+1)), 'w')
-
+            
             qid_uid_rel_score = {}
             qid_uid_score = {}
             genfun = generator.get_batch_generator()
@@ -124,7 +132,7 @@ def train(config):
                 y_pred_reshape = np.reshape(y_pred, (len(y_pred),))
                 # output the predict scores
                 for (q, d, label), score in zip(curr_batch, y_pred_reshape):
-                    output.write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
+                    output_list[output_dict[tag]].write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
 
                     if q not in qid_uid_score:
                         qid_uid_score[q] = {}
@@ -134,8 +142,6 @@ def train(config):
                         qid_uid_rel_score[q] = dict(label=list(), score=list())
                     qid_uid_rel_score[q]['label'].append(label)
                     qid_uid_rel_score[q]['score'].append(score)
-
-            output.close()
 
             # calculate the metrices
             res = dict([[k, 0.] for k in eval_metrics.keys()])
