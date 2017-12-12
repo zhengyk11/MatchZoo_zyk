@@ -34,8 +34,8 @@ def main():
         "output": "../../runtime_data/fulltext/bm25_train_drmm"
     }
 	"""
-    
-
+    typenum = int(sys.argv[0])
+    thread = 40
     config = json.loads(config)
 
     embed_dict, vocab_size, embed_size, word_dict, idf_dict = read_embedding(config['embed_path'])
@@ -48,6 +48,8 @@ def main():
     for dirpath, dirnames, filenames in os.walk(config['input']):
         for fn in filenames:
             if not fn.endswith('.txt'):
+                continue
+            if (int(fn.strip().split('.')[0]) % thread != typenum):
                 continue
             print os.path.join(dirpath, fn)
             with open(os.path.join(dirpath, fn)) as file:
