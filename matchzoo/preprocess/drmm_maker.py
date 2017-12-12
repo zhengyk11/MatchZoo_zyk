@@ -25,8 +25,7 @@ def cal_hist(query_embed, doc_embed, config):
     return hist
 
 def main():
-    """
-    config = 
+    config = """
     {
         "query_maxlen": 10,
         "doc_maxlen": 1000,
