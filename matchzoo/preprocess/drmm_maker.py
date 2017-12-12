@@ -30,10 +30,11 @@ def main():
         "doc_maxlen": 1000,
         "hist_size": 200,
         "embed_path": "../../data/support/embed_query_100w_50.txt",
-        "input": "../../runtime_data/fulltext/real_train_HL_solrex",
-        "output": "../../runtime_data/fulltext/real_train_HL_solrex_drmm"
+        "input": "../../runtime_data/fulltext/bm25_train",
+        "output": "../../runtime_data/fulltext/bm25_train_drmm"
     }
-    """
+	"""
+    
 
     config = json.loads(config)
 
