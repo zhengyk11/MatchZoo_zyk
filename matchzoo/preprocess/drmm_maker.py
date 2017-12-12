@@ -1,5 +1,7 @@
 # suitable for drmm
 
+import multiprocessing
+import time
 import json
 import os
 import sys
@@ -23,8 +25,8 @@ def cal_hist(query_embed, doc_embed, config):
     return hist
 
 def main():
-
-    config = """
+    """
+    config = 
     {
         "query_maxlen": 10,
         "doc_maxlen": 1000,
@@ -34,8 +36,9 @@ def main():
         "output": "../../runtime_data/fulltext/bm25_train_drmm"
     }
 	"""
-    typenum = int(sys.argv[1])
-    thread = 40
+    #typenum = int(sys.argv[0])
+    process_total = 40
+    cpu_num = 2
     config = json.loads(config)
 
     embed_dict, vocab_size, embed_size, word_dict, idf_dict = read_embedding(config['embed_path'])
@@ -44,12 +47,18 @@ def main():
 
     if not os.path.exists(config['output']):
         os.mkdir(config['output'])
+    pool = multiprocessing.Pool(processes=cpu_num)
+    for i in range(0,process_total):
+        pool.apply_async(getfile,(config,process_total,i,embed_dict,embed_size,word_dict))
+    pool.close()
+    pool.join()
 
+def getfile(config, process_total, typenum, embed_dict, embed_size, word_dict):
     for dirpath, dirnames, filenames in os.walk(config['input']):
         for fn in filenames:
             if not fn.endswith('.txt'):
                 continue
-            if (int(fn.strip().split('.')[0]) % thread != typenum):
+            if (int(fn.strip().split('.')[0]) % process_total != typenum):
                 continue
             print os.path.join(dirpath, fn)
             with open(os.path.join(dirpath, fn)) as file:
