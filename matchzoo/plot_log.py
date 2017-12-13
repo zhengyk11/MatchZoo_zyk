@@ -89,9 +89,9 @@ def plot_log_file(path):
                     continue
                 y = eval_epochs[eval_id][k]
                 # print colors[idx]
-                plt.plot(x, y, color=colors[idx], linewidth=0.5)
+                plt.plot(x[:len(y)], y, color=colors[idx], linewidth=0.5)
                 idx += 1
-                new_y, new_x = fun(x, y, 20, 10)
+                new_y, new_x = fun(x[:len(y)], y, 20, 10)
                 plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx], linewidth=1)
                 idx += 1
 
@@ -111,9 +111,9 @@ def plot_log_file(path):
                 if 'ndcg@10' == k.lower():  # or 'map' in k:#  or 'map' in k:
                     y = eval_epochs[eval_id][k]
                     # print colors[idx]
-                    plt.plot(x, y, color=colors[idx], linewidth=0.5)
+                    plt.plot(x[:len(y)], y, color=colors[idx], linewidth=0.5)
                     idx += 1
-                    new_y, new_x = fun(x, y, 20, 10)
+                    new_y, new_x = fun(x[:len(y)], y, 20, 10)
                     plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx], linewidth=1)
                     idx += 1
 
