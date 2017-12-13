@@ -67,8 +67,7 @@ def plot_log_file(path):
 
     colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue', 'pink', 'red', 'moccasin', 'orange', 'lightgrey', 'grey']
     idx = 0
-    r = 10
-    stride = 10
+    plot_cnt = 0
     x = train_iters['iter']
     for k in train_iters:
         if 'iter' == k.lower():
@@ -81,6 +80,7 @@ def plot_log_file(path):
 
         new_y, new_x = fun(x[:x_y_minlen], y[:x_y_minlen], 200, 100)
         plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
+        plot_cnt += 1
         idx += 1
 
     for eval_id in eval_epochs:
@@ -96,17 +96,18 @@ def plot_log_file(path):
                 idx += 1
                 new_y, new_x = fun(x[:x_y_minlen], y[:x_y_minlen], 20, 10)
                 plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx], linewidth=1)
+                plot_cnt += 1
                 idx += 1
 
-    plt.xlabel('#Iteration')
+    # plt.xlabel('#Iteration')
     plt.ylabel('Loss')
-    plt.legend(loc='best')
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=plot_cnt)
     plt.title(net_name)
     plt.grid(axis= 'y')
     plt.savefig(path[:-4].replace('/logs/', '/graph/')+'_loss.pdf')
     plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_loss.png')
     plt.close()
-
+    plot_cnt = 0
     for eval_id in eval_epochs:
         if 'epoch' in eval_epochs[eval_id]:
             # x = [i*num_batch for i in eval_epochs['epoch']]
@@ -120,10 +121,11 @@ def plot_log_file(path):
                     new_y, new_x = fun(x[:x_y_minlen], y[:x_y_minlen], 20, 10)
                     plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx], linewidth=1)
                     idx += 1
+                    plot_cnt += 1
 
-    plt.xlabel('#Iteration')
+    # plt.xlabel('#Iteration')
     plt.ylabel('Metrics')
-    plt.legend(loc='best')
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=plot_cnt)
     plt.title(net_name)
     plt.grid(axis='y')
     plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.pdf')
