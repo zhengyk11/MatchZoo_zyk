@@ -65,7 +65,7 @@ def plot_log_file(path):
     if 'iter' not in train_iters:
         return
 
-    colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue', 'pink', 'red', 'lightblue', 'blue']
+    colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue', 'pink', 'red', 'moccasin', 'orange', 'lightgrey', 'grey']
     idx = 0
     r = 10
     stride = 10
