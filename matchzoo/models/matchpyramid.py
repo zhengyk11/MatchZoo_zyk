@@ -66,7 +66,7 @@ class MatchPyramid(BasicModel):
             hidden_layer = Activation('relu')(hidden_layer)
             # else:
             #     out_ = Activation('relu')(hidden_layer)
-
+        out_ = hidden_layer
         # out_ = Dense(self.config['hidden_sizes'][-1], activation='relu')(hidden_res)
         # out_ = Dense(1)(pool1_flat_drop)
 
