@@ -46,8 +46,8 @@ class ARCI(BasicModel):
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        q_conv1 = Conv1D(self.config['kernel_count'], self.config['kernel_size'], padding='same') (q_embed)
-        d_conv1 = Conv1D(self.config['kernel_count'], self.config['kernel_size'], padding='same') (d_embed)
+        q_conv1 = Conv1D(self.config['kernel_count'], self.config['kernel_size'], activation='relu', padding='same') (q_embed)
+        d_conv1 = Conv1D(self.config['kernel_count'], self.config['kernel_size'], activation='relu', padding='same') (d_embed)
         print q_conv1.shape
         print d_conv1.shape
 
@@ -66,14 +66,15 @@ class ARCI(BasicModel):
         print pool1_flat_drop.shape
 
         num_hidden_layers = len(self.config['hidden_sizes'])
-        if num_hidden_layers == 1:
-            out_ = Dense(self.config['hidden_sizes'][0], activation='tanh')(pool1_flat_drop)
-        else:
-            hidden_res = pool1_flat_drop
-            for i in range(num_hidden_layers - 1):
-                hidden_res = Activation('relu')(BatchNormalization()(Dense(self.config['hidden_sizes'][i])(hidden_res)))
-            out_ = Dense(self.config['hidden_sizes'][-1], activation='tanh')(hidden_res)
-        # out_ = Dense(1)(pool1_flat_drop)
+        hidden_res = pool1_flat_drop
+
+        hidden_res = pool1_flat_drop
+        for i in range(num_hidden_layers):
+            hidden_res = Dense(self.config['hidden_sizes'][i])(hidden_res)
+            hidden_res = BatchNormalization(center=False, scale=False)(hidden_res)
+            hidden_res = Activation('relu')(hidden_res)
+
+        out_ = hidden_res
 
         model = Model(inputs=[query, doc], outputs=out_)
         return model

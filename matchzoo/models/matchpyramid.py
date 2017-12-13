@@ -62,12 +62,12 @@ class MatchPyramid(BasicModel):
             # hidden_layer =
             hidden_layer = Dense(self.config['hidden_sizes'][i])(hidden_layer)
             hidden_layer = BatchNormalization()(hidden_layer)
-            if i < num_hidden_layers - 1:
-                hidden_layer = Activation('relu')(hidden_layer)
-            else:
-                out_ = Activation('tanh')(hidden_layer)
+            # if i < num_hidden_layers - 1:
+            hidden_layer = Activation('relu')(hidden_layer)
+            # else:
+            #     out_ = Activation('relu')(hidden_layer)
 
-        # out_ = Dense(self.config['hidden_sizes'][-1], activation='tanh')(hidden_res)
+        # out_ = Dense(self.config['hidden_sizes'][-1], activation='relu')(hidden_res)
         # out_ = Dense(1)(pool1_flat_drop)
 
         # model = Model(inputs=[query, doc, dpool_index], outputs=out_)
