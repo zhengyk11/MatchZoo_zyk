@@ -11,6 +11,20 @@ from keras.layers import Lambda
 from keras.utils.generic_utils import deserialize_keras_object
 import tensorflow as tf
 
+def cal_cross_entropy_loss(y_true, y_pred, from_logits=False):
+    if from_logits:
+        exp_y_pred = np.exp(y_pred)
+        sum_exp_y_pred = np.sum(exp_y_pred, axis=1)[:, None]
+        softmax_y_pred = np.log(exp_y_pred / sum_exp_y_pred)
+        sum_pred_true = np.sum(y_true * softmax_y_pred, axis=1)
+        crossentropy_loss = -1. * np.mean(sum_pred_true)
+    else:
+        sum_pred_true = np.sum(y_true * y_pred, axis=1)
+        crossentropy_loss = -1. * np.mean(sum_pred_true)
+
+    return crossentropy_loss
+
+
 def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
     res = {}
     if 'cross_entropy_loss' in train_loss:
@@ -35,12 +49,17 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
         crossentropy_loss_list['y_true'] /= np.sum(crossentropy_loss_list['y_true'], axis=1)[:,None]
 
         # cross entropy loss with softmax
-        exp_y_pred = np.exp(crossentropy_loss_list['y_pred'])
-        sum_exp_y_pred = np.sum(exp_y_pred, axis=1)[:,None]
-        softmax_y_pred = np.log(exp_y_pred / sum_exp_y_pred)
-        sum_pred_true = np.sum(crossentropy_loss_list['y_true'] * softmax_y_pred, axis=1)
-        crossentropy_loss = -1. * np.mean(sum_pred_true)
-        res['%s_cross_entropy_loss' % tag] = crossentropy_loss
+        # exp_y_pred = np.exp(crossentropy_loss_list['y_pred'])
+        # sum_exp_y_pred = np.sum(exp_y_pred, axis=1)[:,None]
+        # softmax_y_pred = np.log(exp_y_pred / sum_exp_y_pred)
+        # sum_pred_true = np.sum(crossentropy_loss_list['y_true'] * softmax_y_pred, axis=1)
+        # crossentropy_loss = -1. * np.mean(sum_pred_true)
+        bottom = cal_cross_entropy_loss(crossentropy_loss_list['y_true'],
+                                        crossentropy_loss_list['y_true'],
+                                        from_logits=False)
+        res['%s_cross_entropy_loss' % tag] = cal_cross_entropy_loss(crossentropy_loss_list['y_true'],
+                                                                    crossentropy_loss_list['y_pred'],
+                                                                    from_logits=True) - bottom
 
     if 'rank_hinge_loss' in train_loss:
         hinge_loss_list = []
@@ -54,7 +73,8 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
 def cross_entropy_loss(y_true, y_pred):
     y_true = K.reshape(y_true, [-1, 2])
     y_pred = K.reshape(y_pred, [-1, 2])
-    return K.mean(K.categorical_crossentropy(target=y_true, output=y_pred, from_logits=True))
+    bottom = K.categorical_crossentropy(target=y_true, output=y_true, from_logits=False)
+    return K.mean(K.categorical_crossentropy(target=y_true, output=y_pred, from_logits=True) - bottom)
     # return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred))
 
 def rank_hinge_loss(y_true, y_pred):
