@@ -97,15 +97,15 @@ def train(config):
     model.compile(optimizer=optimizer, loss=loss)
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Model] Model Compile Done.\n'
     
-    output_list = []
-    output_dict = {}
+    # output_list = []
+    # output_dict = {}
     output_cnt = 0
     # open the output file
     output_dir = config['net_name'].split('_')[0]
-    for tag, generator in eval_gen.items():
-        output_list.append(bz2.BZ2File('../output/%s/%s_%s_output.bz2' % (output_dir, config['net_name'], tag), 'w'))
-        output_dict[tag] = output_cnt
-        output_cnt = output_cnt + 1
+    # for tag, generator in eval_gen.items():
+        # output_list.append(bz2.BZ2File('../output/%s/%s_%s_output.bz2' % (output_dir, config['net_name'], tag), 'w'))
+        # output_dict[tag] = output_cnt
+        # output_cnt = output_cnt + 1
             
     for i_e in range(global_conf['num_epochs']):
         model.save_weights(weights_file)
@@ -122,7 +122,9 @@ def train(config):
                     break
 
         for tag, generator in eval_gen.items():
-            output_list[output_dict[tag]].write("EPOCH %s\n"%(str(i_e))) 
+            output_dir = config['net_name'].split('_')[0]
+            output = open('../output/%s/%s_%s_output_%s.txt' % (output_dir, config['net_name'], tag, str(i_e + 1)), 'w')
+            # output_list[output_dict[tag]].write("EPOCH %s\n"%(str(i_e)))
             qid_uid_rel_score = {}
             qid_uid_score = {}
             genfun = generator.get_batch_generator()
@@ -132,7 +134,8 @@ def train(config):
                 y_pred_reshape = np.reshape(y_pred, (len(y_pred),))
                 # output the predict scores
                 for (q, d, label), score in zip(curr_batch, y_pred_reshape):
-                    output_list[output_dict[tag]].write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
+                    output.write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
+                    # output_list[output_dict[tag]].write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
 
                     if q not in qid_uid_score:
                         qid_uid_score[q] = {}
@@ -143,7 +146,8 @@ def train(config):
                     qid_uid_rel_score[q]['label'].append(label)
                     qid_uid_rel_score[q]['score'].append(score)
 
-            output_list[output_dict[tag]].write("\n") 
+            # output_list[output_dict[tag]].write("\n")
+            output.close()
             # calculate the metrices
             res = dict([[k, 0.] for k in eval_metrics.keys()])
             for k, eval_func in eval_metrics.items():
@@ -152,15 +156,15 @@ def train(config):
                 res[k] /= len(qid_uid_rel_score)
 
             # calculate the eval_loss
-            # all_pairs = generator.get_all_pairs()
-            # all_pairs_rel_score = {}
-            # for qid, dp_id, dn_id in all_pairs:
-            #     all_pairs_rel_score[(qid, dp_id, dn_id)] = {}
-            #     all_pairs_rel_score[(qid, dp_id, dn_id)]['score'] = [qid_uid_score[qid][dp_id],
-            #                                                          qid_uid_score[qid][dn_id]]
-            #     all_pairs_rel_score[(qid, dp_id, dn_id)]['rel'] = all_pairs[(qid, dp_id, dn_id)]
+            all_pairs = generator.get_all_pairs()
+            all_pairs_rel_score = {}
+            for qid, dp_id, dn_id in all_pairs:
+                all_pairs_rel_score[(qid, dp_id, dn_id)] = {}
+                all_pairs_rel_score[(qid, dp_id, dn_id)]['score'] = [qid_uid_score[qid][dp_id],
+                                                                     qid_uid_score[qid][dn_id]]
+                all_pairs_rel_score[(qid, dp_id, dn_id)]['rel'] = all_pairs[(qid, dp_id, dn_id)]
 
-            # eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
+            eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print '[Eval] @ epoch: %d,' %(i_e+1),
             # print ', '.join(['%s: %.5f'%(k, eval_loss[k]) for k in eval_loss]),

@@ -34,10 +34,6 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
             dp_rel, dn_rel = all_pairs_rel_score[(qid, dp_id, dn_id)]['rel']
             dp_score, dn_score = all_pairs_rel_score[(qid, dp_id, dn_id)]['score']
 
-            # dp_prob = np.exp(dp_rel)/np.sum(np.exp(dp_rel, dn_rel))
-            # # dp_prob = dp_rel / (dp_rel + dn_rel)
-            # dn_prob = 1. - dp_prob
-
             # crossentropy_loss_list['y_true'].append([1., 0.])
             crossentropy_loss_list['y_true'].append([dp_rel, dn_rel])
             crossentropy_loss_list['y_pred'].append([dp_score, dn_score])
@@ -49,11 +45,6 @@ def cal_eval_loss(all_pairs_rel_score, tag, train_loss):
         crossentropy_loss_list['y_true'] /= np.sum(crossentropy_loss_list['y_true'], axis=1)[:,None]
 
         # cross entropy loss with softmax
-        # exp_y_pred = np.exp(crossentropy_loss_list['y_pred'])
-        # sum_exp_y_pred = np.sum(exp_y_pred, axis=1)[:,None]
-        # softmax_y_pred = np.log(exp_y_pred / sum_exp_y_pred)
-        # sum_pred_true = np.sum(crossentropy_loss_list['y_true'] * softmax_y_pred, axis=1)
-        # crossentropy_loss = -1. * np.mean(sum_pred_true)
         bottom = cal_cross_entropy_loss(crossentropy_loss_list['y_true'],
                                         crossentropy_loss_list['y_true'],
                                         from_logits=False)
@@ -75,7 +66,6 @@ def cross_entropy_loss(y_true, y_pred):
     y_pred = K.reshape(y_pred, [-1, 2])
     bottom = K.categorical_crossentropy(target=y_true, output=y_true, from_logits=False)
     return K.mean(K.categorical_crossentropy(target=y_true, output=y_pred, from_logits=True) - bottom)
-    # return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred))
 
 def rank_hinge_loss(y_true, y_pred):
     # y_pred softmax
