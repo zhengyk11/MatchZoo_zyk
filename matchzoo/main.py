@@ -15,6 +15,8 @@ import tensorflow as tf
 from collections import OrderedDict
 from keras.models import Model
 import keras.backend.tensorflow_backend as KTF
+from keras.utils import multi_gpu_model
+
 
 from utils import *
 import inputs
@@ -81,7 +83,8 @@ def train(config):
         eval_gen[tag] = generator(config=conf)
 
     ######### Load Model #########
-    model = load_model(config)
+    _model = load_model(config)
+    model = multi_gpu_model(_model, gpus=2)
 
     loss = []
     for lobj in config['losses']:
