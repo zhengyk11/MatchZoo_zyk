@@ -167,7 +167,7 @@ def train(config):
             eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print '[Eval] @ epoch: %d,' %(i_e+1),
-            # print ', '.join(['%s: %.5f'%(k, eval_loss[k]) for k in eval_loss]),
+            print ', '.join(['%s: %.5f'%(k, eval_loss[k]) for k in eval_loss]),
             print ', '.join(['%s: %.5f'%(k, res[k]) for k in res])
 
         print ''
