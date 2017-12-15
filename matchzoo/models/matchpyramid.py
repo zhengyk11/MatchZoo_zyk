@@ -39,10 +39,10 @@ class MatchPyramid(BasicModel):
     def build(self):
         query = Input(name='query', shape=(self.config['query_maxlen'],))
         doc = Input(name='doc', shape=(self.config['doc_maxlen'],))
-        # query_mask = Masking(mask_value=-1)(query)
-        # doc_mask = Masking(mask_value=-1)(doc)
 
-        embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']],
+        embedding = Embedding(self.config['vocab_size'],
+                              self.config['embed_size'],
+                              weights=[self.config['embed']],
                               trainable=self.embed_trainable)
         q_embed = embedding(query)
         d_embed = embedding(doc)
@@ -50,26 +50,22 @@ class MatchPyramid(BasicModel):
         cross = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
         cross_reshape = Reshape((self.config['query_maxlen'], self.config['doc_maxlen'], 1))(cross)
 
-        conv1 = Conv2D(self.config['kernel_count'], self.config['kernel_size'], padding='same', activation='relu')(cross_reshape)
-        pool1 = MaxPooling2D(pool_size=(self.config['dpool_size'][0], self.config['dpool_size'][1]))(conv1)
+        conv1 = Conv2D(self.config['kernel_count'],
+                       self.config['kernel_size'],
+                       padding='same', activation='tanh')(cross_reshape)
+        pool1 = MaxPooling2D(pool_size=(self.config['dpool_size'][0],
+                                        self.config['dpool_size'][1]))(conv1)
         pool1_flat = Flatten()(pool1)
 
         pool1_flat_dropout = Dropout(self.config['dropout_rate'])(pool1_flat)
 
-        num_hidden_layers = len(self.config['hidden_sizes'])
         hidden_layer = pool1_flat_dropout
-        for i in range(num_hidden_layers):
-            # hidden_layer =
+        for i in range(len(self.config['hidden_sizes'])):
             hidden_layer = Dense(self.config['hidden_sizes'][i])(hidden_layer)
-            hidden_layer = BatchNormalization()(hidden_layer)
-            # if i < num_hidden_layers - 1:
-            hidden_layer = Activation('relu')(hidden_layer)
-            # else:
-            #     out_ = Activation('relu')(hidden_layer)
-        out_ = hidden_layer
-        # out_ = Dense(self.config['hidden_sizes'][-1], activation='relu')(hidden_res)
-        # out_ = Dense(1)(pool1_flat_drop)
+            hidden_layer = BatchNormalization(center=False, scale=False)(hidden_layer)
+            hidden_layer = Activation('tanh')(hidden_layer)
 
-        # model = Model(inputs=[query, doc, dpool_index], outputs=out_)
+        out_ = hidden_layer
+
         model = Model(inputs=[query, doc], outputs=out_)
         return model

@@ -44,24 +44,24 @@ class DUETEM(BasicModel):
         local_feat_reshape = Reshape((self.config['query_maxlen'], self.config['doc_maxlen'], 1))(local_feat)
         print 3, local_feat_reshape.shape
         local_feat_conv = Conv2D(self.config['kernel_count'], [1, self.config['doc_maxlen']],
-                       activation='relu')(local_feat_reshape)
+                       activation='tanh')(local_feat_reshape)
         print 4, local_feat_conv.shape
         local_feat_conv_reshape = Reshape([self.config['query_maxlen'], -1])(local_feat_conv)
         print 5, local_feat_conv_reshape.shape
         local_feat_conv_reshape = Permute((2, 1))(local_feat_conv_reshape)
         print 6, local_feat_conv_reshape.shape
         hidden_layer = local_feat_conv_reshape
-        hidden_layer = Dense(1, activation='relu')(hidden_layer)
+        hidden_layer = Dense(1, activation='tanh')(hidden_layer)
         print 7, hidden_layer.shape
         hidden_layer = Reshape([self.config['kernel_count'],])(hidden_layer)
         print 8, hidden_layer.shape
-        hidden_layer = Dense(self.config['kernel_count'], activations='relu')(hidden_layer)
+        hidden_layer = Dense(self.config['kernel_count'], activations='tanh')(hidden_layer)
         # hidden_layer = BatchNormalization(center=False, scale=False)(hidden_layer)
-        # hidden_layer = Activation('relu')(hidden_layer)
+        # hidden_layer = Activation('tanh')(hidden_layer)
         print 9, hidden_layer.shape
         hidden_layer = Dropout(self.config['dropout_rate'])(hidden_layer)
         print 10, hidden_layer.shape
-        hidden_layer = Dense(1, activation='relu')(hidden_layer)
+        hidden_layer = Dense(1, activation='tanh')(hidden_layer)
         print 11, hidden_layer.shape
         local_out_ = hidden_layer
 
@@ -69,7 +69,7 @@ class DUETEM(BasicModel):
         print 12, q_embed.shape
         q_conv = Convolution2D(self.config['kernel_count'],
                                [self.config['dist_kernel_size'], self.config['embed_size']],
-                               activation='relu')(q_embed)
+                               activation='tanh')(q_embed)
         print 13, q_conv.shape
         q_conv = Reshape([-1, self.config['kernel_count'], 1])(q_conv)
         print 14, q_conv.shape
@@ -77,14 +77,14 @@ class DUETEM(BasicModel):
         print 15, q_pool.shape
         q_pool = Reshape([-1,])(q_pool)
         print 16, q_pool.shape
-        rq = Dense(self.config['kernel_count'], activation='relu')(q_pool)
+        rq = Dense(self.config['kernel_count'], activation='tanh')(q_pool)
         print 17, rq.shape
 
         d_embed = Reshape((self.config['doc_maxlen'], self.config['embed_size'], 1))(d_embed)
         print 18, d_embed.shape
         d_conv = Convolution2D(self.config['kernel_count'],
                                [self.config['dist_kernel_size'], self.config['embed_size']],
-                               activation='relu')(d_embed)
+                               activation='tanh')(d_embed)
         print 19, d_conv.shape
         d_conv = Reshape([-1, self.config['kernel_count'], 1])(d_conv)
         print 20, d_conv.shape
@@ -92,7 +92,7 @@ class DUETEM(BasicModel):
         print 21, d_pool.shape
         d_conv = Convolution2D(self.config['kernel_count'],
                                [1, self.config['kernel_count']],
-                               activation='relu')(d_pool)
+                               activation='tanh')(d_pool)
         print 22, d_conv.shape
         rd = Reshape([-1, self.config['kernel_count']])(d_conv)
         print 23, rd.shape
@@ -107,16 +107,16 @@ class DUETEM(BasicModel):
         print 24, dist_out_.shape
         dist_out_ = Permute((2, 1))(dist_out_)
         print 25, dist_out_.shape
-        dist_out_ = Dense(1, activation='relu')(dist_out_)
+        dist_out_ = Dense(1, activation='tanh')(dist_out_)
         print 26, dist_out_.shape
 
         dist_out_ = Reshape([-1,])(dist_out_)
         print 27, dist_out_.shape
-        dist_out_ = Dense(self.config['kernel_count'], activation='relu')(dist_out_)
+        dist_out_ = Dense(self.config['kernel_count'], activation='tanh')(dist_out_)
         print 28, dist_out_.shape
         dist_out_ = Dropout(self.config['dropout_rate'])(dist_out_)
         print 29, dist_out_.shape
-        dist_out_ = Dense(1, activation='relu')(dist_out_)
+        dist_out_ = Dense(1, activation='tanh')(dist_out_)
         print 30, dist_out_.shape
 
 
@@ -126,7 +126,7 @@ class DUETEM(BasicModel):
         # print local_dist_out.shape
         out_ = Add()([local_out_, dist_out_])
         print 31, out_.shape
-        # out_ = Dense(1, activation='relu')(local_dist_out)
+        # out_ = Dense(1, activation='tanh')(local_dist_out)
         # print out_.shape
 
         model = Model(inputs=[local_feat, query, doc], outputs=out_)

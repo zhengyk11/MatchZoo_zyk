@@ -38,40 +38,43 @@ class ARCII(BasicModel):
         self.config.update(config)
 
     def build(self):
-
         query = Input(name='query', shape=(self.config['query_maxlen'],))
         doc = Input(name='doc', shape=(self.config['doc_maxlen'],))
 
-        # query_mask = Masking(mask_value=-1)(query)
-        # doc_mask = Masking(mask_value=-1)(doc)
-
-        embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']],
+        embedding = Embedding(self.config['vocab_size'], 
+                              self.config['embed_size'], 
+                              weights=[self.config['embed']],
                               trainable = self.embed_trainable)
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        q_conv1 = Conv1D(self.config['1d_kernel_count'], self.config['1d_kernel_size'], activation='relu', padding='same') (q_embed)
-        d_conv1 = Conv1D(self.config['1d_kernel_count'], self.config['1d_kernel_size'], activation='relu', padding='same') (d_embed)
+        q_conv1 = Conv1D(self.config['1d_kernel_count'], 
+                         self.config['1d_kernel_size'], 
+                         activation='tanh', padding='same') (q_embed)
+        d_conv1 = Conv1D(self.config['1d_kernel_count'], 
+                         self.config['1d_kernel_size'], 
+                         activation='tanh', padding='same') (d_embed)
 
-        cross = Match(match_type='plus')([q_conv1, d_conv1])
+        cross = Match(match_type='concat')([q_conv1, d_conv1])
         z = Reshape((self.config['query_maxlen'], self.config['doc_maxlen'], -1))(cross)
 
         for i in range(self.config['num_conv2d_layers']):
-            z = Conv2D(self.config['2d_kernel_counts'][i], self.config['2d_kernel_sizes'][i], padding='same', activation='relu')(z)
+            z = Conv2D(self.config['2d_kernel_counts'][i],
+                       self.config['2d_kernel_sizes'][i],
+                       padding='same', activation='tanh')(z)
             print z.shape
-            z = MaxPooling2D(pool_size=(self.config['2d_mpool_sizes'][i][0], self.config['2d_mpool_sizes'][i][1]))(z)
+            z = MaxPooling2D(pool_size=(self.config['2d_mpool_sizes'][i][0],
+                                        self.config['2d_mpool_sizes'][i][1]))(z)
             print z.shape
 
         pool1_flat = Flatten()(z)
         pool1_flat_drop = Dropout(rate=self.config['dropout_rate'])(pool1_flat)
 
-        num_hidden_layers = len(self.config['hidden_sizes'])
-
         hidden_res = pool1_flat_drop
-        for i in range(num_hidden_layers):
+        for i in range(len(self.config['hidden_sizes'])):
             hidden_res = Dense(self.config['hidden_sizes'][i])(hidden_res)
             hidden_res = BatchNormalization(center=False, scale=False)(hidden_res)
-            hidden_res = Activation('relu')(hidden_res)
+            hidden_res = Activation('tanh')(hidden_res)
 
         out_ = hidden_res
 

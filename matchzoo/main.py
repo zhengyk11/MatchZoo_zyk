@@ -4,14 +4,7 @@ import sys
 import time
 import json
 import argparse
-import gc
-import random
-import bz2
-# random.seed(49999)
-import numpy as np
-# np.random.seed(49999)
 import tensorflow as tf
-# tf.set_random_seed(49999)
 from collections import OrderedDict
 from keras.models import Model
 import keras.backend.tensorflow_backend as KTF
@@ -84,8 +77,8 @@ def train(config):
 
     ######### Load Model #########
     _model = load_model(config)
-    model = multi_gpu_model(_model, gpus=2)
-
+    # model = multi_gpu_model(_model, gpus=2)
+    model = _model
     loss = []
     for lobj in config['losses']:
         loss.append(rank_losses.get(lobj))
@@ -99,16 +92,6 @@ def train(config):
             eval_metrics[mobj] = metrics.get(mobj)
     model.compile(optimizer=optimizer, loss=loss)
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Model] Model Compile Done.\n'
-    
-    # output_list = []
-    # output_dict = {}
-    output_cnt = 0
-    # open the output file
-    output_dir = config['net_name'].split('_')[0]
-    # for tag, generator in eval_gen.items():
-        # output_list.append(bz2.BZ2File('../output/%s/%s_%s_output.bz2' % (output_dir, config['net_name'], tag), 'w'))
-        # output_dict[tag] = output_cnt
-        # output_cnt = output_cnt + 1
             
     for i_e in range(global_conf['num_epochs']):
         model.save_weights(weights_file)
@@ -127,7 +110,6 @@ def train(config):
         for tag, generator in eval_gen.items():
             output_dir = config['net_name'].split('_')[0]
             output = open('../output/%s/%s_%s_output_%s.txt' % (output_dir, config['net_name'], tag, str(i_e + 1)), 'w')
-            # output_list[output_dict[tag]].write("EPOCH %s\n"%(str(i_e)))
             qid_uid_rel_score = {}
             qid_uid_score = {}
             genfun = generator.get_batch_generator()
@@ -138,7 +120,6 @@ def train(config):
                 # output the predict scores
                 for (q, d, label), score in zip(curr_batch, y_pred_reshape):
                     output.write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
-                    # output_list[output_dict[tag]].write('%s\t%s\t%s\t%s\n' % (str(q), str(d), str(label), str(score)))
 
                     if q not in qid_uid_score:
                         qid_uid_score[q] = {}
@@ -149,7 +130,6 @@ def train(config):
                     qid_uid_rel_score[q]['label'].append(label)
                     qid_uid_rel_score[q]['score'].append(score)
 
-            # output_list[output_dict[tag]].write("\n")
             output.close()
             # calculate the metrices
             res = dict([[k, 0.] for k in eval_metrics.keys()])
@@ -168,6 +148,7 @@ def train(config):
                 all_pairs_rel_score[(qid, dp_id, dn_id)]['rel'] = all_pairs[(qid, dp_id, dn_id)]
 
             eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
+
             print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print '[Eval] @ epoch: %d,' %(i_e+1),
             print ', '.join(['%s: %.5f'%(k, eval_loss[k]) for k in eval_loss]),
@@ -187,7 +168,7 @@ def main(argv):
         exit(0)
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device
-    config = tf.ConfigProto()
+    config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth=True
     with tf.Session(config=config) as sess:
         KTF.set_session(sess)

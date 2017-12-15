@@ -36,58 +36,32 @@ class DRMM(BasicModel):
         query = Input(name='query', shape=(self.config['query_maxlen'],))
         doc = Input(name='doc', shape=(self.config['query_maxlen'], self.config['hist_size']))
 
-        # query_reshape = Reshape(self.config['query_maxlen'],)(query)
-        # print query_reshape.shape
-        # query_mask = Masking(mask_value=-1)(query_reshape)
-        # print query_mask.shape
-
-        # doc_mask = Masking(mask_value=0., input_shape=(self.config['query_maxlen'], self.config['hist_size']))(doc)
-
-        embedding = Embedding(self.config['vocab_size'], 1, weights=[self.config['idf_feat']], trainable=self.embed_trainable)
+        embedding = Embedding(self.config['vocab_size'], 1,
+                              weights=[self.config['idf_feat']],
+                              trainable=self.embed_trainable)
         q_embed = embedding(query)
         print q_embed.shape
 
-
-        # q_w = q_embed
-        # q_w = Dropout(self.config['dropout_rate'])(q_w)
-        # for i in range(len(self.config['hidden_sizes_qw']) - 1):
-        #     q_w = Dense(self.config['hidden_sizes_qw'][i])(q_w)
-        #     q_w = BatchNormalization()(q_w)
-        #     q_w = Activation('relu')(q_w)
-        # q_w = Dropout(self.config['dropout_rate'])(q_w)
         q_w = Dense(1, use_bias=False)(q_embed)
-        # q_w = BatchNormalization()(q_w)
+        print q_w.shape
         q_w = Reshape((self.config['query_maxlen'],))(q_w)
-        # q_w = Activation('tanh')(q_w)
         print q_w.shape
         q_w = Activation('softmax')(q_w)
-        # q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.config['query_maxlen'], ))(q_w)
         print q_w.shape
 
         z = doc
         print z.shape
-        # z = Dropout(self.config['dropout_rate'])(z)
+        z = Dropout(self.config['dropout_rate'])(z)
         for i in range(len(self.config['hidden_sizes_hist'])):
-            z = Dropout(self.config['dropout_rate'])(z)
-            z = Dense(self.config['hidden_sizes_hist'][i])(z) # kernel_initializer=self.initializer_fc
-            z = BatchNormalization()(z)
+            z = Dense(self.config['hidden_sizes_hist'][i])(z)
+            z = BatchNormalization(center=False, scale=False)(z)
             z = Activation('tanh')(z)
-        # z = Dropout(self.config['dropout_rate'])(z)
-        # z = Dense(self.config['hidden_sizes_hist'][-1])(z) # kernel_initializer=self.initializer_fc
-        # z = BatchNormalization()(z)
-        # z = Activation('tanh')(z)
-        print z.shape
-        # z = Permute((2, 1))(z)
-        # print z.shape
-        z = Reshape((self.config['query_maxlen'],))(z)
-        # z = Dropout(self.config['dropout_rate'])(z)
-        # print z.shape
 
-        # q_w = Dropout(self.config['dropout_rate'])(q_w)
+        print z.shape
+
+        z = Reshape((self.config['query_maxlen'],))(z)
 
         out_ = Activation('tanh')(Dot(axes= [1, 1])([z, q_w]))
-        # out_ = Dense(1, activation='tanh')(out_)
-        # print out_.shape
 
         model = Model(inputs=[query, doc], outputs=[out_])
         return model

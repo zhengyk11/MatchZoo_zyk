@@ -27,12 +27,6 @@ class ARCI(BasicModel):
         if not isinstance(config, dict):
             raise TypeError('parameter config should be dict:', config)
 
-        # self.set_default('kernel_count', 32)
-        # self.set_default('kernel_size', 3)
-        # self.set_default('q_pool_size', 2)
-        # self.set_default('d_pool_size', 2)
-        # self.set_default('dropout_rate', 0)
-        # self.set_default('hidden_sizes', [300, 128])
         self.config.update(config)
 
     def build(self):
@@ -41,13 +35,20 @@ class ARCI(BasicModel):
         # query_mask = Masking(mask_value=-1)(query)
         # doc_mask = Masking(mask_value=-1)(doc)
 
-        embedding = Embedding(self.config['vocab_size'], self.config['embed_size'], weights=[self.config['embed']], trainable = self.embed_trainable)
+        embedding = Embedding(self.config['vocab_size'],
+                              self.config['embed_size'],
+                              weights=[self.config['embed']],
+                              trainable = self.embed_trainable)
 
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        q_conv1 = Conv1D(self.config['kernel_count'], self.config['kernel_size'], activation='relu', padding='same') (q_embed)
-        d_conv1 = Conv1D(self.config['kernel_count'], self.config['kernel_size'], activation='relu', padding='same') (d_embed)
+        q_conv1 = Conv1D(self.config['kernel_count'],
+                         self.config['kernel_size'],
+                         activation='tanh', padding='same') (q_embed)
+        d_conv1 = Conv1D(self.config['kernel_count'],
+                         self.config['kernel_size'],
+                         activation='tanh', padding='same') (d_embed)
         print q_conv1.shape
         print d_conv1.shape
 
@@ -65,14 +66,11 @@ class ARCI(BasicModel):
         pool1_flat_drop = Dropout(rate=self.config['dropout_rate'])(pool1_flat)
         print pool1_flat_drop.shape
 
-        num_hidden_layers = len(self.config['hidden_sizes'])
         hidden_res = pool1_flat_drop
-
-        hidden_res = pool1_flat_drop
-        for i in range(num_hidden_layers):
+        for i in range(len(self.config['hidden_sizes'])):
             hidden_res = Dense(self.config['hidden_sizes'][i])(hidden_res)
             hidden_res = BatchNormalization(center=False, scale=False)(hidden_res)
-            hidden_res = Activation('relu')(hidden_res)
+            hidden_res = Activation('tanh')(hidden_res)
 
         out_ = hidden_res
 
