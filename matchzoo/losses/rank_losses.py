@@ -15,7 +15,7 @@ def cal_cross_entropy_loss(y_true, y_pred, from_logits=False):
     if from_logits:
         exp_y_pred = np.exp(y_pred)
         sum_exp_y_pred = np.sum(exp_y_pred, axis=1)[:, None]
-        softmax_y_pred = np.log(exp_y_pred / sum_exp_y_pred)
+        softmax_y_pred = exp_y_pred / sum_exp_y_pred
         sum_pred_true = np.sum(y_true * softmax_y_pred, axis=1)
         crossentropy_loss = -1. * np.mean(sum_pred_true)
     else:

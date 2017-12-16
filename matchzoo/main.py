@@ -143,21 +143,26 @@ def train(config):
                     res[k] += eval_func(y_true=qid_uid_rel_score[qid]['label'], y_pred=qid_uid_rel_score[qid]['score'])
                 res[k] /= len(qid_uid_rel_score)
 
-            # calculate the eval_loss
-            all_pairs = generator.get_all_pairs()
-            all_pairs_rel_score = {}
-            for qid, dp_id, dn_id in all_pairs:
-                all_pairs_rel_score[(qid, dp_id, dn_id)] = {}
-                all_pairs_rel_score[(qid, dp_id, dn_id)]['score'] = [qid_uid_score[qid][dp_id],
-                                                                     qid_uid_score[qid][dn_id]]
-                all_pairs_rel_score[(qid, dp_id, dn_id)]['rel'] = all_pairs[(qid, dp_id, dn_id)]
+            if 'valid' not in tag:
+                print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                print '[Eval] @ epoch: %d,' % (i_e + 1),
+                print ', '.join(['%s: %.5f' % (k, res[k]) for k in res])
+            else:
+                # calculate the eval_loss
+                all_pairs = generator.get_all_pairs()
+                all_pairs_rel_score = {}
+                for qid, dp_id, dn_id in all_pairs:
+                    all_pairs_rel_score[(qid, dp_id, dn_id)] = {}
+                    all_pairs_rel_score[(qid, dp_id, dn_id)]['score'] = [qid_uid_score[qid][dp_id],
+                                                                         qid_uid_score[qid][dn_id]]
+                    all_pairs_rel_score[(qid, dp_id, dn_id)]['rel'] = all_pairs[(qid, dp_id, dn_id)]
 
-            eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
+                eval_loss = cal_eval_loss(all_pairs_rel_score, tag, config['losses'])
 
-            print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-            print '[Eval] @ epoch: %d,' %(i_e+1),
-            print ', '.join(['%s: %.5f'%(k, eval_loss[k]) for k in eval_loss]),
-            print ', '.join(['%s: %.5f'%(k, res[k]) for k in res])
+                print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                print '[Eval] @ epoch: %d,' % (i_e + 1),
+                print ', '.join(['%s: %.5f' % (k, eval_loss[k]) for k in eval_loss]),
+                print ', '.join(['%s: %.5f' % (k, res[k]) for k in res])
 
         print ''
 
