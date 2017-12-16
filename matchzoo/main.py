@@ -93,10 +93,10 @@ def train(config):
     model.compile(optimizer=optimizer, loss=loss)
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Model] Model Compile Done.\n'
 
-    print '### Model Info ###'
+    print '\n### Model Info ###'
     model.summary()
-    print 'Total number of parameters:', model.count_params()
-    print '### Model Info ###'
+    # print 'Total number of parameters:', model.count_params()
+    print '### Model Info ###\n'
 
     for i_e in range(global_conf['num_epochs']):
         model.save_weights(weights_file)
@@ -143,7 +143,7 @@ def train(config):
                     res[k] += eval_func(y_true=qid_uid_rel_score[qid]['label'], y_pred=qid_uid_rel_score[qid]['score'])
                 res[k] /= len(qid_uid_rel_score)
 
-            if 'valid' not in tag:
+            if 'test' in tag:
                 print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                 print '[Eval] @ epoch: %d,' % (i_e + 1),
                 print ', '.join(['%s: %.5f' % (k, res[k]) for k in res])

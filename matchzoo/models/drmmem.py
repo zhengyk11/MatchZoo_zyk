@@ -9,10 +9,10 @@ from keras.layers import Reshape, Dot
 from keras.activations import softmax, tanh
 from model import BasicModel
 
-class DRMM(BasicModel):
+class DRMMEM(BasicModel):
     def __init__(self, config):
-        super(DRMM, self).__init__(config)
-        self._name = 'DRMM'
+        super(DRMMEM, self).__init__(config)
+        self._name = 'DRMMEM'
         self.check_list = [ 'query_maxlen', 'hist_size',
                             'embed', 'embed_size', 'vocab_size',
                             'idf_feat', 'hidden_sizes_qw',
@@ -22,9 +22,9 @@ class DRMM(BasicModel):
         # self.initializer_fc = keras.initializers.RandomUniform(minval=-0.1, maxval=0.1, seed=11)
         # self.initializer_gate = keras.initializers.RandomUniform(minval=-0.01, maxval=0.01, seed=11)
         if not self.check():
-            raise TypeError('[DRMM] parameter check wrong')
+            raise TypeError('[DRMMEM] parameter check wrong')
         print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-        print '[DRMM] init done'
+        print '[DRMMEM] init done'
 
     def setup(self, config):
         if not isinstance(config, dict):
