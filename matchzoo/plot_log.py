@@ -3,6 +3,7 @@ matplotlib.use('Agg')
 import sys
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_log_file(path):
     f = open(path)
@@ -65,7 +66,7 @@ def plot_log_file(path):
     if 'iter' not in train_iters:
         return
 
-    colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue', 'pink', 'red', 'moccasin', 'orange', 'lightgrey', 'grey']
+    colors = ['pink', 'red', 'palegreen', 'g', 'lightblue', 'blue', 'moccasin', 'orange', 'lightgrey', 'grey']
     idx = 0
     plot_cnt = 0
     x = train_iters['iter']
@@ -75,11 +76,11 @@ def plot_log_file(path):
         y = train_iters[k]
         # print colors[idx]
         x_y_minlen = min(len(x), len(y))
-        plt.plot(x[:x_y_minlen], y[:x_y_minlen], color=colors[idx], linewidth=0.5)
+        plt.plot(x[:x_y_minlen], np.log(y[:x_y_minlen]), color=colors[idx%10], linewidth=0.5)
         idx += 1
 
-        new_y, new_x = fun(x[:x_y_minlen], y[:x_y_minlen], 200, 100)
-        plt.plot(new_x, new_y, label=k, color=colors[idx], linewidth=1)
+        new_y, new_x = fun(x[:x_y_minlen], np.log(y[:x_y_minlen]), 200, 100)
+        plt.plot(new_x, new_y, label=k, color=colors[idx%10], linewidth=1)
         plot_cnt += 1
         idx += 1
 
@@ -87,15 +88,17 @@ def plot_log_file(path):
         if 'epoch' in eval_epochs[eval_id]:
             x = [i * num_batch for i in eval_epochs[eval_id]['epoch']]
             for k in eval_epochs[eval_id]:
-                if 'epoch' == k.lower() or 'ndcg' in k.lower() or 'map' == k.lower():
+                if 'loss' not in k:
                     continue
+                # if 'epoch' == k.lower() or 'ndcg' in k.lower() or 'map' == k.lower():
+                #     continue
                 y = eval_epochs[eval_id][k]
                 # print colors[idx]
                 x_y_minlen = min(len(x), len(y))
-                plt.plot(x[:x_y_minlen], y[:x_y_minlen], color=colors[idx], linewidth=0.5)
+                plt.plot(x[:x_y_minlen], np.log(y[:x_y_minlen]), color=colors[idx%10], linewidth=0.5)
                 idx += 1
-                new_y, new_x = fun(x[:x_y_minlen], y[:x_y_minlen], 20, 10)
-                plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx], linewidth=1)
+                new_y, new_x = fun(x[:x_y_minlen], np.log(y[:x_y_minlen]), 20, 10)
+                plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx%10], linewidth=1)
                 plot_cnt += 1
                 idx += 1
 
@@ -116,10 +119,10 @@ def plot_log_file(path):
                     y = eval_epochs[eval_id][k]
                     # print colors[idx]
                     x_y_minlen = min(len(x), len(y))
-                    plt.plot(x[:x_y_minlen], y[:x_y_minlen], color=colors[idx], linewidth=0.5)
+                    plt.plot(x[:x_y_minlen], y[:x_y_minlen], color=colors[idx%10], linewidth=0.5)
                     idx += 1
                     new_y, new_x = fun(x[:x_y_minlen], y[:x_y_minlen], 20, 10)
-                    plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx], linewidth=1)
+                    plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx%10], linewidth=1)
                     idx += 1
                     plot_cnt += 1
 
