@@ -13,8 +13,8 @@ class DRMMEM(BasicModel):
     def __init__(self, config):
         super(DRMMEM, self).__init__(config)
         self._name = 'DRMMEM'
-        self.check_list = [ 'query_maxlen', 'hist_size',
-                            'embed', 'embed_size', 'vocab_size',
+        self.check_list = [ 'query_maxlen', 'embed',
+                            'embed_size', 'vocab_size',
                             'idf_feat', 'hidden_sizes_qw',
                             'hidden_sizes_hist', 'dropout_rate']
         self.setup(config)
