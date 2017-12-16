@@ -92,7 +92,12 @@ def train(config):
             eval_metrics[mobj] = metrics.get(mobj)
     model.compile(optimizer=optimizer, loss=loss)
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Model] Model Compile Done.\n'
-            
+
+    print '### Model Info ###'
+    model.summary()
+    print 'Total number of parameters:', model.count_params()
+    print '### Model Info ###'
+
     for i_e in range(global_conf['num_epochs']):
         model.save_weights(weights_file)
         for tag, generator in train_gen.items():
