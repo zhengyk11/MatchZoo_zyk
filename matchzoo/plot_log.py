@@ -111,6 +111,7 @@ def plot_log_file(path):
     plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_loss.png')
     plt.close()
     plot_cnt = 0
+    idx = 0
     for eval_id in eval_epochs:
         if 'epoch' in eval_epochs[eval_id]:
             # x = [i*num_batch for i in eval_epochs['epoch']]
