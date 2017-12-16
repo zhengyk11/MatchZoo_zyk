@@ -55,7 +55,7 @@ class DUETEM(BasicModel):
         print 7, hidden_layer.shape
         hidden_layer = Reshape([self.config['kernel_count'],])(hidden_layer)
         print 8, hidden_layer.shape
-        hidden_layer = Dense(self.config['kernel_count'], activations='tanh')(hidden_layer)
+        hidden_layer = Dense(self.config['kernel_count'], activation='tanh')(hidden_layer)
         # hidden_layer = BatchNormalization(center=False, scale=False)(hidden_layer)
         # hidden_layer = Activation('tanh')(hidden_layer)
         print 9, hidden_layer.shape
