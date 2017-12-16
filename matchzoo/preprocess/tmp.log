@@ -1,0 +1,5 @@
+nohup: 忽略输入
+Using TensorFlow backend.
+[2017-12-15 17:51:38] [/home/zhenfan/lab/K-NRM/data/embed_query_50w_50.txt]
+	Embedding size: 500000
+[2017-12-15 17:51:42] Generate numpy embed: (500001, 50)
