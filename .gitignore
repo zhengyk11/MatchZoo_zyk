@@ -5,7 +5,7 @@ logs/
 *.pyc
 *.weights
 graph/
-config_*/
+config*/
 .idea/
 runtime_data/
 saved_model/
