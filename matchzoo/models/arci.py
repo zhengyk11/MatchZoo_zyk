@@ -45,10 +45,10 @@ class ARCI(BasicModel):
 
         q_conv1 = Conv1D(self.config['kernel_count'],
                          self.config['kernel_size'],
-                         activation='tanh', padding='same') (q_embed)
+                         activation='relu', padding='same') (q_embed)
         d_conv1 = Conv1D(self.config['kernel_count'],
                          self.config['kernel_size'],
-                         activation='tanh', padding='same') (d_embed)
+                         activation='relu', padding='same') (d_embed)
         print q_conv1.shape
         print d_conv1.shape
 
@@ -67,10 +67,14 @@ class ARCI(BasicModel):
         print pool1_flat_drop.shape
 
         hidden_res = pool1_flat_drop
-        for i in range(len(self.config['hidden_sizes'])):
+        num_layers = len(self.config['hidden_sizes'])
+        for i in range(num_layers):
             hidden_res = Dense(self.config['hidden_sizes'][i])(hidden_res)
             hidden_res = BatchNormalization(center=False, scale=False)(hidden_res)
-            hidden_res = Activation('tanh')(hidden_res)
+            if i < num_layers - 1:
+                hidden_res = Activation('relu')(hidden_res)
+            else:
+                hidden_res = Activation('tanh')(hidden_res)
 
         out_ = hidden_res
 

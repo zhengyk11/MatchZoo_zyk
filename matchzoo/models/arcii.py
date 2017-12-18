@@ -50,10 +50,10 @@ class ARCII(BasicModel):
 
         q_conv1 = Conv1D(self.config['1d_kernel_count'], 
                          self.config['1d_kernel_size'], 
-                         activation='tanh', padding='same') (q_embed)
+                         activation='relu', padding='same') (q_embed)
         d_conv1 = Conv1D(self.config['1d_kernel_count'], 
                          self.config['1d_kernel_size'], 
-                         activation='tanh', padding='same') (d_embed)
+                         activation='relu', padding='same') (d_embed)
 
         cross = Match(match_type='concat')([q_conv1, d_conv1])
         z = Reshape((self.config['query_maxlen'], self.config['doc_maxlen'], -1))(cross)
@@ -61,7 +61,7 @@ class ARCII(BasicModel):
         for i in range(self.config['num_conv2d_layers']):
             z = Conv2D(self.config['2d_kernel_counts'][i],
                        self.config['2d_kernel_sizes'][i],
-                       padding='same', activation='tanh')(z)
+                       padding='same', activation='relu')(z)
             print z.shape
             z = MaxPooling2D(pool_size=(self.config['2d_mpool_sizes'][i][0],
                                         self.config['2d_mpool_sizes'][i][1]))(z)
@@ -71,10 +71,14 @@ class ARCII(BasicModel):
         pool1_flat_drop = Dropout(rate=self.config['dropout_rate'])(pool1_flat)
 
         hidden_res = pool1_flat_drop
-        for i in range(len(self.config['hidden_sizes'])):
+        num_layers = len(self.config['hidden_sizes'])
+        for i in range(num_layers):
             hidden_res = Dense(self.config['hidden_sizes'][i])(hidden_res)
             hidden_res = BatchNormalization(center=False, scale=False)(hidden_res)
-            hidden_res = Activation('tanh')(hidden_res)
+            if i < num_layers - 1:
+                hidden_res = Activation('relu')(hidden_res)
+            else:
+                hidden_res = Activation('tanh')(hidden_res)
 
         out_ = hidden_res
 
