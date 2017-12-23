@@ -121,9 +121,11 @@ def plot_log_file(path):
                     # print colors[idx]
                     x_y_minlen = min(len(x), len(y))
                     plt.plot(x[:x_y_minlen], y[:x_y_minlen], color=colors[idx%10], linewidth=0.5)
+                    print max(y[-20:])
                     idx += 1
                     new_y, new_x = fun(x[:x_y_minlen], y[:x_y_minlen], 20, 10)
                     plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx%10], linewidth=1)
+                    # print new_y[-1]
                     idx += 1
                     plot_cnt += 1
 
