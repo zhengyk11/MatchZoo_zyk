@@ -16,6 +16,10 @@ class DRMM_PairGenerator():
         self.data_path = config['data_path']
         self.word_dict = config['word_dict']
 
+        self.label_index = 4
+        if 'label_index' in config:
+            self.label_index += config['label_index']
+
         self.log_option = False
         if 'log_opiton' in config:
             self.log_option = config['log_opiton']
@@ -52,14 +56,22 @@ class DRMM_PairGenerator():
         for fn in qfiles:
             with open(fn) as file:
                 for line in file:
-                    qid, query, uid, doc, label = line.split('\t')
-                    qid = qid.strip()
-                    uid = uid.strip()
+                    # qid, query, uid, doc, label = line.split('\t')
+                    # qid = qid.strip()
+                    # uid = uid.strip()
+
+                    attr = line.strip().split('\t')
+                    qid = attr[0].strip()
+                    query = attr[1].strip()
+                    uid = attr[2].strip()
+                    doc = attr[3].strip()
+                    label = float(attr[self.label_index])
+
                     query = convert_term2id(query.strip().split(), self.word_dict)
                     doc = map(float, doc.strip().split())
                     # doc = np.array(map(float, doc.strip().split()), dtype=np.float32) # convert_term2id(doc.strip().split(), self.word_dict)
                     # doc = np.reshape(doc, [self.query_maxlen, self.hist_size])
-                    label = float(label)
+
                     qid_query[qid] = query
                     uid_doc[uid] = doc
                     if qid not in qid_label_uid:

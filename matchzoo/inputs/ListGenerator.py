@@ -13,6 +13,9 @@ class ListGenerator():
         self.batch_size = config['batch_size']
         self.data_path = config['data_path']
         self.word_dict = config['word_dict']
+        self.label_index = 4
+        if 'label_index' in config:
+            self.label_index += config['label_index']
 
         self.rel_gap = 0.
         if 'rel_gap' in config:
@@ -103,10 +106,16 @@ class ListGenerator():
                         self.data_handler = open(self.qfile_list[qfile_idx])
                         line = self.data_handler.readline()
 
-                qid, query, doc_id, doc, label = line.strip().split('\t')
-                qid = qid.strip()
-                doc_id = doc_id.strip()
-                label = float(label)
+                # qid, query, doc_id, doc, label = line.strip().split('\t')
+                # qid = qid.strip()
+                # doc_id = doc_id.strip()
+                # label = float(label)
+                attr = line.strip().split('\t')
+                qid = attr[0].strip()
+                query = attr[1].strip()
+                doc_id = attr[2].strip()
+                doc = attr[3].strip()
+                label = float(attr[self.label_index])
 
                 curr_batch.append([qid, doc_id, label])
 

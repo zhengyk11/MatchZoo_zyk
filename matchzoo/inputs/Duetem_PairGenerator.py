@@ -16,6 +16,10 @@ class Duetem_PairGenerator():
         self.data_path = config['data_path']
         self.word_dict = config['word_dict']
 
+        self.label_index = 4
+        if 'label_index' in config:
+            self.label_index += config['label_index']
+
         self.rel_gap = 0.
         if 'rel_gap' in config:
             self.rel_gap = config['rel_gap']
@@ -48,12 +52,20 @@ class Duetem_PairGenerator():
         for fn in qfiles:
             with open(fn) as file:
                 for line in file:
-                    qid, query, uid, doc, label = line.split('\t')
-                    qid = qid.strip()
-                    uid = uid.strip()
+                    # qid, query, uid, doc, label = line.split('\t')
+                    # qid = qid.strip()
+                    # uid = uid.strip()
+
+                    attr = line.strip().split('\t')
+                    qid = attr[0].strip()
+                    query = attr[1].strip()
+                    uid = attr[2].strip()
+                    doc = attr[3].strip()
+                    label = float(attr[self.label_index])
+
                     query = convert_term2id(query.strip().split(), self.word_dict)
                     doc = convert_term2id(doc.strip().split(), self.word_dict)
-                    label = float(label)
+
                     qid_query[qid] = query
                     uid_doc[uid] = doc
                     if qid not in qid_label_uid:
