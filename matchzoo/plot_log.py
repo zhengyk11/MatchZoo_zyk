@@ -5,7 +5,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_log_file(path):
+metriclist = ['ndcg@1','ndcg@3','ndcg@10','recall@10','precision@10','map']
+scorefile = open('score.txt','w')
+def plot_log_file(path,metric_name):
     f = open(path)
     # loss_dict = {}
     num_batch = -1
@@ -101,7 +103,8 @@ def plot_log_file(path):
                 plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx%10], linewidth=1)
                 plot_cnt += 1
                 idx += 1
-
+    
+    scorefile.write('%s\t%s\t%s\t'%(path.split('/')[-1].split('_')[0],metric_name,path.split('_')[-1].split('.')[0]))
     # plt.xlabel('#Iteration')
     plt.ylabel('Loss')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=plot_cnt)
@@ -116,26 +119,28 @@ def plot_log_file(path):
         if 'epoch' in eval_epochs[eval_id]:
             # x = [i*num_batch for i in eval_epochs['epoch']]
             for k in eval_epochs[eval_id]:
-                if 'ndcg@10' == k.lower():  # or 'map' in k:#  or 'map' in k:
+                if metric_name == k.lower():  # or 'map' in k:#  or 'map' in k:
                     y = eval_epochs[eval_id][k]
                     # print colors[idx]
                     x_y_minlen = min(len(x), len(y))
                     plt.plot(x[:x_y_minlen], y[:x_y_minlen], color=colors[idx%10], linewidth=0.5)
-                    print max(y[-20:])
+                    #print max(y[-20:])
+                    #scorefile.write('%s\t'%(max(y[-20:])))
                     idx += 1
                     new_y, new_x = fun(x[:x_y_minlen], y[:x_y_minlen], 20, 10)
                     plt.plot(new_x, new_y, label=k+'_'+str(eval_id), color=colors[idx%10], linewidth=1)
-                    # print new_y[-1]
+                    print new_y[-1]
+                    scorefile.write('%s\t'%(new_y[-1]))
                     idx += 1
                     plot_cnt += 1
-
+    scorefile.write('\n')
     # plt.xlabel('#Iteration')
-    plt.ylabel('Metrics')
+    plt.ylabel(metric_name)
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=plot_cnt)
     plt.title(net_name)
     plt.grid(axis='y')
-    plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.pdf')
-    plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics.png')
+    plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics_'+metric_name+'.pdf')
+    plt.savefig(path[:-4].replace('/logs/', '/graph/') + '_metrics_'+metric_name+'.png')
     plt.close()
 
     f.close()
@@ -155,14 +160,16 @@ def fun(x, y, r, s):
 
 if __name__ == '__main__':
     log_path = sys.argv[1]
-    if os.path.isfile(log_path) or os.path.isfile(os.path.join(os.path.curdir,log_path)): # file
-        print os.path.join(os.path.curdir, log_path)
-        plot_log_file(os.path.join(os.path.curdir,log_path))
-    elif os.path.isdir(log_path) or os.path.isdir(os.path.join(os.path.curdir,log_path)): # dir
-        for dirpath, dirnames, filenames in os.walk(log_path):
-            for fn in filenames:
-                if fn.endswith('.log'):
-                    print os.path.join(dirpath, fn)
-                    plot_log_file(os.path.join(dirpath, fn))
+    for metric in metriclist:
+        #scorefile.write('%s\n' % (metric))
+        if os.path.isfile(log_path) or os.path.isfile(os.path.join(os.path.curdir,log_path)): # file
+            print os.path.join(os.path.curdir, log_path)
+            plot_log_file(os.path.join(os.path.curdir,log_path),metric)
+        elif os.path.isdir(log_path) or os.path.isdir(os.path.join(os.path.curdir,log_path)): # dir
+            for dirpath, dirnames, filenames in os.walk(log_path):
+                for fn in filenames:
+                    if fn.endswith('.log'):
+                        print os.path.join(dirpath, fn)
+                        plot_log_file(os.path.join(dirpath, fn),metric)
     else:
         print 'path error'
