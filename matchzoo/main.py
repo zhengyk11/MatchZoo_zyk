@@ -79,6 +79,10 @@ def train(config):
     _model = load_model(config)
     # model = multi_gpu_model(_model, gpus=2)
     model = _model
+
+    if 'load_model_path' in global_conf:
+        model.load_weights(global_conf['load_model_path'])
+
     loss = []
     for lobj in config['losses']:
         loss.append(rank_losses.get(lobj))
