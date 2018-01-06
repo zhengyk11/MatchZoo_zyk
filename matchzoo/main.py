@@ -80,8 +80,8 @@ def train(config):
     # model = multi_gpu_model(_model, gpus=2)
     model = _model
 
-    if 'load_model_path' in global_conf:
-        model.load_weights(global_conf['load_model_path'])
+    if 'load_weights_path' in global_conf:
+        model.load_weights(global_conf['load_weights_path'])
 
     loss = []
     for lobj in config['losses']:
