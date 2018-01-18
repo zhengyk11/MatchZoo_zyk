@@ -106,6 +106,8 @@ def recall(k=10):
                 break
             if g > rel_threshold:
                 recall += 1
+        if pos_count < 1:
+            return 0.
         recall /= pos_count
         return recall
     return top_k
