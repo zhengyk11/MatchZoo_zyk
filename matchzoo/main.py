@@ -7,6 +7,7 @@ import argparse
 import tensorflow as tf
 from collections import OrderedDict
 from keras.models import Model
+from keras import optimizers
 import keras.backend.tensorflow_backend as KTF
 # from keras.utils import multi_gpu_model
 
@@ -22,7 +23,7 @@ def train(config):
 
     # read basic config
     global_conf = config["global"]
-    optimizer = global_conf['optimizer']
+    # optimizer = global_conf['optimizer']
     weights_file = global_conf['weights_file']
     num_batch = global_conf['num_batch']
 
@@ -94,6 +95,22 @@ def train(config):
             eval_metrics[mobj] = metrics.get(mt_key)(int(mt_val))
         else:
             eval_metrics[mobj] = metrics.get(mobj)
+
+    if 'weight_decay' in global_conf:
+        weight_decay = global_conf['weight_decay']
+    else:
+        weight_decay = 0.
+
+    if global_conf['optimizer'] == 'sgd':
+        optimizer = optimizers.SGD(lr=global_conf['learning_rate'], decay=weight_decay, momentum=0.9, nesterov=True)
+    elif global_conf['optimizer'] == 'adagrad':
+        optimizer = optimizers.Adagrad(lr=global_conf['learning_rate'], decay=weight_decay)
+    elif global_conf['optimizer'] == 'adadelta':
+        optimizer = optimizers.Adadelta(lr=global_conf['learning_rate'], decay=weight_decay)
+    elif global_conf['optimizer'] == 'adam':
+        optimizer = optimizers.Adam(lr=global_conf['learning_rate'], decay=weight_decay)
+    else:
+        exit(0)
     model.compile(optimizer=optimizer, loss=loss)
     print '[%s]'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), '[Model] Model Compile Done.\n'
 
