@@ -90,6 +90,8 @@ class Duet_PairGenerator():
     def get_batch(self):
         while True:
             qid_query, uid_doc, qid_label_uid, pair_list = self.make_pair()
+            if len(pair_list) < self.batch_size:
+                continue
             print '[%s]' % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             print 'Pair Instance Count:', len(pair_list)
             for _i in range(self.batch_per_iter):
